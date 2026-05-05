@@ -167,6 +167,7 @@ strong {
 
 .nav-links a:hover,
 .nav-links a:focus-visible,
+.nav-links a[aria-current="page"],
 .theme-toggle:hover,
 .theme-toggle:focus-visible {
   color: var(--text);
@@ -227,6 +228,15 @@ strong {
 .advisor {
   max-width: 680px;
   margin-bottom: 18px;
+}
+
+.page-hero {
+  max-width: 720px;
+  padding: 58px 0 50px;
+}
+
+.page-hero p:last-child {
+  margin-bottom: 0;
 }
 
 .link-row,
@@ -313,6 +323,7 @@ strong {
 
 .paper-figure {
   margin: 6px 0 0;
+  max-width: 680px;
 }
 
 .paper-figure img {
@@ -373,6 +384,18 @@ strong {
   margin-top: 18px;
   padding-top: 10px;
   border-top: 1px solid var(--line);
+}
+
+.guestbook-note {
+  margin: 12px 0 0;
+  color: var(--faint);
+  font-size: 0.86rem;
+}
+
+.guestbook-note code {
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.84rem;
 }
 
 .site-footer {
@@ -469,7 +492,7 @@ html.js .reveal {
   }
 
   .paper-figure {
-    max-width: none;
+    max-width: 100%;
   }
 }
 
