@@ -33,6 +33,72 @@
     });
   }
 
+  const guestbookThread = document.querySelector('[data-guestbook-thread]');
+  const guestbookLocal = document.querySelector('[data-guestbook-local]');
+  const guestbookForm = document.querySelector('[data-guestbook-form]');
+  const guestbookList = document.querySelector('[data-guestbook-list]');
+
+  function renderLocalGuestbook() {
+    if (!guestbookList) return;
+    const notes = JSON.parse(window.localStorage.getItem('guestbook-notes') || '[]');
+    guestbookList.innerHTML = notes.map((note) => `
+      <article class="guestbook-item">
+        <strong>${escapeHtml(note.name)}</strong>
+        <time>${escapeHtml(note.date)}</time>
+        <p>${escapeHtml(note.message)}</p>
+      </article>
+    `).join('');
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  if (guestbookThread) {
+    if (window.location.protocol === 'file:') {
+      guestbookThread.hidden = true;
+      if (guestbookLocal) {
+        guestbookLocal.hidden = false;
+      }
+      renderLocalGuestbook();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://cusdis.com/js/cusdis.es.js';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+  }
+
+  if (guestbookForm) {
+    guestbookForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const formData = new FormData(guestbookForm);
+      const note = {
+        name: String(formData.get('name') || '').trim(),
+        message: String(formData.get('message') || '').trim(),
+        date: new Date().toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        }),
+      };
+
+      if (!note.name || !note.message) return;
+
+      const notes = JSON.parse(window.localStorage.getItem('guestbook-notes') || '[]');
+      notes.unshift(note);
+      window.localStorage.setItem('guestbook-notes', JSON.stringify(notes.slice(0, 20)));
+      guestbookForm.reset();
+      renderLocalGuestbook();
+    });
+  }
+
   function setHeaderState() {
     if (!header) return;
     header.classList.toggle('is-scrolled', window.scrollY > 8);

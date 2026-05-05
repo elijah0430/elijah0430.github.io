@@ -398,6 +398,75 @@ strong {
   font-size: 0.84rem;
 }
 
+.guestbook-form {
+  display: grid;
+  gap: 12px;
+  max-width: 520px;
+  margin-top: 16px;
+}
+
+.guestbook-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.guestbook-form input,
+.guestbook-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  padding: 9px 10px;
+}
+
+.guestbook-form textarea {
+  resize: vertical;
+}
+
+.guestbook-form button {
+  justify-self: start;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--link);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+}
+
+.guestbook-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.guestbook-item {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.guestbook-item strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.guestbook-item time {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--faint);
+  font-size: 0.84rem;
+}
+
+.guestbook-item p {
+  margin-bottom: 0;
+  white-space: pre-wrap;
+}
+
 .site-footer {
   display: flex;
   justify-content: space-between;

@@ -90,6 +90,35 @@
       </div>
     </section>
 
+    <section class="section" id="news">
+      <div class="section-title">
+        <h2>Recent News</h2>
+      </div>
+      <div class="section-body">
+        <article class="entry">
+          <time>2026</time>
+          <div>
+            <h3>Paper accepted to ICML 2026</h3>
+            <p><em>Dual Mechanisms of Value Expression</em> was accepted to ICML 2026.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <time>2026</time>
+          <div>
+            <h3>Paper accepted to ACL Findings 2026</h3>
+            <p><em>Learning to Retrieve User History and Generate User Profiles</em> was accepted to ACL Findings 2026.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <time>2025</time>
+          <div>
+            <h3>Started Ph.D. at Seoul National University</h3>
+            <p>Joined the Graduate School of Data Science, Seoul National University.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <section class="section" id="experience">
       <div class="section-title">
         <h2>Experience</h2>
@@ -167,13 +196,30 @@
         <div class="guestbook-frame">
           <div
             id="cusdis_thread"
+            data-guestbook-thread
             data-host="https://cusdis.com"
             data-app-id="bc4aa7a1-00c1-4e29-8082-a6c6ef0b23c4"
             data-page-id="jongwon-lim-guestbook"
-            data-page-url="https://elijah0430.github.io/#guestbook"
+            data-page-url="https://elijah0430.github.io/"
             data-page-title="Jongwon Lim Guestbook">
           </div>
-          <script async defer src="https://cusdis.com/js/cusdis.es.js"></script>
+          <div class="guestbook-local" data-guestbook-local hidden>
+            <p class="guestbook-note">
+              Local preview mode. These notes are saved only in this browser. The deployed site uses the public guestbook.
+            </p>
+            <form class="guestbook-form" data-guestbook-form>
+              <label>
+                Name
+                <input name="name" autocomplete="name" required />
+              </label>
+              <label>
+                Message
+                <textarea name="message" rows="4" required></textarea>
+              </label>
+              <button type="submit">Leave note</button>
+            </form>
+            <div class="guestbook-list" data-guestbook-list></div>
+          </div>
         </div>
       </div>
     </section>
