@@ -534,10 +534,33 @@
       return JSON.parse(window.localStorage.getItem('runner-scores') || '[]');
     }
 
+    function scoreNameKey(name) {
+      return String(name || '').trim().toLocaleLowerCase();
+    }
+
+    function bestScoresByName(scores) {
+      const byName = new Map();
+      scores.forEach((score) => {
+        const key = scoreNameKey(score.name);
+        if (!key) return;
+        const current = byName.get(key);
+        if (!current || Number(score.score) > Number(current.score)) {
+          byName.set(key, {
+            name: String(score.name || '').trim(),
+            score: Number(score.score) || 0,
+          });
+        }
+      });
+      return Array.from(byName.values())
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+    }
+
     function renderScores(scores = localScores()) {
       if (!highScoresEl) return;
-      highScoresEl.innerHTML = scores.length
-        ? scores.map((score) => `<li><strong>${score.score}</strong> ${escapeHtml(score.name)}</li>`).join('')
+      const bestScores = bestScoresByName(scores);
+      highScoresEl.innerHTML = bestScores.length
+        ? bestScores.map((score) => `<li><strong>${score.score}</strong> ${escapeHtml(score.name)}</li>`).join('')
         : '<li>No scores yet.</li>';
     }
 
@@ -570,9 +593,7 @@
         }
       }
 
-      const scores = [...localScores(), { name, score }]
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 10);
+      const scores = bestScoresByName([...localScores(), { name, score }]);
       window.localStorage.setItem('runner-scores', JSON.stringify(scores));
       renderScores(scores);
       return remoteSaved;
@@ -580,7 +601,7 @@
 
     async function loadRemoteScores() {
       if (!leaderboardConfig.supabaseUrl || !leaderboardConfig.supabaseAnonKey) return;
-      const url = `${leaderboardConfig.supabaseUrl}/rest/v1/${leaderboardConfig.table}?select=name,score&order=score.desc,created_at.asc&limit=10`;
+      const url = `${leaderboardConfig.supabaseUrl}/rest/v1/${leaderboardConfig.table}?select=name,score&order=score.desc,created_at.asc&limit=50`;
       const response = await fetch(url, {
         headers: {
           apikey: leaderboardConfig.supabaseAnonKey,
