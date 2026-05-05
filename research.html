@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Research - Jongwon Lim</title>
+  <meta name="description" content="Publications by Jongwon Lim." />
+  <meta name="author" content="Jongwon Lim" />
+  <meta property="og:title" content="Research - Jongwon Lim" />
+  <meta property="og:description" content="Publications by Jongwon Lim." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="assets/img/profile.jpg" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <script>document.documentElement.classList.add('js');</script>
+  <script defer src="assets/js/main.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="page">
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="index.html" class="brand">Jongwon Lim</a>
+        <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle>
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links" data-nav-panel>
+          <a href="index.html">Home</a>
+          <a href="research.html" aria-current="page">Research</a>
+          <a href="blog.html">Blog</a>
+          <a href="guestbook.html">Guestbook</a>
+          <button class="theme-toggle" type="button" aria-label="Toggle color theme" data-theme-toggle>Dark</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <section class="page-hero">
+      <p class="kicker">Research</p>
+      <h1>Publications</h1>
+      <p>
+        Papers and projects on understanding language models and improving practical NLP applications.
+      </p>
+    </section>
+
+    <section class="section" id="publications">
+      <div class="section-title">
+        <h2>Publications</h2>
+      </div>
+      <div class="section-body">
+        <article class="paper">
+          <div class="paper-main">
+            <p class="venue">ACL Findings 2026</p>
+            <h3>Learning to Retrieve User History and Generate User Profiles for Personalized Persuasiveness Prediction</h3>
+            <p class="authors">Sejun Park, Yoonah Park, <strong>Jongwon Lim</strong>, Yohan Jo</p>
+            <p class="summary">
+              A context-aware user profiling framework that retrieves persuasion-relevant history and generates user profiles for a practical NLP task: persuasiveness prediction.
+            </p>
+            <div class="paper-links">
+              <a href="https://arxiv.org/abs/2601.05654" target="_blank" rel="noopener noreferrer">arXiv</a>
+              <a href="https://arxiv.org/pdf/2601.05654" target="_blank" rel="noopener noreferrer">PDF</a>
+            </div>
+          </div>
+          <figure class="paper-figure">
+            <img src="assets/img/user-profile-framework-figure.png" alt="Overview of the retrieval, profiling, prediction, and training pipeline for personalized persuasiveness prediction" loading="lazy" />
+            <figcaption>Overview of the retrieval, profiling, prediction, and training pipeline.</figcaption>
+          </figure>
+        </article>
+
+        <article class="paper">
+          <div class="paper-main">
+            <p class="venue">ICML 2026</p>
+            <h3>Dual Mechanisms of Value Expression: Intrinsic vs. Prompted Values in Large Language Models</h3>
+            <p class="authors">Jongwook Han*, <strong>Jongwon Lim*</strong>, Injin Kong, Yohan Jo</p>
+            <p class="summary">
+              A mechanistic analysis for understanding how language models internally represent and express values under intrinsic and prompted settings.
+            </p>
+            <div class="paper-links">
+              <a href="https://arxiv.org/abs/2509.24319" target="_blank" rel="noopener noreferrer">arXiv</a>
+              <a href="https://arxiv.org/pdf/2509.24319" target="_blank" rel="noopener noreferrer">PDF</a>
+              <span>* Equal contribution</span>
+            </div>
+          </div>
+          <figure class="paper-figure">
+            <img src="assets/img/value-pipeline-figure.png" alt="Extraction pipeline for intrinsic and prompted value vectors" loading="lazy" />
+            <figcaption>Overview of the extraction pipeline for intrinsic and prompted value vectors.</figcaption>
+          </figure>
+        </article>
+
+        <article class="paper">
+          <div class="paper-main">
+            <p class="venue">EMNLP 2024 FEVER Workshop</p>
+            <h3>DAHL: Domain-specific Automated Hallucination Evaluation of Long-Form Text through a Benchmark Dataset in Biomedicine</h3>
+            <p class="authors">Jean Seo, <strong>Jongwon Lim</strong>, Dongjun Jang, Hyopil Shin</p>
+            <p class="summary">
+              A biomedical benchmark and automated evaluation pipeline for factuality assessment in long-form LLM outputs.
+            </p>
+            <div class="paper-links">
+              <a href="https://arxiv.org/abs/2411.09255" target="_blank" rel="noopener noreferrer">arXiv</a>
+              <a href="https://arxiv.org/pdf/2411.09255" target="_blank" rel="noopener noreferrer">PDF</a>
+              <a href="https://github.com/seemdog/DAHL" target="_blank" rel="noopener noreferrer">Code</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer page">
+    <p>&copy; <span data-year></span> Jongwon Lim.</p>
+    <a href="index.html">Home</a>
+  </footer>
+</body>
+</html>
