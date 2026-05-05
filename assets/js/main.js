@@ -10,6 +10,57 @@
     year.textContent = new Date().getFullYear();
   }
 
+  const supabaseConfig = {
+    url: 'https://yahixtpkoeqmgxktpzlc.supabase.co',
+    anonKey: 'sb_publishable_MRpyKKRo-J459tJktJsXJg_9pq2MCeg',
+  };
+
+  function supabaseHeaders(extraHeaders = {}) {
+    return {
+      apikey: supabaseConfig.anonKey,
+      Authorization: `Bearer ${supabaseConfig.anonKey}`,
+      ...extraHeaders,
+    };
+  }
+
+  function seoulViewTimeParts() {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(new Date());
+    const value = (type) => parts.find((part) => part.type === type)?.value || '';
+    return {
+      viewed_date: `${value('year')}-${value('month')}-${value('day')}`,
+      viewed_hour: Number(value('hour')),
+      timezone: 'Asia/Seoul',
+    };
+  }
+
+  function trackPageView() {
+    if (!supabaseConfig.url || !supabaseConfig.anonKey || !/^https?:$/.test(window.location.protocol)) return;
+    const path = window.location.pathname.replace(/^\/+/, '') || 'index.html';
+    window.fetch(`${supabaseConfig.url}/rest/v1/page_views`, {
+      method: 'POST',
+      headers: supabaseHeaders({
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      }),
+      body: JSON.stringify({
+        path,
+        title: document.title,
+        url: window.location.href,
+        referrer: document.referrer || null,
+        ...seoulViewTimeParts(),
+      }),
+    }).catch(() => {});
+  }
+
+  trackPageView();
+
   const savedTheme = window.localStorage.getItem('theme');
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
@@ -115,8 +166,8 @@
     const scoreForm = runnerGame.querySelector('[data-score-form]');
     const highScoresEl = runnerGame.querySelector('[data-high-scores]');
     const leaderboardConfig = {
-      supabaseUrl: 'https://yahixtpkoeqmgxktpzlc.supabase.co',
-      supabaseAnonKey: 'sb_publishable_MRpyKKRo-J459tJktJsXJg_9pq2MCeg',
+      supabaseUrl: supabaseConfig.url,
+      supabaseAnonKey: supabaseConfig.anonKey,
       table: 'dot_rush_scores',
     };
     const player = {
