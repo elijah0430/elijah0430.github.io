@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jongwon Lim - NLP & Data Science</title>
-  <meta name="description" content="Jongwon Lim is a Ph.D. student at Seoul National University working on NLP, large language model evaluation, hallucination, value alignment, and linguistic capability evaluation." />
+  <title>Jongwon Lim</title>
+  <meta name="description" content="Jongwon Lim is a Ph.D. student at Seoul National University working on NLP, large language model evaluation, hallucination, value alignment, and computational linguistics." />
   <meta name="author" content="Jongwon Lim" />
-  <meta property="og:title" content="Jongwon Lim - NLP & Data Science" />
-  <meta property="og:description" content="Ph.D. student at Seoul National University working on NLP, LLM evaluation, hallucination, and value alignment." />
+  <meta property="og:title" content="Jongwon Lim" />
+  <meta property="og:description" content="Ph.D. student at Seoul National University working on NLP and large language models." />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="assets/img/profile.jpg" />
-  <meta name="theme-color" content="#f8fafc" />
+  <meta name="theme-color" content="#ffffff" />
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/styles.css" />
   <script>document.documentElement.classList.add('js');</script>
@@ -45,198 +45,178 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="site-header" data-header>
-    <nav class="nav container" aria-label="Primary navigation">
-      <a class="brand" href="#home" aria-label="Jongwon Lim homepage">Jongwon Lim</a>
-      <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle>
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-      <div class="nav-panel" data-nav-panel>
-        <a href="#about">About</a>
-        <a href="#publications">Publications</a>
-        <a href="#experience">Experience</a>
-        <a href="#education">Education</a>
-        <a href="#contact">Contact</a>
-        <button class="theme-toggle" type="button" aria-label="Toggle color theme" data-theme-toggle>Theme</button>
-      </div>
-    </nav>
+  <header class="site-header">
+    <div class="page">
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="#home" class="brand">Jongwon Lim</a>
+        <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle>
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links" data-nav-panel>
+          <a href="#publications">Publications</a>
+          <a href="#experience">Experience</a>
+          <a href="#education">Education</a>
+          <a href="#contact">Links</a>
+          <button class="theme-toggle" type="button" aria-label="Toggle color theme" data-theme-toggle>Dark</button>
+        </div>
+      </nav>
+    </div>
   </header>
 
-  <main id="main">
-    <section class="hero" id="home">
-      <div class="container hero-grid">
-        <div class="hero-copy reveal">
-          <p class="eyebrow">Ph.D. Student, Data Science</p>
-          <h1>Jongwon Lim</h1>
-          <p class="hero-lead">
-            I study natural language processing and large language models at the Graduate School of Data Science,
-            Seoul National University. My work focuses on evaluation methods that make model behavior easier to inspect,
-            especially factuality, linguistic capability, value expression, and tutoring dialogue.
-          </p>
-          <div class="hero-actions" aria-label="Profile links">
-            <a class="button primary" href="#publications">Publications</a>
-            <a class="button" href="https://scholar.google.com/citations?user=Mo8VK_YAAAAJ&amp;hl=ko" target="_blank" rel="noopener noreferrer">Google Scholar</a>
-            <a class="button" href="https://www.linkedin.com/in/jongwon-lim-a57549251/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-          </div>
-        </div>
-        <img src="assets/img/profile.jpg" alt="Jongwon Lim" class="profile-photo reveal" />
-      </div>
-    </section>
-
-    <section class="section" id="about">
-      <div class="container narrow reveal">
-        <p class="eyebrow">About</p>
-        <h2>Research interests</h2>
-        <p>
-          I build datasets, evaluation pipelines, and analyses for understanding LLM outputs. Recent topics include
-          long-form hallucination evaluation, Korean and morphology-oriented linguistic benchmarks, value alignment,
-          mechanistic analysis, and LLM-based tutoring systems.
+  <main id="main" class="page">
+    <section class="intro" id="home">
+      <img class="portrait" src="assets/img/profile.jpg" alt="Jongwon Lim" />
+      <div>
+        <p class="kicker">Ph.D. Student, Data Science</p>
+        <h1>Jongwon Lim</h1>
+        <p class="affiliation">
+          Graduate School of Data Science, Seoul National University
         </p>
-        <dl class="facts">
-          <div>
-            <dt>Affiliation</dt>
-            <dd>Graduate School of Data Science, Seoul National University</dd>
-          </div>
-          <div>
-            <dt>Background</dt>
-            <dd>Linguistics and Data Science for Humanities</dd>
-          </div>
-          <div>
-            <dt>Labs</dt>
-            <dd><a href="https://yohanjo.github.io/lab.html" target="_blank" rel="noopener noreferrer">Jo Lab</a> / <a href="http://knlp.snu.ac.kr/people.html" target="_blank" rel="noopener noreferrer">CL_NLP Lab</a></dd>
-          </div>
-        </dl>
-      </div>
-    </section>
-
-    <section class="section" id="publications">
-      <div class="container reveal">
-        <p class="eyebrow">Selected Publications</p>
-        <h2>Publications</h2>
-
-        <article class="publication">
-          <p class="pub-meta">ICML 2026, Regular</p>
-          <h3>Dual Mechanisms of Value Expression: Intrinsic vs. Prompted Values in Large Language Models</h3>
-          <p class="authors">Jongwook Han*, <strong>Jongwon Lim*</strong>, Injin Kong, Yohan Jo</p>
-          <p>
-            A mechanistic analysis of whether intrinsic and prompted value expression in language models rely on
-            shared or distinct internal components.
-          </p>
-          <figure class="pub-figure">
-            <img src="assets/img/value-pipeline-figure.png" alt="Overview of the extraction pipeline for intrinsic and prompted value vectors" loading="lazy" />
-            <figcaption>Extraction pipeline for intrinsic and prompted value vectors.</figcaption>
-          </figure>
-          <div class="pub-links">
-            <a href="https://arxiv.org/abs/2509.24319" target="_blank" rel="noopener noreferrer">arXiv</a>
-            <a href="https://arxiv.org/pdf/2509.24319" target="_blank" rel="noopener noreferrer">PDF</a>
-            <span>* Equal contribution</span>
-          </div>
-        </article>
-
-        <article class="publication">
-          <p class="pub-meta">EMNLP 2024 FEVER Workshop</p>
-          <h3>DAHL: Domain-specific Automated Hallucination Evaluation of Long-Form Text through a Benchmark Dataset in Biomedicine</h3>
-          <p class="authors">Jean Seo, <strong>Jongwon Lim</strong>, Dongjun Jang, Hyopil Shin</p>
-          <p>
-            A biomedical benchmark and automated evaluation pipeline for factuality assessment in long-form LLM outputs.
-          </p>
-          <div class="pub-links">
-            <a href="https://arxiv.org/abs/2411.09255" target="_blank" rel="noopener noreferrer">arXiv</a>
-            <a href="https://arxiv.org/pdf/2411.09255" target="_blank" rel="noopener noreferrer">PDF</a>
-            <a href="https://github.com/seemdog/DAHL" target="_blank" rel="noopener noreferrer">Code</a>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <section class="section" id="experience">
-      <div class="container reveal">
-        <p class="eyebrow">Experience</p>
-        <h2>Research Experience</h2>
-        <div class="timeline">
-          <article>
-            <time>Oct 2023 - Present</time>
-            <div>
-              <h3>Research Intern, <a href="http://knlp.snu.ac.kr/people.html" target="_blank" rel="noopener noreferrer">CL_NLP Lab</a>, Seoul National University</h3>
-              <p>Language model training and evaluation, retrieval-augmented generation, experiments, analysis, and academic writing.</p>
-            </div>
-          </article>
-          <article>
-            <time>May 2024 - Present</time>
-            <div>
-              <h3>Head Researcher, SNU Faculty of Liberal Education</h3>
-              <p>Benchmark dataset for evaluating morphological capabilities of large language models.</p>
-            </div>
-          </article>
-          <article>
-            <time>Sep 2024 - Present</time>
-            <div>
-              <h3>Researcher, SNU Learning Sciences Research Institute</h3>
-              <p>Multi-turn dialogue framework for LLM-based tutoring.</p>
-            </div>
-          </article>
-          <article>
-            <time>Jan 2024 - Mar 2024</time>
-            <div>
-              <h3>Kaggle Silver Medalist, LLM - Detect AI-generated Text</h3>
-              <p>Built ensemble systems for AI-generated text detection.</p>
-            </div>
-          </article>
-          <article>
-            <time>Sep 2023 - Jan 2024</time>
-            <div>
-              <h3>Research Assistant, SNU Humanities x SNU AIIS Collaborative Project</h3>
-              <p>Created instruction-tuning datasets for Korean large language models.</p>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="education">
-      <div class="container two-column reveal">
-        <div>
-          <p class="eyebrow">Education</p>
-          <h2>Education</h2>
-          <ul class="plain-list">
-            <li><strong>Seoul National University</strong>, Ph.D. in Data Science, 2025 - Present</li>
-            <li><strong>Seoul National University</strong>, B.A. in Linguistics and Data Science for Humanities, 2019 - 2025</li>
-          </ul>
-        </div>
-        <div>
-          <p class="eyebrow">Recognition</p>
-          <h2>Awards</h2>
-          <ul class="plain-list">
-            <li>Outstanding Bachelor's Thesis, SNU Linguistics Department, 2024</li>
-            <li>President of the Linguistics Society, 2023 - 2024</li>
-            <li>Survey Analyst Certificate, Level 2</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section class="section contact-section" id="contact">
-      <div class="container contact reveal">
-        <div>
-          <p class="eyebrow">Contact</p>
-          <h2>Links</h2>
-        </div>
-        <div class="contact-links">
+        <p class="bio">
+          I study natural language processing and large language models, with a focus on evaluating model behavior:
+          factuality in long-form generation, linguistic capability, value expression, and personalized persuasion.
+        </p>
+        <p class="advisor">
+          Advised by <a href="https://yohanjo.github.io/" target="_blank" rel="noopener noreferrer">Prof. Yohan Jo</a>.
+          Previously worked with <a href="http://knlp.snu.ac.kr/people.html" target="_blank" rel="noopener noreferrer">CL_NLP Lab</a>.
+        </p>
+        <div class="link-row" id="contact">
           <a href="https://scholar.google.com/citations?user=Mo8VK_YAAAAJ&amp;hl=ko" target="_blank" rel="noopener noreferrer">Google Scholar</a>
           <a href="https://www.linkedin.com/in/jongwon-lim-a57549251/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           <a href="https://yohanjo.github.io/lab.html" target="_blank" rel="noopener noreferrer">Lab Page</a>
         </div>
       </div>
     </section>
+
+    <section class="section" id="publications">
+      <div class="section-title">
+        <h2>Publications</h2>
+      </div>
+      <div class="section-body">
+        <article class="paper">
+          <div class="paper-main">
+            <p class="venue">ACL Findings 2026</p>
+            <h3>Learning to Retrieve User History and Generate User Profiles for Personalized Persuasiveness Prediction</h3>
+            <p class="authors">Sejun Park, Yoonah Park, <strong>Jongwon Lim</strong>, Yohan Jo</p>
+            <p class="summary">
+              A context-aware user profiling framework that retrieves persuasion-relevant history and generates user profiles for persuasiveness prediction.
+            </p>
+            <div class="paper-links">
+              <a href="https://arxiv.org/abs/2601.05654" target="_blank" rel="noopener noreferrer">arXiv</a>
+              <a href="https://arxiv.org/pdf/2601.05654" target="_blank" rel="noopener noreferrer">PDF</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="paper has-figure">
+          <div class="paper-main">
+            <p class="venue">ICML 2026</p>
+            <h3>Dual Mechanisms of Value Expression: Intrinsic vs. Prompted Values in Large Language Models</h3>
+            <p class="authors">Jongwook Han*, <strong>Jongwon Lim*</strong>, Injin Kong, Yohan Jo</p>
+            <p class="summary">
+              A mechanistic analysis of whether intrinsic and prompted value expression in language models rely on shared or distinct internal components.
+            </p>
+            <div class="paper-links">
+              <a href="https://arxiv.org/abs/2509.24319" target="_blank" rel="noopener noreferrer">arXiv</a>
+              <a href="https://arxiv.org/pdf/2509.24319" target="_blank" rel="noopener noreferrer">PDF</a>
+              <span>* Equal contribution</span>
+            </div>
+          </div>
+          <figure class="paper-figure">
+            <img src="assets/img/value-pipeline-figure.png" alt="Extraction pipeline for intrinsic and prompted value vectors" loading="lazy" />
+          </figure>
+        </article>
+
+        <article class="paper">
+          <div class="paper-main">
+            <p class="venue">EMNLP 2024 FEVER Workshop</p>
+            <h3>DAHL: Domain-specific Automated Hallucination Evaluation of Long-Form Text through a Benchmark Dataset in Biomedicine</h3>
+            <p class="authors">Jean Seo, <strong>Jongwon Lim</strong>, Dongjun Jang, Hyopil Shin</p>
+            <p class="summary">
+              A biomedical benchmark and automated evaluation pipeline for factuality assessment in long-form LLM outputs.
+            </p>
+            <div class="paper-links">
+              <a href="https://arxiv.org/abs/2411.09255" target="_blank" rel="noopener noreferrer">arXiv</a>
+              <a href="https://arxiv.org/pdf/2411.09255" target="_blank" rel="noopener noreferrer">PDF</a>
+              <a href="https://github.com/seemdog/DAHL" target="_blank" rel="noopener noreferrer">Code</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="experience">
+      <div class="section-title">
+        <h2>Experience</h2>
+      </div>
+      <div class="section-body">
+        <article class="entry">
+          <time>Oct 2023 - Sep 2024</time>
+          <div>
+            <h3>Research Intern, CL_NLP Lab, Seoul National University</h3>
+            <p>Language model training and evaluation, retrieval-augmented generation, experiments, analysis, and academic writing.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <time>May 2024 - Dec 2024</time>
+          <div>
+            <h3>Head Researcher, SNU Faculty of Liberal Education</h3>
+            <p>Benchmark dataset for evaluating morphological capabilities of large language models.</p>
+          </div>
+        </article>
+        <article class="entry">
+          <time>Jan 2024 - Mar 2024</time>
+          <div>
+            <h3>Kaggle Silver Medalist, LLM - Detect AI-generated Text</h3>
+            <p>Built ensemble systems for AI-generated text detection.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="education">
+      <div class="section-title">
+        <h2>Education</h2>
+      </div>
+      <div class="section-body">
+        <article class="entry">
+          <time>2025 - Present</time>
+          <div>
+            <h3>Seoul National University</h3>
+            <p>Ph.D. in Data Science, Graduate School of Data Science</p>
+          </div>
+        </article>
+        <article class="entry">
+          <time>2019 - 2025</time>
+          <div>
+            <h3>Seoul National University</h3>
+            <p>B.A. in Linguistics and Data Science for Humanities</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-title">
+        <h2>Awards</h2>
+      </div>
+      <div class="section-body">
+        <article class="entry">
+          <time>2024</time>
+          <div>
+            <h3>Outstanding Bachelor's Thesis</h3>
+            <p>SNU Linguistics Department</p>
+          </div>
+        </article>
+      </div>
+    </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <p>&copy; <span data-year></span> Jongwon Lim.</p>
-      <a href="#home">Back to top</a>
-    </div>
+  <footer class="site-footer page">
+    <p>&copy; <span data-year></span> Jongwon Lim.</p>
+    <a href="#home">Back to top</a>
   </footer>
 </body>
 </html>

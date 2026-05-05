@@ -16,11 +16,20 @@
     root.setAttribute('data-theme', 'dark');
   }
 
+  function syncThemeToggle() {
+    if (!themeToggle) return;
+    const isDark = root.getAttribute('data-theme') === 'dark';
+    themeToggle.textContent = isDark ? 'Light' : 'Dark';
+  }
+
+  syncThemeToggle();
+
   if (themeToggle) {
     themeToggle.addEventListener('click', () => {
       const nextTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       root.setAttribute('data-theme', nextTheme);
       window.localStorage.setItem('theme', nextTheme);
+      syncThemeToggle();
     });
   }
 
