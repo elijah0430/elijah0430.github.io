@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Game - Jongwon Lim</title>
-  <meta name="description" content="A small hallucination dodge game on Jongwon Lim's homepage." />
+  <title>Play a game - Jongwon Lim</title>
+  <meta name="description" content="A small runner game on Jongwon Lim's homepage." />
   <meta name="author" content="Jongwon Lim" />
-  <meta property="og:title" content="Game - Jongwon Lim" />
-  <meta property="og:description" content="A small hallucination dodge game on Jongwon Lim's homepage." />
+  <meta property="og:title" content="Play a game - Jongwon Lim" />
+  <meta property="og:description" content="A small runner game on Jongwon Lim's homepage." />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="assets/img/profile.jpg?v=2" />
   <meta name="theme-color" content="#ffffff" />
@@ -32,7 +32,7 @@
           <a href="index.html">Home</a>
           <a href="research.html">Research</a>
           <a href="blog.html">Blog</a>
-          <a href="game.html" aria-current="page">Game</a>
+          <a href="game.html" aria-current="page">Play a game</a>
           <button class="theme-toggle" type="button" aria-label="Toggle color theme" data-theme-toggle>Dark</button>
         </div>
       </nav>
@@ -42,9 +42,9 @@
   <main id="main" class="page">
     <section class="page-hero">
       <p class="kicker">Mini Game</p>
-      <h1>Hallucination Dodge</h1>
+      <h1>Ostrich Runner</h1>
       <p>
-        Catch evidence-backed tokens, dodge hallucinations, and keep the model reliable.
+        I like ostriches. Do you?
       </p>
     </section>
 
@@ -53,14 +53,33 @@
         <h2>Play</h2>
       </div>
       <div class="section-body">
-        <div class="game-panel" data-dodge-game>
+        <div class="game-panel" data-runner-game>
           <div class="game-status">
-            <span>Score: <strong data-dodge-score>0</strong></span>
-            <span>Lives: <strong data-dodge-lives>3</strong></span>
-            <button type="button" data-dodge-start>Start</button>
+            <span>Score: <strong data-runner-score>0</strong></span>
+            <span>Distance: <strong data-runner-distance>0</strong> m</span>
+            <span>Best: <strong data-runner-best>0</strong></span>
+            <span>Speed: <strong data-runner-speed>1.0</strong>x</span>
+            <button type="button" data-runner-start>Start</button>
           </div>
-          <canvas class="dodge-canvas" width="680" height="420" data-dodge-canvas aria-label="Hallucination Dodge game board"></canvas>
-          <p class="game-message" data-dodge-message>Move with arrow keys, A/D, or your pointer.</p>
+          <div class="runner-stage">
+            <canvas class="runner-canvas" width="760" height="360" data-runner-canvas aria-label="Ostrich Runner game board"></canvas>
+            <form class="score-form score-form-overlay" data-score-form hidden>
+              <label>
+                Name for high score
+                <input name="name" maxlength="24" autocomplete="nickname" required />
+              </label>
+              <button type="submit">Save score</button>
+            </form>
+          </div>
+          <div class="runner-controls" aria-label="Game controls">
+            <button type="button" data-runner-jump>Jump</button>
+            <button type="button" data-runner-duck>Duck / Drop</button>
+          </div>
+          <p class="game-message" data-runner-message>Space or tap to jump. Press down mid-air to drop.</p>
+          <div class="high-score-board">
+            <h3>High Scores</h3>
+            <ol data-high-scores></ol>
+          </div>
         </div>
       </div>
     </section>

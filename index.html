@@ -14,6 +14,14 @@
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/styles.css" />
   <script>document.documentElement.classList.add('js');</script>
+  <script>
+    window.EMAILJS_CONFIG = {
+      publicKey: '2GaagtGvpbcJizeMo',
+      serviceId: 'service_48abim4',
+      templateId: 'template_flk9bg6',
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script defer src="assets/js/main.js"></script>
   <script type="application/ld+json">
   {
@@ -58,7 +66,7 @@
           <a href="index.html" aria-current="page">Home</a>
           <a href="research.html">Research</a>
           <a href="blog.html">Blog</a>
-          <a href="game.html">Game</a>
+          <a href="game.html">Play a game</a>
           <button class="theme-toggle" type="button" aria-label="Toggle color theme" data-theme-toggle>Dark</button>
         </div>
       </nav>
@@ -217,13 +225,14 @@
           </label>
           <label>
             Your email
-            <input name="email" type="email" autocomplete="email" />
+            <input name="email" type="email" autocomplete="email" required />
           </label>
           <label>
             Message
             <textarea name="message" rows="5" required></textarea>
           </label>
-          <button type="submit">Open email draft</button>
+          <button type="submit">Send message</button>
+          <p class="contact-status" data-contact-status role="status" aria-live="polite"></p>
         </form>
         <p class="contact-note">
           Or email me directly at <a href="mailto:elijah0430@snu.ac.kr">elijah0430@snu.ac.kr</a>.

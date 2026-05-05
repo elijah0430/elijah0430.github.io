@@ -427,6 +427,18 @@ strong {
   color: var(--text);
 }
 
+.contact-form button:disabled {
+  cursor: progress;
+  opacity: 0.65;
+}
+
+.contact-status {
+  min-height: 1.2em;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .contact-note {
   margin: 12px 0 0;
   color: var(--faint);
@@ -434,7 +446,7 @@ strong {
 }
 
 .game-panel {
-  max-width: 680px;
+  max-width: 760px;
 }
 
 .game-status {
@@ -457,17 +469,114 @@ strong {
   font-weight: 650;
 }
 
-.dodge-canvas {
+.runner-stage {
+  position: relative;
+}
+
+.runner-canvas {
+  display: block;
   width: 100%;
-  aspect-ratio: 34 / 21;
+  aspect-ratio: 19 / 9;
   border: 1px solid var(--line);
   background: var(--surface);
   touch-action: none;
 }
 
+.runner-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.runner-controls button {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--link);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+}
+
 .game-message {
   margin: 12px 0 0;
   color: var(--muted);
+}
+
+.score-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.score-form-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  z-index: 2;
+  width: min(420px, calc(100% - 28px));
+  padding: 14px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: 0 18px 48px rgba(32, 41, 56, 0.16);
+  transform: translateX(-50%);
+}
+
+.score-form[hidden] {
+  display: none;
+}
+
+.score-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.score-form input {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  padding: 0 9px;
+}
+
+.score-form button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--link);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+}
+
+.high-score-board {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.high-score-board h3 {
+  margin-bottom: 10px;
+}
+
+.high-score-board ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 22px;
+  color: var(--muted);
+}
+
+.high-score-board li::marker {
+  color: var(--faint);
 }
 
 .site-footer {
