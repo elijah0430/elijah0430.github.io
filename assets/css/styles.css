@@ -372,40 +372,22 @@ strong {
 }
 
 .note p:last-child,
-.guestbook-intro {
+.contact-intro {
   margin-bottom: 0;
 }
 
-.guestbook-intro {
+.contact-intro {
   color: var(--muted);
 }
 
-.guestbook-frame {
-  margin-top: 18px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
-}
-
-.guestbook-note {
-  margin: 12px 0 0;
-  color: var(--faint);
-  font-size: 0.86rem;
-}
-
-.guestbook-note code {
-  color: var(--text);
-  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-  font-size: 0.84rem;
-}
-
-.guestbook-form {
+.contact-form {
   display: grid;
   gap: 12px;
-  max-width: 520px;
+  max-width: 560px;
   margin-top: 16px;
 }
 
-.guestbook-form label {
+.contact-form label {
   display: grid;
   gap: 6px;
   color: var(--text);
@@ -413,8 +395,8 @@ strong {
   font-weight: 650;
 }
 
-.guestbook-form input,
-.guestbook-form textarea {
+.contact-form input,
+.contact-form textarea {
   width: 100%;
   border: 1px solid var(--line);
   background: var(--surface);
@@ -423,11 +405,11 @@ strong {
   padding: 9px 10px;
 }
 
-.guestbook-form textarea {
+.contact-form textarea {
   resize: vertical;
 }
 
-.guestbook-form button {
+.contact-form button {
   justify-self: start;
   min-height: 32px;
   padding: 0 12px;
@@ -439,32 +421,53 @@ strong {
   font-weight: 650;
 }
 
-.guestbook-list {
-  display: grid;
-  gap: 12px;
-  margin-top: 20px;
+.contact-form button:hover,
+.contact-form button:focus-visible {
+  background: var(--link-bg);
+  color: var(--text);
 }
 
-.guestbook-item {
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
-
-.guestbook-item strong {
-  display: block;
-  margin-bottom: 2px;
-}
-
-.guestbook-item time {
-  display: block;
-  margin-bottom: 6px;
+.contact-note {
+  margin: 12px 0 0;
   color: var(--faint);
-  font-size: 0.84rem;
+  font-size: 0.9rem;
 }
 
-.guestbook-item p {
-  margin-bottom: 0;
-  white-space: pre-wrap;
+.game-panel {
+  max-width: 680px;
+}
+
+.game-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: var(--muted);
+}
+
+.game-status button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--link);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+}
+
+.dodge-canvas {
+  width: 100%;
+  aspect-ratio: 34 / 21;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  touch-action: none;
+}
+
+.game-message {
+  margin: 12px 0 0;
+  color: var(--muted);
 }
 
 .site-footer {
@@ -574,4 +577,5 @@ html.js .reveal {
   .paper-links {
     gap: 6px;
   }
+
 }

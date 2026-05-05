@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Game - Jongwon Lim</title>
+  <meta name="description" content="A small hallucination dodge game on Jongwon Lim's homepage." />
+  <meta name="author" content="Jongwon Lim" />
+  <meta property="og:title" content="Game - Jongwon Lim" />
+  <meta property="og:description" content="A small hallucination dodge game on Jongwon Lim's homepage." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="assets/img/profile.jpg?v=2" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <script>document.documentElement.classList.add('js');</script>
+  <script defer src="assets/js/main.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="page">
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="index.html" class="brand">Jongwon Lim</a>
+        <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle>
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="nav-links" data-nav-panel>
+          <a href="index.html">Home</a>
+          <a href="research.html">Research</a>
+          <a href="blog.html">Blog</a>
+          <a href="game.html" aria-current="page">Game</a>
+          <button class="theme-toggle" type="button" aria-label="Toggle color theme" data-theme-toggle>Dark</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <section class="page-hero">
+      <p class="kicker">Mini Game</p>
+      <h1>Hallucination Dodge</h1>
+      <p>
+        Catch evidence-backed tokens, dodge hallucinations, and keep the model reliable.
+      </p>
+    </section>
+
+    <section class="section">
+      <div class="section-title">
+        <h2>Play</h2>
+      </div>
+      <div class="section-body">
+        <div class="game-panel" data-dodge-game>
+          <div class="game-status">
+            <span>Score: <strong data-dodge-score>0</strong></span>
+            <span>Lives: <strong data-dodge-lives>3</strong></span>
+            <button type="button" data-dodge-start>Start</button>
+          </div>
+          <canvas class="dodge-canvas" width="680" height="420" data-dodge-canvas aria-label="Hallucination Dodge game board"></canvas>
+          <p class="game-message" data-dodge-message>Move with arrow keys, A/D, or your pointer.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer page">
+    <p>&copy; <span data-year></span> Jongwon Lim.</p>
+    <a href="index.html">Home</a>
+  </footer>
+</body>
+</html>

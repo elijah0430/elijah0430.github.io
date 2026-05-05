@@ -33,70 +33,205 @@
     });
   }
 
-  const guestbookThread = document.querySelector('[data-guestbook-thread]');
-  const guestbookLocal = document.querySelector('[data-guestbook-local]');
-  const guestbookForm = document.querySelector('[data-guestbook-form]');
-  const guestbookList = document.querySelector('[data-guestbook-list]');
-
-  function renderLocalGuestbook() {
-    if (!guestbookList) return;
-    const notes = JSON.parse(window.localStorage.getItem('guestbook-notes') || '[]');
-    guestbookList.innerHTML = notes.map((note) => `
-      <article class="guestbook-item">
-        <strong>${escapeHtml(note.name)}</strong>
-        <time>${escapeHtml(note.date)}</time>
-        <p>${escapeHtml(note.message)}</p>
-      </article>
-    `).join('');
-  }
-
-  function escapeHtml(value) {
-    return String(value)
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
-
-  if (guestbookThread) {
-    if (window.location.protocol === 'file:') {
-      guestbookThread.hidden = true;
-      if (guestbookLocal) {
-        guestbookLocal.hidden = false;
-      }
-      renderLocalGuestbook();
-    } else {
-      const script = document.createElement('script');
-      script.src = 'https://cusdis.com/js/cusdis.es.js';
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
-    }
-  }
-
-  if (guestbookForm) {
-    guestbookForm.addEventListener('submit', (event) => {
+  const contactForm = document.querySelector('[data-contact-form]');
+  if (contactForm) {
+    contactForm.addEventListener('submit', (event) => {
       event.preventDefault();
-      const formData = new FormData(guestbookForm);
-      const note = {
-        name: String(formData.get('name') || '').trim(),
-        message: String(formData.get('message') || '').trim(),
-        date: new Date().toLocaleDateString(undefined, {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-        }),
-      };
-
-      if (!note.name || !note.message) return;
-
-      const notes = JSON.parse(window.localStorage.getItem('guestbook-notes') || '[]');
-      notes.unshift(note);
-      window.localStorage.setItem('guestbook-notes', JSON.stringify(notes.slice(0, 20)));
-      guestbookForm.reset();
-      renderLocalGuestbook();
+      const formData = new FormData(contactForm);
+      const name = String(formData.get('name') || '').trim();
+      const email = String(formData.get('email') || '').trim();
+      const message = String(formData.get('message') || '').trim();
+      const body = [
+        name ? `Name: ${name}` : '',
+        email ? `Email: ${email}` : '',
+        '',
+        message,
+      ].filter(Boolean).join('\n');
+      const mailto = `mailto:elijah0430@snu.ac.kr?subject=${encodeURIComponent('Message from homepage')}&body=${encodeURIComponent(body)}`;
+      window.location.href = mailto;
     });
+  }
+
+  const dodgeGame = document.querySelector('[data-dodge-game]');
+  if (dodgeGame) {
+    const canvas = dodgeGame.querySelector('[data-dodge-canvas]');
+    const scoreEl = dodgeGame.querySelector('[data-dodge-score]');
+    const livesEl = dodgeGame.querySelector('[data-dodge-lives]');
+    const messageEl = dodgeGame.querySelector('[data-dodge-message]');
+    const startButton = dodgeGame.querySelector('[data-dodge-start]');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    const goodTokens = ['Evidence', 'Mechanism', 'Retrieval', 'Profile', 'Factuality'];
+    const badTokens = ['Hallucination', 'Leakage', 'Bias'];
+    const state = {
+      running: false,
+      score: 0,
+      lives: 3,
+      playerX: 320,
+      targetX: 320,
+      objects: [],
+      lastTime: 0,
+      spawnTimer: 0,
+    };
+
+    function setCanvasSize() {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.max(320, Math.floor(rect.width * ratio));
+      canvas.height = Math.max(220, Math.floor(rect.height * ratio));
+      if (ctx) ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function drawGame() {
+      if (!canvas || !ctx) return;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = getComputedStyle(root).getPropertyValue('--surface').trim();
+      ctx.fillRect(0, 0, width, height);
+      ctx.strokeStyle = getComputedStyle(root).getPropertyValue('--line').trim();
+      ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
+
+      state.objects.forEach((object) => {
+        ctx.fillStyle = object.good ? '#1d5f8a' : '#a43f3f';
+        ctx.fillRect(object.x - 36, object.y - 15, 72, 30);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(object.label, object.x, object.y);
+      });
+
+      ctx.fillStyle = '#202938';
+      ctx.fillRect(state.playerX - 42, height - 32, 84, 14);
+      ctx.fillStyle = '#1d5f8a';
+      ctx.fillRect(state.playerX - 28, height - 48, 56, 16);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '12px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('MODEL', state.playerX, height - 40);
+    }
+
+    function updateStatus() {
+      if (scoreEl) scoreEl.textContent = String(state.score);
+      if (livesEl) livesEl.textContent = String(state.lives);
+    }
+
+    function spawnObject() {
+      if (!canvas) return;
+      const good = Math.random() > 0.34;
+      const labels = good ? goodTokens : badTokens;
+      state.objects.push({
+        x: 48 + Math.random() * Math.max(100, canvas.clientWidth - 96),
+        y: -20,
+        speed: 88 + Math.random() * 80 + state.score * 1.8,
+        good,
+        label: labels[Math.floor(Math.random() * labels.length)],
+      });
+    }
+
+    function endGame(text) {
+      state.running = false;
+      if (messageEl) messageEl.textContent = text;
+      if (startButton) startButton.textContent = 'Restart';
+      drawGame();
+    }
+
+    function step(timestamp) {
+      if (!state.running || !canvas) return;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const delta = Math.min(32, timestamp - state.lastTime || 16) / 1000;
+      state.lastTime = timestamp;
+      state.spawnTimer -= delta;
+
+      state.playerX += (state.targetX - state.playerX) * Math.min(1, delta * 12);
+      state.playerX = Math.max(42, Math.min(width - 42, state.playerX));
+
+      if (state.spawnTimer <= 0) {
+        spawnObject();
+        state.spawnTimer = Math.max(0.42, 1.05 - state.score * 0.015);
+      }
+
+      state.objects = state.objects.filter((object) => {
+        object.y += object.speed * delta;
+        const caught = object.y > height - 58
+          && object.y < height - 18
+          && Math.abs(object.x - state.playerX) < 62;
+
+        if (caught) {
+          if (object.good) {
+            state.score += 1;
+          } else {
+            state.lives -= 1;
+          }
+          return false;
+        }
+
+        if (object.y > height + 30) {
+          if (object.good) state.lives -= 1;
+          return false;
+        }
+
+        return true;
+      });
+
+      updateStatus();
+      drawGame();
+
+      if (state.lives <= 0) {
+        endGame(`Game over. Final score: ${state.score}.`);
+        return;
+      }
+
+      window.requestAnimationFrame(step);
+    }
+
+    function startGame() {
+      if (!canvas || !ctx) return;
+      setCanvasSize();
+      state.running = true;
+      state.score = 0;
+      state.lives = 3;
+      state.playerX = canvas.clientWidth / 2;
+      state.targetX = state.playerX;
+      state.objects = [];
+      state.lastTime = 0;
+      state.spawnTimer = 0.2;
+      if (messageEl) messageEl.textContent = 'Catch useful tokens. Avoid hallucinations.';
+      if (startButton) startButton.textContent = 'Restart';
+      updateStatus();
+      window.requestAnimationFrame(step);
+    }
+
+    if (canvas) {
+      setCanvasSize();
+      drawGame();
+      canvas.addEventListener('pointermove', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        state.targetX = event.clientX - rect.left;
+      });
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (!canvas) return;
+      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') {
+        state.targetX -= 42;
+      }
+      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') {
+        state.targetX += 42;
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      setCanvasSize();
+      drawGame();
+    });
+
+    if (startButton) {
+      startButton.addEventListener('click', startGame);
+    }
   }
 
   function setHeaderState() {

@@ -58,6 +58,7 @@
           <a href="index.html" aria-current="page">Home</a>
           <a href="research.html">Research</a>
           <a href="blog.html">Blog</a>
+          <a href="game.html">Game</a>
           <button class="theme-toggle" type="button" aria-label="Toggle color theme" data-theme-toggle>Dark</button>
         </div>
       </nav>
@@ -68,7 +69,7 @@
     <section class="intro" id="home">
       <img class="portrait" src="assets/img/profile.jpg?v=2" alt="Jongwon Lim" />
       <div>
-        <p class="kicker">Ph.D. Student, Data Science</p>
+        <p class="kicker">Ph.D. Student</p>
         <h1>Jongwon Lim</h1>
         <p class="affiliation">
           Graduate School of Data Science, Seoul National University
@@ -201,42 +202,32 @@
       </div>
     </section>
 
-    <section class="section" id="guestbook">
+    <section class="section" id="contact">
       <div class="section-title">
-        <h2>Guestbook</h2>
+        <h2>Contact Me</h2>
       </div>
       <div class="section-body">
-        <p class="guestbook-intro">
-          Leave a note, question, or reading recommendation. No GitHub sign-in required.
+        <p class="contact-intro">
+          Feel free to reach out by email.
         </p>
-        <div class="guestbook-frame">
-          <div
-            id="cusdis_thread"
-            data-guestbook-thread
-            data-host="https://cusdis.com"
-            data-app-id="bc4aa7a1-00c1-4e29-8082-a6c6ef0b23c4"
-            data-page-id="jongwon-lim-guestbook"
-            data-page-url="https://elijah0430.github.io/"
-            data-page-title="Jongwon Lim Guestbook">
-          </div>
-          <div class="guestbook-local" data-guestbook-local hidden>
-            <p class="guestbook-note">
-              Local preview mode. These notes are saved only in this browser. The deployed site uses the public guestbook.
-            </p>
-            <form class="guestbook-form" data-guestbook-form>
-              <label>
-                Name
-                <input name="name" autocomplete="name" required />
-              </label>
-              <label>
-                Message
-                <textarea name="message" rows="4" required></textarea>
-              </label>
-              <button type="submit">Leave note</button>
-            </form>
-            <div class="guestbook-list" data-guestbook-list></div>
-          </div>
-        </div>
+        <form class="contact-form" data-contact-form>
+          <label>
+            Your name
+            <input name="name" autocomplete="name" />
+          </label>
+          <label>
+            Your email
+            <input name="email" type="email" autocomplete="email" />
+          </label>
+          <label>
+            Message
+            <textarea name="message" rows="5" required></textarea>
+          </label>
+          <button type="submit">Open email draft</button>
+        </form>
+        <p class="contact-note">
+          Or email me directly at <a href="mailto:elijah0430@snu.ac.kr">elijah0430@snu.ac.kr</a>.
+        </p>
       </div>
     </section>
 
