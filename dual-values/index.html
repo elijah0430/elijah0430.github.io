@@ -10,20 +10,20 @@
     >
     <style>
       :root {
-        --bg: #ffffff;
-        --paper: #ffffff;
-        --ink: #202938;
-        --muted: #667085;
-        --line: #e4e7ec;
-        --green: #1d5f8a;
-        --green-dark: #164766;
-        --plum: #667085;
-        --rust: #667085;
+        --bg: #f6f4ef;
+        --paper: #fffdf8;
+        --ink: #141414;
+        --muted: #64615c;
+        --line: #ded8cc;
+        --green: #246b59;
+        --green-dark: #184c40;
+        --plum: #7568a6;
+        --rust: #ae5639;
         --gold: #d99b2b;
         --blue: #315f82;
-        --soft-green: #eef6fa;
-        --soft-plum: #f2f4f7;
-        --shadow: 0 14px 42px rgba(32, 41, 56, 0.1);
+        --soft-green: #e8f0ec;
+        --soft-plum: #ece9f5;
+        --shadow: 0 18px 58px rgba(38, 34, 28, 0.12);
       }
 
       * {
@@ -38,7 +38,7 @@
         margin: 0;
         background: var(--bg);
         color: var(--ink);
-        font-family: Arial, Helvetica, sans-serif;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         font-size: 16px;
         line-height: 1.58;
       }
@@ -67,8 +67,8 @@
         gap: 20px;
         min-height: 66px;
         padding: 0 max(22px, calc((100vw - 1120px) / 2));
-        border-bottom: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.94);
+        border-bottom: 1px solid rgba(20, 20, 20, 0.09);
+        background: rgba(246, 244, 239, 0.92);
         backdrop-filter: blur(14px);
       }
 
@@ -88,7 +88,7 @@
 
       .nav-affiliation {
         max-width: min(580px, 52vw);
-        color: var(--muted);
+        color: #5d574e;
         font-size: 12px;
         font-weight: 650;
         line-height: 1.25;
@@ -114,7 +114,7 @@
       }
 
       .nav-links a {
-        color: var(--muted);
+        color: #45433f;
       }
 
       .hero {
@@ -141,16 +141,17 @@
 
       h1 {
         margin: 0;
-        font-size: clamp(36px, 5.4vw, 64px);
-        font-weight: 750;
-        line-height: 1.04;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(38px, 6vw, 70px);
+        font-weight: 500;
+        line-height: 0.98;
         letter-spacing: 0;
       }
 
       .subtitle {
         max-width: 740px;
         margin: 20px 0 0;
-        color: var(--ink);
+        color: #302f2c;
         font-size: clamp(17px, 2vw, 21px);
         line-height: 1.48;
       }
@@ -357,8 +358,9 @@
 
       h2 {
         margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
         font-size: clamp(30px, 4vw, 46px);
-        font-weight: 750;
+        font-weight: 500;
         line-height: 1.05;
         letter-spacing: 0;
       }
@@ -375,7 +377,7 @@
 
       .lead {
         margin: 0;
-        color: var(--ink);
+        color: #302f2c;
         font-size: 18px;
         line-height: 1.55;
       }

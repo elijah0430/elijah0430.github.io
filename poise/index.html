@@ -10,18 +10,18 @@
     >
     <style>
       :root {
-        --bg: #ffffff;
+        --bg: #f5f7f4;
         --paper: #ffffff;
-        --ink: #202938;
-        --muted: #667085;
-        --line: #e4e7ec;
-        --wash: #eef6fa;
-        --green: #1d5f8a;
-        --green-dark: #164766;
-        --rust: #667085;
+        --ink: #101612;
+        --muted: #626a64;
+        --line: #d9e0da;
+        --wash: #eaf1ed;
+        --green: #2e6d56;
+        --green-dark: #1f4d3d;
+        --rust: #a64e37;
         --blue: #315f83;
-        --charcoal: #202938;
-        --shadow: 0 14px 42px rgba(32, 41, 56, 0.1);
+        --charcoal: #18201b;
+        --shadow: 0 18px 55px rgba(26, 35, 30, 0.12);
       }
 
       * {
@@ -36,7 +36,7 @@
         margin: 0;
         background: var(--bg);
         color: var(--ink);
-        font-family: Arial, Helvetica, sans-serif;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         font-size: 16px;
         line-height: 1.6;
       }
@@ -65,8 +65,8 @@
         gap: 22px;
         min-height: 66px;
         padding: 0 max(22px, calc((100vw - 1080px) / 2));
-        border-bottom: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.94);
+        border-bottom: 1px solid rgba(16, 22, 18, 0.09);
+        background: rgba(245, 247, 244, 0.92);
         backdrop-filter: blur(16px);
       }
 
@@ -86,7 +86,7 @@
 
       .nav-affiliation {
         max-width: min(560px, 52vw);
-        color: var(--muted);
+        color: #526158;
         font-size: 12px;
         font-weight: 650;
         line-height: 1.25;
@@ -112,7 +112,7 @@
       }
 
       .nav-links a {
-        color: var(--muted);
+        color: #425047;
       }
 
       .hero {
@@ -140,17 +140,19 @@
         max-width: 850px;
         margin: 16px auto 0;
         color: var(--green-dark);
+        font-family: Georgia, "Times New Roman", serif;
         font-size: clamp(22px, 3vw, 32px);
-        font-weight: 650;
+        font-weight: 500;
         line-height: 1.16;
         letter-spacing: 0;
       }
 
       h1 {
         margin: 0 auto;
-        font-size: clamp(36px, 5.4vw, 64px);
-        font-weight: 750;
-        line-height: 1.04;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(38px, 6vw, 72px);
+        font-weight: 500;
+        line-height: 0.98;
         letter-spacing: 0;
       }
 
@@ -161,21 +163,21 @@
         border: 1px solid var(--line);
         border-radius: 10px;
         background: rgba(255, 255, 255, 0.76);
-        color: var(--ink);
+        color: #2d3730;
         font-size: 16px;
         line-height: 1.5;
-        box-shadow: 0 10px 28px rgba(32, 41, 56, 0.06);
+        box-shadow: 0 10px 28px rgba(25, 32, 28, 0.06);
       }
 
       .authors {
         max-width: 860px;
         margin: 20px auto 0;
-        color: var(--ink);
+        color: #26302a;
         font-size: 16px;
       }
 
       .authors a {
-        border-bottom: 1px solid rgba(29, 95, 138, 0.34);
+        border-bottom: 1px solid rgba(46, 109, 86, 0.34);
       }
 
       .notes {
@@ -266,7 +268,7 @@
 
       .score strong {
         display: block;
-        color: var(--ink);
+        color: #26302a;
         font-size: 13px;
         line-height: 1.2;
       }
@@ -328,8 +330,9 @@
 
       h2 {
         margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
         font-size: clamp(30px, 4vw, 46px);
-        font-weight: 750;
+        font-weight: 500;
         line-height: 1.05;
         letter-spacing: 0;
       }
@@ -346,7 +349,7 @@
 
       .lead {
         margin: 0;
-        color: var(--ink);
+        color: #2d3730;
         font-size: 18px;
         line-height: 1.55;
       }
@@ -360,14 +363,14 @@
 
       .claim {
         padding: clamp(22px, 3vw, 34px);
-        border: 1px solid var(--line);
         border-radius: 10px;
-        background: #f8fafc;
-        color: var(--ink);
+        background: var(--charcoal);
+        color: #f2faf4;
       }
 
       .claim p {
         margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
         font-size: clamp(24px, 3vw, 34px);
         line-height: 1.16;
       }
@@ -375,8 +378,8 @@
       .claim span {
         display: block;
         margin-top: 16px;
-        color: var(--muted);
-        font-family: Arial, Helvetica, sans-serif;
+        color: #b7cabf;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
         font-size: 14px;
         line-height: 1.45;
       }
