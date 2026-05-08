@@ -629,13 +629,15 @@
           <div class="plain-summary" id="plain">
             <h2>What is this paper about?</h2>
             <p>
-              When we train a language model on math or reasoning tasks, a checker often only says
-              whether the final answer is right or wrong. That feedback is useful, but noisy. Existing
-              methods reduce the noise by either training another large model as a critic, or by asking
-              the same question many times and comparing the answers. POISE asks a simpler question:
-              can the model look at its own internal signals and estimate how well it is likely to do?
-              The answer is yes. POISE uses the actor model's own hidden states and uncertainty signals
-              to build a cheap value estimate during reinforcement learning.
+              Reinforcement learning with verifiable rewards trains language models from outcome
+              feedback, such as whether a final math answer is correct. This feedback is powerful,
+              but high variance: two responses to the same prompt may receive very different rewards,
+              and noisy updates can make training unstable. Existing methods reduce this variance by
+              estimating a baseline, either with a separate critic model or with multiple rollouts from
+              the same prompt. POISE studies whether the actor model already contains enough
+              information to estimate this baseline itself. It trains a lightweight value estimator on
+              hidden states and entropy statistics produced during the actor's own forward pass, then
+              uses a cross-rollout construction to keep the policy-gradient update unbiased.
             </p>
           </div>
 
