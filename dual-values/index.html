@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dual Mechanisms of Value Expression</title>
+    <meta
+      name="description"
+      content="Project page for Dual Mechanisms of Value Expression: Intrinsic vs. Prompted Values in Large Language Models."
+    >
+    <style>
+      :root {
+        --bg: #ffffff;
+        --paper: #ffffff;
+        --ink: #202938;
+        --muted: #667085;
+        --line: #e4e7ec;
+        --green: #1d5f8a;
+        --green-dark: #164766;
+        --plum: #667085;
+        --rust: #667085;
+        --gold: #d99b2b;
+        --blue: #315f82;
+        --soft-green: #eef6fa;
+        --soft-plum: #f2f4f7;
+        --shadow: 0 14px 42px rgba(32, 41, 56, 0.1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 16px;
+        line-height: 1.58;
+      }
+
+      a {
+        color: var(--green);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        min-height: 66px;
+        padding: 0 max(22px, calc((100vw - 1120px) / 2));
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(14px);
+      }
+
+      .nav-identity {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .brand {
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 850;
+        letter-spacing: 0.04em;
+      }
+
+      .nav-affiliation {
+        max-width: min(580px, 52vw);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 650;
+        line-height: 1.25;
+      }
+
+      .nav-affiliation b {
+        color: var(--green-dark);
+        font-weight: 900;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+
+      .nav-affiliation span {
+        display: block;
+      }
+
+      .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 17px;
+        font-size: 13px;
+        font-weight: 720;
+      }
+
+      .nav-links a {
+        color: var(--muted);
+      }
+
+      .hero {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 54px 22px 44px;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.58fr) minmax(360px, 0.42fr);
+        gap: 40px;
+        align-items: center;
+      }
+
+      .kicker {
+        margin: 0 0 13px;
+        color: var(--rust);
+        font-size: 12px;
+        font-weight: 850;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(36px, 5.4vw, 64px);
+        font-weight: 750;
+        line-height: 1.04;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        max-width: 740px;
+        margin: 20px 0 0;
+        color: var(--ink);
+        font-size: clamp(17px, 2vw, 21px);
+        line-height: 1.48;
+      }
+
+      .authors {
+        margin: 20px 0 0;
+        color: #252420;
+        font-size: 16px;
+      }
+
+      .authors a {
+        border-bottom: 1px solid rgba(36, 107, 89, 0.35);
+      }
+
+      .notes {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .affiliation {
+        max-width: 720px;
+        margin: 10px 0 0;
+        color: #565149;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 24px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 0 17px;
+        border: 1px solid var(--green);
+        border-radius: 5px;
+        background: var(--green);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 780;
+      }
+
+      .button:hover {
+        background: var(--green-dark);
+        text-decoration: none;
+      }
+
+      .button.secondary {
+        background: transparent;
+        color: var(--green);
+      }
+
+      .button.secondary:hover {
+        background: var(--soft-green);
+      }
+
+      .mechanism-card {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+
+      .mechanism-header {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .mechanism-header div {
+        padding: 18px;
+      }
+
+      .mechanism-header div:first-child {
+        border-right: 1px solid var(--line);
+        background: var(--soft-green);
+      }
+
+      .mechanism-header div:last-child {
+        background: var(--soft-plum);
+      }
+
+      .mechanism-header strong {
+        display: block;
+        font-size: 18px;
+        line-height: 1.15;
+      }
+
+      .mechanism-header span {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .mechanism-body {
+        padding: 20px;
+      }
+
+      .claim-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 14px;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .claim-box {
+        padding: 14px;
+        border-radius: 8px;
+        background: #f8f7f3;
+      }
+
+      .claim-box b {
+        display: block;
+        color: var(--ink);
+        font-size: 22px;
+        line-height: 1;
+      }
+
+      .claim-box span {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .arrow {
+        color: #8e887f;
+        font-size: 18px;
+        font-weight: 850;
+      }
+
+      .mechanism-body p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .teaser {
+        max-width: 1120px;
+        margin: 26px auto 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      .teaser img {
+        width: 100%;
+      }
+
+      .caption {
+        margin: 0;
+        padding: 12px 16px 15px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      main {
+        background: #fffdfa;
+        border-top: 1px solid var(--line);
+      }
+
+      section {
+        padding: 58px max(22px, calc((100vw - 1120px) / 2));
+        border-bottom: 1px solid var(--line);
+      }
+
+      section:last-child {
+        border-bottom: 0;
+      }
+
+      .section-head {
+        display: grid;
+        grid-template-columns: minmax(230px, 0.32fr) minmax(0, 0.68fr);
+        gap: 44px;
+        align-items: start;
+        margin-bottom: 26px;
+      }
+
+      .eyebrow {
+        margin: 0 0 9px;
+        color: var(--rust);
+        font-size: 12px;
+        font-weight: 850;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: clamp(30px, 4vw, 46px);
+        font-weight: 750;
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      h3 {
+        margin: 0 0 7px;
+        font-size: 17px;
+        line-height: 1.25;
+      }
+
+      p {
+        margin: 0 0 15px;
+      }
+
+      .lead {
+        margin: 0;
+        color: var(--ink);
+        font-size: 18px;
+        line-height: 1.55;
+      }
+
+      .three-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 15px;
+      }
+
+      .tile {
+        min-height: 175px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #fff;
+      }
+
+      .tile .mark {
+        display: inline-flex;
+        align-items: center;
+        min-height: 26px;
+        margin-bottom: 14px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: var(--soft-green);
+        color: var(--green-dark);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .tile:nth-child(2) .mark {
+        background: #f5eadf;
+        color: #89442e;
+      }
+
+      .tile:nth-child(3) .mark {
+        background: var(--soft-plum);
+        color: #514681;
+      }
+
+      .tile p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .method-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.67fr) minmax(280px, 0.33fr);
+        gap: 26px;
+        align-items: start;
+      }
+
+      .figure {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 12px 34px rgba(38, 34, 28, 0.08);
+      }
+
+      .figure img {
+        width: 100%;
+      }
+
+      .steps {
+        display: grid;
+        gap: 12px;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr);
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .step:first-child {
+        padding-top: 0;
+      }
+
+      .step:last-child {
+        border-bottom: 0;
+      }
+
+      .step b {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 31px;
+        height: 31px;
+        border-radius: 50%;
+        background: var(--rust);
+        color: #fff;
+        font-size: 13px;
+      }
+
+      .step p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.48;
+      }
+
+      .evidence-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.5fr) minmax(0, 0.5fr);
+        gap: 18px;
+      }
+
+      .evidence-grid .figure img {
+        padding: 16px;
+      }
+
+      .result-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+      }
+
+      .result-card {
+        padding: 19px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+      }
+
+      .result-card .label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 25px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: var(--soft-green);
+        color: var(--green-dark);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .metric {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr) 62px;
+        gap: 10px;
+        align-items: center;
+        margin-top: 11px;
+        color: #383630;
+        font-size: 13px;
+        font-weight: 760;
+      }
+
+      .track {
+        overflow: hidden;
+        height: 12px;
+        border-radius: 999px;
+        background: #e7e3db;
+      }
+
+      .bar {
+        height: 100%;
+        border-radius: inherit;
+        background: var(--green);
+      }
+
+      .bar.prompted {
+        background: var(--plum);
+      }
+
+      .result-card p {
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.48;
+      }
+
+      .analysis-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.56fr) minmax(0, 0.44fr);
+        gap: 20px;
+        align-items: start;
+      }
+
+      .analysis-grid .figure img {
+        padding: 14px;
+      }
+
+      .note-box {
+        padding: 22px;
+        border-left: 4px solid var(--plum);
+        background: var(--soft-plum);
+      }
+
+      .note-box p {
+        color: #3b3651;
+      }
+
+      .note-box p:last-child {
+        margin-bottom: 0;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 18px 0 0;
+        padding: 18px;
+        border-radius: 10px;
+        background: #181713;
+        color: #f5f0e7;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      }
+
+      .citation {
+        background: #181713;
+        color: #fff8ed;
+      }
+
+      .citation .eyebrow {
+        color: #d99b82;
+      }
+
+      .citation .lead {
+        color: #d9d0c1;
+      }
+
+      .citation pre {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      footer {
+        padding: 24px max(22px, calc((100vw - 1120px) / 2)) 36px;
+        background: #181713;
+        color: #c8beaf;
+        font-size: 13px;
+      }
+
+      @media (max-width: 920px) {
+        .nav {
+          align-items: flex-start;
+          flex-direction: column;
+          padding: 14px 22px;
+        }
+
+        .nav-links {
+          width: 100%;
+          overflow-x: auto;
+          padding-bottom: 2px;
+        }
+
+        .nav-affiliation {
+          max-width: none;
+          white-space: normal;
+        }
+
+        .hero-grid,
+        .section-head,
+        .three-grid,
+        .method-grid,
+        .evidence-grid,
+        .result-grid,
+        .analysis-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero {
+          padding-top: 38px;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .actions {
+          display: grid;
+        }
+
+        .button {
+          width: 100%;
+        }
+
+        .claim-row {
+          grid-template-columns: 1fr;
+        }
+
+        .arrow {
+          display: none;
+        }
+
+        .metric {
+          grid-template-columns: 78px minmax(0, 1fr) 54px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav" aria-label="Primary navigation">
+      <div class="nav-identity">
+        <a class="brand" href="#top">VALUE MECHANISMS</a>
+        <span class="nav-affiliation">
+          <span><b>H</b>uman <b>O</b>riented <b>L</b>anguage <b>I</b>ntelligence Lab (HOLI)</span>
+          <span>Graduate School of Data Science, Seoul National University</span>
+        </span>
+      </div>
+      <div class="nav-links">
+        <a href="#idea">Idea</a>
+        <a href="#method">Method</a>
+        <a href="#evidence">Evidence</a>
+        <a href="#behavior">Behavior</a>
+        <a href="#analysis">Analysis</a>
+        <a href="#cite">Cite</a>
+      </div>
+    </nav>
+
+    <header class="hero" id="top">
+      <div class="hero-grid">
+        <div>
+          <p class="kicker">Intrinsic vs. Prompted Values in LLMs</p>
+          <h1>Dual Mechanisms of Value Expression</h1>
+          <p class="subtitle">
+            Large language models can express values through learned, intrinsic tendencies
+            or through explicit prompting. This work asks whether those two routes use the
+            same internal mechanisms or distinct ones.
+          </p>
+          <p class="authors">
+            Jongwook Han<sup>*</sup>, Jongwon Lim<sup>*</sup>, Injin Kong,
+            <a href="https://yohanjo.github.io/lab.html">Yohan Jo</a><sup>&dagger;</sup>
+          </p>
+          <p class="notes"><sup>*</sup>Equal contribution. <sup>&dagger;</sup>Corresponding author.</p>
+          <div class="actions">
+            <a class="button" href="assets/dual-mechanisms-paper.pdf">Paper PDF</a>
+            <a class="button secondary" href="https://arxiv.org/pdf/2509.24319">arXiv</a>
+            <a class="button secondary" href="https://yohanjo.github.io/lab.html">Lab</a>
+          </div>
+        </div>
+
+        <aside class="mechanism-card" aria-label="Intrinsic and prompted value mechanism summary">
+          <div class="mechanism-header">
+            <div>
+              <strong>Intrinsic</strong>
+              <span>Values expressed through the model's learned tendencies.</span>
+            </div>
+            <div>
+              <strong>Prompted</strong>
+              <span>Values elicited by explicit system or user instructions.</span>
+            </div>
+          </div>
+          <div class="mechanism-body">
+            <div class="claim-row">
+              <div class="claim-box">
+                <b>Diversity</b>
+                <span>intrinsic &gt; prompted</span>
+              </div>
+              <div class="arrow">vs.</div>
+              <div class="claim-box">
+                <b>Steering</b>
+                <span>prompted &gt; intrinsic</span>
+              </div>
+            </div>
+            <p>
+              The mechanisms overlap, but their unique components play different roles:
+              intrinsic components broaden expression, while prompted components strengthen compliance.
+            </p>
+          </div>
+        </aside>
+      </div>
+
+      <figure class="teaser">
+        <img src="assets/pipeline.png" alt="Pipeline for extracting intrinsic and prompted value vectors">
+        <figcaption class="caption">
+          The pipeline generates intrinsic and prompted responses, classifies whether a target value is expressed,
+          and extracts value vectors from activation differences.
+        </figcaption>
+      </figure>
+    </header>
+
+    <main>
+      <section id="idea">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Core Question</p>
+            <h2>Do prompted values reuse intrinsic values?</h2>
+          </div>
+          <p class="lead">
+            Value alignment often assumes that prompting a model to express a value uses roughly
+            the same mechanism as the model's learned value tendency. This paper tests that assumption
+            mechanistically, using value vectors in the residual stream and value neurons in MLP layers.
+          </p>
+        </div>
+
+        <div class="three-grid">
+          <article class="tile">
+            <span class="mark">Shared</span>
+            <h3>Common components induce value expression</h3>
+            <p>Intrinsic and prompted mechanisms partially overlap at both the vector level and the neuron level.</p>
+          </article>
+          <article class="tile">
+            <span class="mark">Intrinsic-unique</span>
+            <h3>Natural expression is more diverse</h3>
+            <p>Intrinsic components promote broader vocabulary and higher lexical diversity in generated responses.</p>
+          </article>
+          <article class="tile">
+            <span class="mark">Prompted-unique</span>
+            <h3>Instruction following is stronger</h3>
+            <p>Prompted components increase steerability and compliance with explicit directions, even outside value tasks.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="method">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Method</p>
+            <h2>Vectors first, neurons second</h2>
+          </div>
+          <p class="lead">
+            The method extracts one value direction per Schwartz value and expression type,
+            then decomposes those directions into shared and unique axes. MLP neurons are assigned
+            functional roles by their alignment with those axes.
+          </p>
+        </div>
+
+        <div class="method-grid">
+          <figure class="figure">
+            <img src="assets/neuron-geometry.png" alt="Geometric interpretation of shared and unique value neurons">
+            <figcaption class="caption">
+              Value neurons are projected into the subspace spanned by intrinsic and prompted value vectors.
+            </figcaption>
+          </figure>
+
+          <div class="steps">
+            <div class="step">
+              <b>1</b>
+              <div>
+                <h3>Collect value responses</h3>
+                <p>Generate responses with no value prompt for intrinsic expression and with value-targeting prompts for prompted expression.</p>
+              </div>
+            </div>
+            <div class="step">
+              <b>2</b>
+              <div>
+                <h3>Label expression</h3>
+                <p>Classify whether each response expresses the target value, producing expressed and unexpressed sets.</p>
+              </div>
+            </div>
+            <div class="step">
+              <b>3</b>
+              <div>
+                <h3>Extract directions</h3>
+                <p>Use difference-in-means over residual stream activations to obtain value vectors.</p>
+              </div>
+            </div>
+            <div class="step">
+              <b>4</b>
+              <div>
+                <h3>Decompose neurons</h3>
+                <p>Identify shared, intrinsic-unique, and prompted-unique neurons from MLP output directions.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="evidence">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Evidence</p>
+            <h2>Overlap exists, but it is not the whole story</h2>
+          </div>
+          <p class="lead">
+            Intrinsic and prompted value vectors show positive similarity, and some neurons are shared.
+            The paper then isolates the non-overlapping components to explain why the two routes behave differently.
+          </p>
+        </div>
+
+        <div class="evidence-grid">
+          <figure class="figure">
+            <img src="assets/overlap-heatmap.png" alt="Cosine similarity heatmap between intrinsic and prompted value vectors">
+            <figcaption class="caption">
+              Cosine similarity between intrinsic and prompted value vectors at layer 14.
+            </figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="assets/neuron-distribution.png" alt="Distribution of shared and unique value neurons by layer">
+            <figcaption class="caption">
+              Shared and unique neurons appear across model layers for a representative value.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="behavior">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Behavior</p>
+            <h2>Prompting steers harder; intrinsic values speak more broadly</h2>
+          </div>
+          <p class="lead">
+            The behavioral split is the page's main takeaway: prompted mechanisms are more steerable,
+            while intrinsic mechanisms produce richer and more varied language.
+          </p>
+        </div>
+
+        <div class="result-grid">
+          <article class="result-card">
+            <div class="label">
+              <h3>PVQ steering, questionnaire</h3>
+              <span class="tag">higher is better</span>
+            </div>
+            <div class="metric">
+              <span>Intrinsic</span>
+              <div class="track"><div class="bar" style="width: 78.7%"></div></div>
+              <span>+1.74</span>
+            </div>
+            <div class="metric">
+              <span>Prompted</span>
+              <div class="track"><div class="bar prompted" style="width: 100%"></div></div>
+              <span>+2.21</span>
+            </div>
+            <p>Mean score delta over five languages and ten Schwartz values with Qwen2.5-7B-Instruct.</p>
+          </article>
+
+          <article class="result-card">
+            <div class="label">
+              <h3>PVQ steering, free-form</h3>
+              <span class="tag">higher is better</span>
+            </div>
+            <div class="metric">
+              <span>Intrinsic</span>
+              <div class="track"><div class="bar" style="width: 94.2%"></div></div>
+              <span>+0.98</span>
+            </div>
+            <div class="metric">
+              <span>Prompted</span>
+              <div class="track"><div class="bar prompted" style="width: 100%"></div></div>
+              <span>+1.04</span>
+            </div>
+            <p>The prompted mechanism remains slightly stronger in open-ended value expression.</p>
+          </article>
+
+          <article class="result-card">
+            <div class="label">
+              <h3>Distinct-3 diversity</h3>
+              <span class="tag">higher is better</span>
+            </div>
+            <div class="metric">
+              <span>Intrinsic</span>
+              <div class="track"><div class="bar" style="width: 100%"></div></div>
+              <span>0.654</span>
+            </div>
+            <div class="metric">
+              <span>Prompted</span>
+              <div class="track"><div class="bar prompted" style="width: 94.6%"></div></div>
+              <span>0.619</span>
+            </div>
+            <p>Intrinsic steering uses a broader set of lexical choices in English situational dilemmas.</p>
+          </article>
+
+          <article class="result-card">
+            <div class="label">
+              <h3>Entropy-3 diversity</h3>
+              <span class="tag">higher is better</span>
+            </div>
+            <div class="metric">
+              <span>Intrinsic</span>
+              <div class="track"><div class="bar" style="width: 100%"></div></div>
+              <span>14.36</span>
+            </div>
+            <div class="metric">
+              <span>Prompted</span>
+              <div class="track"><div class="bar prompted" style="width: 96%"></div></div>
+              <span>13.79</span>
+            </div>
+            <p>The diversity advantage persists across multiple lexical and semantic metrics.</p>
+          </article>
+        </div>
+
+        <div class="evidence-grid" style="margin-top: 22px">
+          <figure class="figure">
+            <img src="assets/situational-steering.png" alt="Steering results on situational dilemmas">
+            <figcaption class="caption">
+              Steering on situational dilemmas shows prompted mechanisms as strong value inducers.
+            </figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="assets/value-portrait.png" alt="Steering results on Value Portrait benchmark">
+            <figcaption class="caption">
+              Value Portrait results show the same broad trend across value dimensions.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="analysis">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Analysis</p>
+            <h2>Shared semantics, distinct control channels</h2>
+          </div>
+          <p class="lead">
+            The shared component reconstructs the structure of Schwartz values in representation space,
+            while unique components explain the behavioral tradeoff between natural diversity and direct compliance.
+          </p>
+        </div>
+
+        <div class="analysis-grid">
+          <figure class="figure">
+            <img src="assets/schwartz-pca.png" alt="PCA visualization of shared Schwartz value axes">
+            <figcaption class="caption">
+              Shared value axes recover structure aligned with Schwartz's theory of basic human values.
+            </figcaption>
+          </figure>
+
+          <div>
+            <figure class="figure">
+              <img src="assets/lexical-entropy.png" alt="Lexical entropy comparison of value vectors">
+              <figcaption class="caption">
+                Intrinsic vectors, especially intrinsic-orthogonal components, lead to higher lexical entropy.
+              </figcaption>
+            </figure>
+            <div class="note-box" style="margin-top: 18px">
+              <p>
+                The prompted-unique direction behaves like a broader instruction-following channel.
+                The paper reports that this compliance effect transfers beyond value-expression tasks,
+                which makes it relevant for transparency and safety analysis.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="citation" id="cite">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Citation</p>
+            <h2>How to cite</h2>
+          </div>
+          <p class="lead">
+            This BibTeX entry is based on the arXiv PDF metadata.
+          </p>
+        </div>
+
+        <pre><code>@misc{han2026dualmechanisms,
+  title = {Dual Mechanisms of Value Expression: Intrinsic vs. Prompted Values in Large Language Models},
+  author = {Jongwook Han and Jongwon Lim and Injin Kong and Yohan Jo},
+  year = {2026},
+  eprint = {2509.24319},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.CL}
+}</code></pre>
+      </section>
+    </main>
+
+    <footer>
+      Project page built from arXiv:2509.24319.
+    </footer>
+  </body>
+</html>

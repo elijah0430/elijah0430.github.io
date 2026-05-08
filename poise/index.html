@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Your Language Model is Its Own Critic</title>
+    <meta
+      name="description"
+      content="Project page for POISE: reinforcement learning with value estimation from actor internal states."
+    >
+    <style>
+      :root {
+        --bg: #ffffff;
+        --paper: #ffffff;
+        --ink: #202938;
+        --muted: #667085;
+        --line: #e4e7ec;
+        --wash: #eef6fa;
+        --green: #1d5f8a;
+        --green-dark: #164766;
+        --rust: #667085;
+        --blue: #315f83;
+        --charcoal: #202938;
+        --shadow: 0 14px 42px rgba(32, 41, 56, 0.1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      a {
+        color: var(--green);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 22px;
+        min-height: 66px;
+        padding: 0 max(22px, calc((100vw - 1080px) / 2));
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(16px);
+      }
+
+      .nav-identity {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .brand {
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 850;
+        letter-spacing: 0.06em;
+      }
+
+      .nav-affiliation {
+        max-width: min(560px, 52vw);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 650;
+        line-height: 1.25;
+      }
+
+      .nav-affiliation b {
+        color: var(--green-dark);
+        font-weight: 900;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+
+      .nav-affiliation span {
+        display: block;
+      }
+
+      .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        font-size: 13px;
+        font-weight: 720;
+      }
+
+      .nav-links a {
+        color: var(--muted);
+      }
+
+      .hero {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 54px 22px 38px;
+      }
+
+      .hero-copy {
+        max-width: 920px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      .kicker {
+        margin: 0 0 13px;
+        color: var(--rust);
+        font-size: 12px;
+        font-weight: 850;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .paper-subtitle {
+        max-width: 850px;
+        margin: 16px auto 0;
+        color: var(--green-dark);
+        font-size: clamp(22px, 3vw, 32px);
+        font-weight: 650;
+        line-height: 1.16;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        margin: 0 auto;
+        font-size: clamp(36px, 5.4vw, 64px);
+        font-weight: 750;
+        line-height: 1.04;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        max-width: 820px;
+        margin: 22px auto 0;
+        padding: 14px 18px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.76);
+        color: var(--ink);
+        font-size: 16px;
+        line-height: 1.5;
+        box-shadow: 0 10px 28px rgba(32, 41, 56, 0.06);
+      }
+
+      .authors {
+        max-width: 860px;
+        margin: 20px auto 0;
+        color: var(--ink);
+        font-size: 16px;
+      }
+
+      .authors a {
+        border-bottom: 1px solid rgba(29, 95, 138, 0.34);
+      }
+
+      .notes {
+        margin: 7px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .affiliation {
+        max-width: 760px;
+        margin: 10px auto 0;
+        color: #4d5a52;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .actions {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 24px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 0 17px;
+        border: 1px solid var(--green);
+        border-radius: 5px;
+        background: var(--green);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 780;
+      }
+
+      .button:hover {
+        background: var(--green-dark);
+        text-decoration: none;
+      }
+
+      .button.secondary {
+        background: transparent;
+        color: var(--green);
+      }
+
+      .button.secondary:hover {
+        background: var(--wash);
+      }
+
+      .teaser {
+        margin-top: 34px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+
+      .teaser img {
+        width: 100%;
+        padding: clamp(14px, 2.5vw, 28px);
+      }
+
+      .caption {
+        margin: 0;
+        padding: 13px 18px 16px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .score-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .score {
+        padding: 15px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.78);
+      }
+
+      .score strong {
+        display: block;
+        color: var(--ink);
+        font-size: 13px;
+        line-height: 1.2;
+      }
+
+      .score .pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .score b {
+        display: block;
+        color: var(--green);
+        font-size: 24px;
+        line-height: 1;
+      }
+
+      .score span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 720;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      main {
+        background: var(--paper);
+        border-top: 1px solid var(--line);
+      }
+
+      section {
+        padding: 58px max(22px, calc((100vw - 1080px) / 2));
+        border-bottom: 1px solid var(--line);
+      }
+
+      section:last-child {
+        border-bottom: 0;
+      }
+
+      .section-head {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.32fr) minmax(0, 0.68fr);
+        gap: 40px;
+        align-items: start;
+        margin-bottom: 24px;
+      }
+
+      .eyebrow {
+        margin: 0 0 9px;
+        color: var(--rust);
+        font-size: 12px;
+        font-weight: 850;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: clamp(30px, 4vw, 46px);
+        font-weight: 750;
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      h3 {
+        margin: 0 0 7px;
+        font-size: 17px;
+        line-height: 1.25;
+      }
+
+      p {
+        margin: 0 0 15px;
+      }
+
+      .lead {
+        margin: 0;
+        color: var(--ink);
+        font-size: 18px;
+        line-height: 1.55;
+      }
+
+      .idea-grid {
+        display: grid;
+        grid-template-columns: 1.08fr 0.92fr;
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .claim {
+        padding: clamp(22px, 3vw, 34px);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #f8fafc;
+        color: var(--ink);
+      }
+
+      .claim p {
+        margin: 0;
+        font-size: clamp(24px, 3vw, 34px);
+        line-height: 1.16;
+      }
+
+      .claim span {
+        display: block;
+        margin-top: 16px;
+        color: var(--muted);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .mini-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .mini-item {
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fbfcfb;
+      }
+
+      .mini-item p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.48;
+      }
+
+      .method-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 0.66fr) minmax(260px, 0.34fr);
+        gap: 26px;
+        align-items: start;
+      }
+
+      .figure {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 12px 34px rgba(25, 32, 28, 0.07);
+      }
+
+      .figure img {
+        width: 100%;
+      }
+
+      .steps {
+        display: grid;
+        gap: 13px;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 38px minmax(0, 1fr);
+        gap: 13px;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .step:first-child {
+        padding-top: 0;
+      }
+
+      .step:last-child {
+        border-bottom: 0;
+      }
+
+      .step b {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--rust);
+        color: #fff;
+        font-size: 14px;
+        line-height: 1;
+      }
+
+      .step p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.48;
+      }
+
+      .results-panel {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+      }
+
+      .result-card {
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fbfcfb;
+      }
+
+      .result-card .label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .result-card .label h3 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 25px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: var(--wash);
+        color: var(--green-dark);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 66px minmax(0, 1fr) 54px;
+        gap: 10px;
+        align-items: center;
+        margin-top: 10px;
+        color: #354039;
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      .bar-track {
+        overflow: hidden;
+        height: 12px;
+        border-radius: 999px;
+        background: #e4e9e5;
+      }
+
+      .bar {
+        height: 100%;
+        border-radius: inherit;
+        background: var(--green);
+      }
+
+      .bar.dapo {
+        background: var(--blue);
+      }
+
+      .result-card p {
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.48;
+      }
+
+      .wide-figure {
+        margin-top: 22px;
+      }
+
+      .estimator-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 0.58fr) minmax(260px, 0.42fr);
+        gap: 28px;
+        align-items: center;
+      }
+
+      .bullets {
+        margin: 0;
+        padding-left: 19px;
+        color: var(--muted);
+      }
+
+      .bullets li {
+        margin: 8px 0;
+      }
+
+      pre {
+        overflow-x: auto;
+        margin: 18px 0 0;
+        padding: 18px;
+        border-radius: 10px;
+        background: var(--charcoal);
+        color: #edf7f1;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      }
+
+      .code-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.58fr) minmax(250px, 0.42fr);
+        gap: 24px;
+        align-items: start;
+      }
+
+      .file-list {
+        margin: 18px 0 0;
+        padding: 0;
+        list-style: none;
+        border-top: 1px solid var(--line);
+      }
+
+      .file-list li {
+        padding: 13px 0;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .file-list strong {
+        display: block;
+        color: var(--ink);
+      }
+
+      .citation {
+        background: #111914;
+        color: #f4faf6;
+      }
+
+      .citation .eyebrow {
+        color: #d28b74;
+      }
+
+      .citation .lead {
+        color: #c8d8ce;
+      }
+
+      .citation pre {
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      footer {
+        padding: 24px max(22px, calc((100vw - 1080px) / 2)) 36px;
+        background: #111914;
+        color: #aebfb4;
+        font-size: 13px;
+      }
+
+      @media (max-width: 900px) {
+        .nav {
+          align-items: flex-start;
+          flex-direction: column;
+          padding: 14px 22px;
+        }
+
+        .nav-links {
+          width: 100%;
+          overflow-x: auto;
+          padding-bottom: 2px;
+        }
+
+        .nav-affiliation {
+          max-width: none;
+          white-space: normal;
+        }
+
+        .score-strip,
+        .section-head,
+        .idea-grid,
+        .method-layout,
+        .results-panel,
+        .estimator-layout,
+        .code-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .score-strip {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 560px) {
+        .hero {
+          padding-top: 34px;
+        }
+
+        .actions,
+        .score-strip {
+          grid-template-columns: 1fr;
+        }
+
+        .actions {
+          display: grid;
+        }
+
+        .button {
+          width: 100%;
+        }
+
+        .score-strip {
+          display: grid;
+        }
+
+        .bar-row {
+          grid-template-columns: 58px minmax(0, 1fr) 48px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav" aria-label="Primary navigation">
+      <div class="nav-identity">
+        <a class="brand" href="#top">POISE</a>
+        <span class="nav-affiliation">
+          <span><b>H</b>uman <b>O</b>riented <b>L</b>anguage <b>I</b>ntelligence Lab (HOLI)</span>
+          <span>Graduate School of Data Science, Seoul National University</span>
+        </span>
+      </div>
+      <div class="nav-links">
+        <a href="#idea">Idea</a>
+        <a href="#method">Method</a>
+        <a href="#results">Results</a>
+        <a href="#estimator">Estimator</a>
+        <a href="#code">Code</a>
+        <a href="#cite">Cite</a>
+      </div>
+    </nav>
+
+    <header class="hero" id="top">
+      <div class="hero-copy">
+        <p class="kicker">POISE</p>
+        <h1>Your Language Model is Its Own Critic</h1>
+        <p class="paper-subtitle">
+          Reinforcement Learning with Value Estimation from Actor&rsquo;s Internal States
+        </p>
+        <p class="authors">
+          Yunho Choi<sup>*</sup>, Jongwon Lim<sup>*</sup>, Woojin Ahn, Minjae Oh,
+          Jeonghoon Shim, <a href="https://yohanjo.github.io/lab.html">Yohan Jo</a><sup>&dagger;</sup>
+        </p>
+        <p class="notes"><sup>*</sup>Equal contribution. <sup>&dagger;</sup>Corresponding author.</p>
+        <div class="actions">
+          <a class="button" href="assets/poise-paper.pdf">Paper PDF</a>
+          <a class="button secondary" href="#code">Code Recipe</a>
+        </div>
+        <p class="subtitle">
+          POISE replaces expensive RLVR baselines with a lightweight value estimator
+          trained from the actor's own hidden states and entropy statistics.
+        </p>
+      </div>
+
+      <figure class="teaser">
+        <img src="assets/poise-overview.png" alt="Overview of POISE cross-rollout value estimation">
+        <figcaption class="caption">
+          POISE samples paired rollouts and swaps their value estimates, letting a trajectory-conditioned
+          probe reduce variance without turning the actor's own response into a biased baseline.
+        </figcaption>
+      </figure>
+
+      <div class="score-strip" aria-label="POISE and DAPO comparison highlights">
+        <div class="score">
+          <strong>Qwen3-4B Avg@32</strong>
+          <div class="pair">
+            <div><b>0.500</b><span>POISE</span></div>
+            <div><b>0.508</b><span>DAPO</span></div>
+          </div>
+        </div>
+        <div class="score">
+          <strong>DeepSeek 1.5B Avg@32</strong>
+          <div class="pair">
+            <div><b>0.303</b><span>POISE</span></div>
+            <div><b>0.296</b><span>DAPO</span></div>
+          </div>
+        </div>
+        <div class="score">
+          <strong>Qwen3-4B Time</strong>
+          <div class="pair">
+            <div><b>36h</b><span>POISE</span></div>
+            <div><b>49h</b><span>DAPO</span></div>
+          </div>
+        </div>
+        <div class="score">
+          <strong>DeepSeek 1.5B Time</strong>
+          <div class="pair">
+            <div><b>18h</b><span>POISE</span></div>
+            <div><b>24h</b><span>DAPO</span></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="idea">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Core Idea</p>
+            <h2>Can the actor estimate its own value?</h2>
+          </div>
+          <p class="lead">
+            RLVR methods need a baseline to reduce variance in outcome-reward policy gradients.
+            PPO trains a policy-scale critic. GRPO and DAPO estimate a group mean from multiple
+            same-prompt responses. POISE asks whether the actor's existing internal computation
+            can provide the baseline directly.
+          </p>
+        </div>
+
+        <div class="idea-grid">
+          <div class="claim">
+            <p>A language model already exposes the signals needed to predict whether its answer will verify.</p>
+            <span>
+              POISE trains a small online probe on prompt hidden states, trajectory hidden states,
+              and token entropy statistics already produced during generation.
+            </span>
+          </div>
+          <div class="mini-list">
+            <article class="mini-item">
+              <h3>No extra LLM critic</h3>
+              <p>The value estimator is lightweight, avoiding the memory and optimization cost of a second model-scale network.</p>
+            </article>
+            <article class="mini-item">
+              <h3>More useful sampling</h3>
+              <p>Instead of spending rollouts to find zero-advantage prompt groups, POISE can cover more prompts for the same budget.</p>
+            </article>
+            <article class="mini-item">
+              <h3>Online adaptation</h3>
+              <p>A recent-example buffer keeps the probe calibrated as the policy changes during reinforcement learning.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="method">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Method</p>
+            <h2>Cross-rollout value estimation</h2>
+          </div>
+          <p class="lead">
+            A baseline conditioned on the same generated trajectory can bias the policy gradient.
+            POISE avoids this by estimating rollout 1's baseline from rollout 2's internal states,
+            and rollout 2's baseline from rollout 1's internal states.
+          </p>
+        </div>
+
+        <div class="method-layout">
+          <figure class="figure">
+            <img src="assets/poise-overview.png" alt="POISE cross-rollout algorithm diagram">
+            <figcaption class="caption">
+              The paired rollouts are independent samples for the same prompt. Their internal-state
+              features are swapped before computing advantages.
+            </figcaption>
+          </figure>
+
+          <div class="steps">
+            <div class="step">
+              <b>1</b>
+              <div>
+                <h3>Sample two rollouts</h3>
+                <p>Two independent responses are generated from the old policy and scored by the verifier.</p>
+              </div>
+            </div>
+            <div class="step">
+              <b>2</b>
+              <div>
+                <h3>Extract actor signals</h3>
+                <p>Hidden-state pools and entropy statistics are collected from each response.</p>
+              </div>
+            </div>
+            <div class="step">
+              <b>3</b>
+              <div>
+                <h3>Swap predicted values</h3>
+                <p>Each rollout subtracts a value predicted from the other rollout's features.</p>
+              </div>
+            </div>
+            <div class="step">
+              <b>4</b>
+              <div>
+                <h3>Update probe online</h3>
+                <p>The estimator is trained on current and recent rollouts so it tracks policy drift.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="results">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Results</p>
+            <h2>Comparable accuracy, less wall-clock time</h2>
+          </div>
+          <p class="lead">
+            POISE is not framed as uniformly more accurate than DAPO. The main result is that
+            it reaches similar benchmark performance while replacing large group-relative sampling
+            with a cheaper internal-state baseline.
+          </p>
+        </div>
+
+        <div class="results-panel">
+          <article class="result-card">
+            <div class="label">
+              <h3>Avg@32 Accuracy</h3>
+              <span class="tag">higher is better</span>
+            </div>
+            <div class="bar-row">
+              <span>POISE</span>
+              <div class="bar-track"><div class="bar" style="width: 98.4%"></div></div>
+              <span>0.500</span>
+            </div>
+            <div class="bar-row">
+              <span>DAPO</span>
+              <div class="bar-track"><div class="bar dapo" style="width: 100%"></div></div>
+              <span>0.508</span>
+            </div>
+            <p>Qwen3-4B: DAPO is slightly higher on the average, while POISE wins on AMC23, HMMT25, and BRUMO25.</p>
+          </article>
+
+          <article class="result-card">
+            <div class="label">
+              <h3>Avg@32 Accuracy</h3>
+              <span class="tag">higher is better</span>
+            </div>
+            <div class="bar-row">
+              <span>POISE</span>
+              <div class="bar-track"><div class="bar" style="width: 100%"></div></div>
+              <span>0.303</span>
+            </div>
+            <div class="bar-row">
+              <span>DAPO</span>
+              <div class="bar-track"><div class="bar dapo" style="width: 97.7%"></div></div>
+              <span>0.296</span>
+            </div>
+            <p>DeepSeek-R1-Distill-Qwen-1.5B: POISE is slightly higher on the reported benchmark average.</p>
+          </article>
+
+          <article class="result-card">
+            <div class="label">
+              <h3>Training Time</h3>
+              <span class="tag">lower is better</span>
+            </div>
+            <div class="bar-row">
+              <span>POISE</span>
+              <div class="bar-track"><div class="bar" style="width: 73.5%"></div></div>
+              <span>36h</span>
+            </div>
+            <div class="bar-row">
+              <span>DAPO</span>
+              <div class="bar-track"><div class="bar dapo" style="width: 100%"></div></div>
+              <span>49h</span>
+            </div>
+            <p>Qwen3-4B wall-clock time on two B200 GPUs in the reported setup.</p>
+          </article>
+
+          <article class="result-card">
+            <div class="label">
+              <h3>Training Time</h3>
+              <span class="tag">lower is better</span>
+            </div>
+            <div class="bar-row">
+              <span>POISE</span>
+              <div class="bar-track"><div class="bar" style="width: 75%"></div></div>
+              <span>18h</span>
+            </div>
+            <div class="bar-row">
+              <span>DAPO</span>
+              <div class="bar-track"><div class="bar dapo" style="width: 100%"></div></div>
+              <span>24h</span>
+            </div>
+            <p>DeepSeek-R1-Distill-Qwen-1.5B reaches the same performance level faster on one B200 GPU.</p>
+          </article>
+        </div>
+
+        <figure class="figure wide-figure">
+          <img src="assets/results-dynamics.png" alt="POISE benchmark table and training dynamics">
+          <figcaption class="caption">
+            Reported benchmark accuracy, wall-clock dynamics, gradient norms, and estimator calibration.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section id="estimator">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Estimator</p>
+            <h2>A small probe can rival a critic</h2>
+          </div>
+          <p class="lead">
+            The paper compares the internal-state probe against a separately trained policy-scale
+            critic. The probe predicts empirical verifier reward with strong correlation while being
+            much cheaper to train and run.
+          </p>
+        </div>
+
+        <div class="estimator-layout">
+          <figure class="figure">
+            <img src="assets/value-estimation.png" alt="Value-estimation comparison between POISE probe and critic">
+            <figcaption class="caption">
+              POISE uses the actor's representations as the value signal instead of adding another
+              language-model-sized network.
+            </figcaption>
+          </figure>
+          <ul class="bullets">
+            <li>Features come from hidden states and entropy statistics already available during generation.</li>
+            <li>The estimator is trained online with a buffer of recent rollouts.</li>
+            <li>The reported variance reduction ratio stays around 30% after the initial phase.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="code">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Implementation</p>
+            <h2>POISE as a verl recipe</h2>
+          </div>
+          <p class="lead">
+            The included repository packages POISE as a configurable training recipe. The launch
+            script accepts environment variables and Hydra overrides.
+          </p>
+        </div>
+
+        <div class="code-grid">
+          <pre><code>cd poise
+
+CUDA_VISIBLE_DEVICES=0,1 \
+MODEL_PATH=Qwen/Qwen3-4B \
+TRAIN_DATA_DIR=data/DAPO-Math-17k-Processed_Splits \
+OUTPUT_DIR=outputs/poise \
+bash recipe/poise/run_poise.sh trainer.total_epochs=10</code></pre>
+
+          <ul class="file-list">
+            <li><strong>poise_main_ppo.py</strong> POISE training entry point.</li>
+            <li><strong>poise_ray_trainer.py</strong> Trainer logic integrated with verl.</li>
+            <li><strong>estimator/</strong> Single-trajectory value estimator components.</li>
+            <li><strong>run_poise.sh</strong> Configurable launch script.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="citation" id="cite">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Citation</p>
+            <h2>How to cite</h2>
+          </div>
+          <p class="lead">
+            Citation metadata can be updated when the final publication record is available.
+          </p>
+        </div>
+
+        <pre><code>@misc{choi2026poise,
+  title = {Your Language Model is Its Own Critic: Reinforcement Learning with Value Estimation from Actor's Internal States},
+  author = {Yunho Choi and Jongwon Lim and Woojin Ahn and Minjae Oh and Jeonghoon Shim and Yohan Jo},
+  year = {2026},
+  note = {Manuscript}
+}</code></pre>
+      </section>
+    </main>
+
+    <footer>
+      POISE project page.
+    </footer>
+  </body>
+</html>
