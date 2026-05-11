@@ -604,7 +604,7 @@
       });
       return Array.from(byName.values())
         .sort((a, b) => b.score - a.score)
-        .slice(0, 5);
+        .slice(0, 10);
     }
 
     function renderScores(scores = localScores()) {
