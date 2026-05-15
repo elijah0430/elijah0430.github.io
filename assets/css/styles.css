@@ -350,8 +350,31 @@ strong {
   font-weight: 650;
 }
 
+.entry h3 {
+  margin-bottom: 8px;
+}
+
 .entry p {
   margin-bottom: 0;
+}
+
+.entry-details {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+}
+
+.entry-details li + li {
+  margin-top: 8px;
+}
+
+.entry-details a {
+  font-weight: 650;
+}
+
+.entry-details span {
+  display: block;
+  margin-top: 2px;
 }
 
 .note-grid {
