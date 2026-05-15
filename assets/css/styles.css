@@ -301,16 +301,15 @@ strong {
 .entry {
   padding-left: 14px;
   padding-bottom: 26px;
-  border-left: 2px solid transparent;
-  transition: background-color 140ms ease, border-color 140ms ease;
+  border-left: 1px solid transparent;
+  transition: border-color 140ms ease;
 }
 
 .paper:hover,
 .paper:focus-within,
 .entry:hover,
 .entry:focus-within {
-  border-left-color: color-mix(in srgb, var(--link) 55%, var(--line));
-  background-color: color-mix(in srgb, var(--link-bg) 14%, transparent);
+  border-left-color: var(--line);
 }
 
 .paper + .paper,
@@ -392,7 +391,16 @@ strong {
 }
 
 .entry-details a {
+  color: var(--text);
   font-weight: 650;
+  text-decoration: none;
+  transition: color 140ms ease, text-decoration-color 140ms ease;
+}
+
+.entry-details a:hover,
+.entry-details a:focus-visible {
+  color: var(--link);
+  text-decoration: underline;
 }
 
 .entry-details span {
