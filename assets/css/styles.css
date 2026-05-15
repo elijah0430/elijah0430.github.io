@@ -275,10 +275,22 @@ strong {
 
 .section {
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
-  gap: 34px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
   padding: 34px 0;
   border-top: 1px solid var(--line);
+}
+
+.section-title {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.section-title h2 {
+  color: var(--muted);
+  font-size: 0.86rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .section-body {
@@ -287,18 +299,18 @@ strong {
 
 .paper,
 .entry {
+  padding-left: 14px;
   padding-bottom: 26px;
-  border-radius: 6px;
-  background-color: transparent;
-  transition: background-color 140ms ease, box-shadow 140ms ease;
+  border-left: 2px solid transparent;
+  transition: background-color 140ms ease, border-color 140ms ease;
 }
 
 .paper:hover,
 .paper:focus-within,
 .entry:hover,
 .entry:focus-within {
-  background-color: color-mix(in srgb, var(--link-bg) 32%, transparent);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--link) 38%, transparent);
+  border-left-color: color-mix(in srgb, var(--link) 55%, var(--line));
+  background-color: color-mix(in srgb, var(--link-bg) 14%, transparent);
 }
 
 .paper + .paper,
