@@ -6,6 +6,7 @@
   --muted: #667085;
   --faint: #98a2b3;
   --line: #e4e7ec;
+  --item-line: #f0f2f5;
   --link: #1d5f8a;
   --link-bg: #eef6fa;
   --header-height: 56px;
@@ -20,6 +21,7 @@ html[data-theme="dark"] {
   --muted: #c1c7d0;
   --faint: #858d9a;
   --line: #2d3540;
+  --item-line: #242b34;
   --link: #8ecae6;
   --link-bg: #172b36;
 }
@@ -277,13 +279,13 @@ strong {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 20px;
-  padding: 34px 0;
+  padding: 38px 0;
   border-top: 1px solid var(--line);
 }
 
 .section-title {
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 18%, var(--line));
 }
 
 .section-title h2 {
@@ -315,7 +317,8 @@ strong {
 
 .paper + .paper,
 .entry + .entry {
-  margin-top: 6px;
+  margin-top: 0;
+  border-top: 1px solid var(--item-line);
 }
 
 .paper {
