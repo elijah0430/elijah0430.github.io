@@ -299,8 +299,7 @@ strong {
 
 .paper,
 .entry {
-  padding-left: 14px;
-  padding-bottom: 26px;
+  padding: 18px 0 18px 14px;
   border-left: 1px solid transparent;
   transition: border-color 140ms ease;
 }
@@ -314,13 +313,7 @@ strong {
 
 .paper + .paper,
 .entry + .entry {
-  padding-top: 26px;
   border-top: 1px solid var(--line);
-}
-
-.paper:last-child,
-.entry:last-child {
-  padding-bottom: 0;
 }
 
 .paper {
