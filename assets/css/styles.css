@@ -299,12 +299,23 @@ strong {
 
 .paper,
 .entry {
-  padding: 18px 0;
+  margin: 0 -16px;
+  padding: 16px;
+  border-radius: 6px;
+  transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.paper:hover,
+.paper:focus-within,
+.entry:hover,
+.entry:focus-within {
+  background-color: var(--link-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--link) 34%, var(--line));
 }
 
 .paper + .paper,
 .entry + .entry {
-  border-top: 1px solid var(--line);
+  margin-top: 6px;
 }
 
 .paper {
@@ -346,11 +357,16 @@ strong {
 
 .entry {
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+.entry > div {
+  order: 1;
 }
 
 .entry time {
+  order: 2;
   color: var(--faint);
   font-size: 0.92rem;
   font-weight: 650;
@@ -367,8 +383,9 @@ strong {
 
 .entry-details {
   margin: 0;
-  padding-left: 1.1rem;
+  padding-left: 0;
   color: var(--muted);
+  list-style: none;
 }
 
 .entry-details li + li {
