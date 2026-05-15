@@ -288,6 +288,17 @@ strong {
 .paper,
 .entry {
   padding-bottom: 26px;
+  border-radius: 6px;
+  background-color: transparent;
+  transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.paper:hover,
+.paper:focus-within,
+.entry:hover,
+.entry:focus-within {
+  background-color: color-mix(in srgb, var(--link-bg) 32%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--link) 38%, transparent);
 }
 
 .paper + .paper,
