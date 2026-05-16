@@ -118,13 +118,14 @@ def make_pdf():
     contact = "elijah0430@snu.ac.kr"
     page.insert_text((MARGIN_X, y), contact, fontsize=8.8, fontname="helv", color=ACCENT)
     y += 11
+    y = max(y, photo_rect.y1 + 12)
     page.draw_line((MARGIN_X, y), (MARGIN_X + CONTENT_W, y), color=LINE, width=0.8)
     y += 18
 
     page, y = section(doc, page, y, "Research Interests")
     y = draw_wrapped(
         page,
-        "Natural language processing, large language model evaluation, hallucination evaluation, value alignment, mechanistic interpretability, personalization, and computational linguistics.",
+        "I am interested in developing methods for understanding the internal mechanisms of language models, and using those insights to improve practical NLP and LLM applications.",
         MARGIN_X,
         y,
         CONTENT_W,
