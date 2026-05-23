@@ -239,7 +239,7 @@ def make_pdf():
         y,
         "2026",
         "Reviewer, ICML 2026 Workshops",
-        "Pluralistic Alignment Workshop @ ICML 2026; Mechanistic Interpretability Workshop @ ICML 2026.",
+        "Pluralistic Alignment Workshop @ ICML 2026; Mechanistic Interpretability Workshop @ ICML 2026; 3rd AI for Math Workshop @ ICML 2026.",
     )
 
     page, y = section(doc, page, y, "Awards and Other Experience")
@@ -247,9 +247,17 @@ def make_pdf():
         doc,
         page,
         y,
+        "Sep 2025 - Present",
+        "Research Scholarship for M.S. Studies",
+        "National Research Foundation of Korea.",
+    )
+    page, y = item(
+        doc,
+        page,
+        y,
         "2024",
         "Outstanding Bachelor's Thesis",
-        "SNU Linguistics Department.",
+        "SNU Linguistics Department. Topic: Evaluating the Understanding of Blend Morphology in Large Language Models.",
     )
     page, y = item(
         doc,
