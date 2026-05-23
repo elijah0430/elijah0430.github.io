@@ -248,8 +248,8 @@ def make_pdf():
         page,
         y,
         "Sep 2025 - Present",
-        "Research Scholarship for M.S. Studies",
-        "National Research Foundation of Korea.",
+        "Research Scholarship",
+        "National Research Foundation of Korea (NRF).",
     )
     page, y = item(
         doc,
@@ -257,7 +257,7 @@ def make_pdf():
         y,
         "2024",
         "Outstanding Bachelor's Thesis",
-        "SNU Linguistics Department. Topic: Evaluating the Understanding of Blend Morphology in Large Language Models.",
+        "Evaluating the Understanding of Blend Morphology in Large Language Models.",
     )
     page, y = item(
         doc,
