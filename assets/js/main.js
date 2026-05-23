@@ -353,7 +353,7 @@
 
     function updateRunner(delta) {
       state.distance += state.speed * delta;
-      state.speed = Math.min(560, 255 + state.distance * 0.025);
+      state.speed = 255 + state.distance * 0.025;
       state.animTime += delta;
       state.obstacleTimer -= delta;
       state.coinTimer -= delta;
@@ -410,7 +410,7 @@
           height: coin.radius * 2,
         };
         if (rectsOverlap(playerBox, coinBox)) {
-          state.bonus += 50;
+          state.bonus += 500;
           return false;
         }
         return coin.x + coin.radius > 0;
