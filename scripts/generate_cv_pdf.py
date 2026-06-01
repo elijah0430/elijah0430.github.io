@@ -239,7 +239,7 @@ def make_pdf():
         y,
         "2026",
         "Reviewer, ICML 2026 Workshops",
-        "Pluralistic Alignment Workshop @ ICML 2026; Mechanistic Interpretability Workshop @ ICML 2026; 3rd AI for Math Workshop @ ICML 2026.",
+        "Pluralistic Alignment Workshop @ ICML 2026 (2 papers); Mechanistic Interpretability Workshop @ ICML 2026 (8 papers); 3rd AI for Math Workshop @ ICML 2026 (3 papers).",
     )
 
     page, y = section(doc, page, y, "Awards and Other Experience")
