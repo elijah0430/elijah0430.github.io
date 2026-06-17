@@ -156,15 +156,6 @@ def make_pdf():
         doc,
         page,
         y,
-        "arXiv preprint, 2026",
-        "Your Language Model is Its Own Critic: Reinforcement Learning with Value Estimation from Actor's Internal States",
-        "Yunho Choi*, Jongwon Lim*, Woojin Ahn, Minjae Oh, Jeonghoon Shim, Yohan Jo",
-        "POISE estimates RLVR baselines from the actor's internal hidden states and entropy statistics, reducing rollout overhead while matching DAPO-level performance.",
-    )
-    page, y = paper(
-        doc,
-        page,
-        y,
         "ICML 2026 Regular Paper; Mechanistic Interpretability Workshop @ NeurIPS 2025",
         "Dual Mechanisms of Value Expression: Intrinsic vs. Prompted Values in Large Language Models",
         "Jongwook Han*, Jongwon Lim*, Injin Kong, Yohan Jo",
@@ -187,6 +178,17 @@ def make_pdf():
         "DAHL: Domain-specific Automated Hallucination Evaluation of Long-Form Text through a Benchmark Dataset in Biomedicine",
         "Jean Seo, Jongwon Lim, Dongjun Jang, Hyopil Shin",
         "Biomedical benchmark and automated evaluation pipeline for factuality assessment in long-form LLM outputs.",
+    )
+
+    page, y = section(doc, page, y, "Preprints")
+    page, y = paper(
+        doc,
+        page,
+        y,
+        "arXiv preprint, 2026",
+        "Your Language Model is Its Own Critic: Reinforcement Learning with Value Estimation from Actor's Internal States",
+        "Yunho Choi*, Jongwon Lim*, Woojin Ahn, Minjae Oh, Jeonghoon Shim, Yohan Jo",
+        "POISE estimates RLVR baselines from the actor's internal hidden states and entropy statistics, reducing rollout overhead while matching DAPO-level performance.",
     )
     y = draw_wrapped(page, "* Equal contribution", MARGIN_X, y, CONTENT_W, fontsize=8.8, color=MUTED) + 7
 
