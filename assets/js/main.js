@@ -398,10 +398,10 @@
       });
 
       const playerBox = {
-        x: player.x + 4,
-        y: player.y + 4,
-        width: player.width - 8,
-        height: player.height - 8,
+        x: player.x + (player.ducking ? 10 : 13),
+        y: player.y + (player.ducking ? 13 : 15),
+        width: player.ducking ? 34 : 29,
+        height: player.ducking ? 17 : 29,
       };
 
       if (state.obstacles.some((obstacle) => rectsOverlap(playerBox, obstacle))) {
