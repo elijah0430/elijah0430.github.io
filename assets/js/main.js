@@ -225,8 +225,13 @@
         text: styles.getPropertyValue('--text').trim(),
         muted: styles.getPropertyValue('--muted').trim(),
         link: styles.getPropertyValue('--link').trim(),
-        danger: '#b54747',
-        star: '#c58a22',
+        danger: '#9b4f45',
+        star: '#c6953e',
+        kiwi: '#725438',
+        kiwiLight: '#9b7851',
+        kiwiDark: '#382d24',
+        kiwiBeak: '#c99d60',
+        kiwiFeet: '#d68739',
       };
     }
 
@@ -245,6 +250,8 @@
       canvas.width = Math.max(320, Math.floor(rect.width * ratio));
       canvas.height = Math.max(180, Math.floor(rect.height * ratio));
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+      if (!state.running) player.y = groundY() - player.height;
       drawRunner();
     }
 
@@ -480,87 +487,41 @@
         }
       });
 
-      const stride = player.onGround ? Math.sin(state.animTime * state.speed * 0.035) : 0.85;
-      const bodyX = player.x + (player.ducking ? 30 : 27);
-      const bodyY = player.y + (player.ducking ? 20 : 31);
-      const neckBaseX = bodyX + 18;
-      const neckBaseY = bodyY - 7;
-      const headX = player.ducking ? bodyX + 34 : bodyX + 25;
-      const headY = player.ducking ? bodyY - 18 : bodyY - 44;
+      const pixel = 3;
+      const bodyX = Math.round(player.x + (player.ducking ? 7 : 8));
+      const bodyY = Math.round(player.y + (player.ducking ? 11 : 16));
+      const stride = player.onGround ? Math.round(Math.sin(state.animTime * state.speed * 0.035) * 2) : 1;
+      const pixelRect = (x, y, rectWidth, rectHeight, color) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x), Math.round(y), rectWidth, rectHeight);
+      };
 
-      ctx.save();
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
+      // A deliberately blocky kiwi: round feathers, tiny legs, and its unmistakably long beak.
+      const bodyWidth = player.ducking ? 45 : 39;
+      const bodyHeight = player.ducking ? 24 : 30;
+      pixelRect(bodyX + pixel * 2, bodyY, bodyWidth - pixel * 4, pixel * 2, colors.kiwiDark);
+      pixelRect(bodyX + pixel, bodyY + pixel * 2, bodyWidth - pixel * 2, bodyHeight - pixel * 4, colors.kiwiDark);
+      pixelRect(bodyX + pixel * 2, bodyY + bodyHeight - pixel * 2, bodyWidth - pixel * 4, pixel * 2, colors.kiwiDark);
+      pixelRect(bodyX + pixel * 3, bodyY + pixel * 2, bodyWidth - pixel * 6, bodyHeight - pixel * 4, colors.kiwi);
+      pixelRect(bodyX + pixel * 4, bodyY + pixel * 4, bodyWidth - pixel * 10, bodyHeight - pixel * 9, colors.kiwiLight);
+      pixelRect(bodyX + pixel * 6, bodyY + pixel * 6, bodyWidth - pixel * 15, pixel * 3, colors.kiwi);
 
-      ctx.strokeStyle = colors.link;
-      ctx.lineWidth = 7;
-      ctx.beginPath();
-      ctx.moveTo(neckBaseX, neckBaseY);
-      ctx.quadraticCurveTo(
-        player.ducking ? bodyX + 36 : bodyX + 30,
-        player.ducking ? bodyY - 15 : bodyY - 34,
-        headX,
-        headY,
-      );
-      ctx.stroke();
+      const headX = bodyX + bodyWidth - pixel * 7;
+      const headY = bodyY - (player.ducking ? pixel * 2 : pixel * 4);
+      pixelRect(headX, headY + pixel, pixel * 5, pixel * 5, colors.kiwiDark);
+      pixelRect(headX + pixel, headY, pixel * 3, pixel * 6, colors.kiwi);
+      pixelRect(headX + pixel * 3, headY + pixel, pixel, pixel, colors.kiwiLight);
+      pixelRect(headX + pixel * 4, headY + pixel * 3, pixel * 7, pixel, colors.kiwiBeak);
+      pixelRect(headX + pixel * 4, headY + pixel * 4, pixel * 5, pixel, colors.kiwiDark);
+      pixelRect(headX + pixel * 2, headY + pixel * 2, pixel, pixel, '#f8f7f3');
+      pixelRect(headX + pixel * 3, headY + pixel * 2, pixel, pixel, colors.kiwiDark);
 
-      ctx.fillStyle = colors.link;
-      ctx.beginPath();
-      ctx.ellipse(bodyX, bodyY, player.ducking ? 30 : 25, player.ducking ? 14 : 20, -0.1, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = colors.line;
-      ctx.beginPath();
-      ctx.ellipse(bodyX - 5, bodyY + 2, player.ducking ? 18 : 14, player.ducking ? 8 : 12, -0.25, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = colors.link;
-      ctx.beginPath();
-      ctx.ellipse(headX, headY, 10, 8, 0.1, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = colors.star;
-      ctx.beginPath();
-      ctx.moveTo(headX + 8, headY - 1);
-      ctx.lineTo(headX + 20, headY + 3);
-      ctx.lineTo(headX + 8, headY + 7);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(headX + 3, headY - 2, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = colors.text;
-      ctx.beginPath();
-      ctx.arc(headX + 4, headY - 2, 1.4, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = colors.text;
-      ctx.lineWidth = 3;
-      const hipX = bodyX - 6;
-      const hipY = bodyY + 16;
-      const footY = player.onGround ? groundY() + 1 : hipY + 34;
-      const kneeLift = player.onGround ? 18 : 16;
-      const legA = player.onGround ? stride : -0.75;
-      const legB = player.onGround ? -stride : 0.85;
-      ctx.beginPath();
-      ctx.moveTo(hipX - 5, hipY);
-      ctx.lineTo(hipX - 10 + legA * 10, footY - kneeLift);
-      ctx.lineTo(hipX - 18 + legA * 18, footY);
-      ctx.moveTo(hipX + 7, hipY);
-      ctx.lineTo(hipX + 4 + legB * 10, footY - kneeLift);
-      ctx.lineTo(hipX - 2 + legB * 18, footY);
-      ctx.stroke();
-
-      ctx.strokeStyle = colors.link;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(bodyX - 22, bodyY - 2);
-      ctx.quadraticCurveTo(bodyX - 35, bodyY - 12 - Math.abs(stride) * 5, bodyX - 22, bodyY + 10);
-      ctx.stroke();
-
-      ctx.restore();
+      const footY = player.onGround ? groundY() - pixel : bodyY + bodyHeight + pixel * 2;
+      const legBaseY = bodyY + bodyHeight - pixel;
+      pixelRect(bodyX + pixel * 4, legBaseY, pixel, footY - legBaseY, colors.kiwiFeet);
+      pixelRect(bodyX + pixel * 8, legBaseY, pixel, footY - legBaseY, colors.kiwiFeet);
+      pixelRect(bodyX + pixel * 4 + stride * pixel, footY, pixel * 3, pixel, colors.kiwiFeet);
+      pixelRect(bodyX + pixel * 8 - stride * pixel, footY, pixel * 3, pixel, colors.kiwiFeet);
 
       if (!state.running) {
         ctx.fillStyle = colors.muted;
