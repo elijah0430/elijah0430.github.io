@@ -525,7 +525,7 @@
 
       if (!state.running) {
         ctx.fillStyle = colors.muted;
-        ctx.font = '600 18px Arial, sans-serif';
+        ctx.font = `600 18px ${getComputedStyle(document.body).fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(state.ended ? 'Game over' : 'Press Start', width / 2, height / 2);
