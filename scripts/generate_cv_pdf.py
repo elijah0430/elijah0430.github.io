@@ -249,7 +249,7 @@ def make_pdf():
         doc,
         page,
         y,
-        "Sep 2025 - Present",
+        "Sep 2025 - Aug 2026",
         "Research Scholarship",
         "National Research Foundation of Korea (NRF).",
     )
@@ -271,7 +271,7 @@ def make_pdf():
     )
 
     page, y = ensure_page(doc, page, y, 22)
-    page.insert_text((MARGIN_X + CONTENT_W - 96, PAGE_H - 34), "Last updated: May 2026", fontsize=8.5, fontname="helv", color=MUTED)
+    page.insert_text((MARGIN_X + CONTENT_W - 96, PAGE_H - 34), "Last updated: Sep 2026", fontsize=8.5, fontname="helv", color=MUTED)
 
     doc.save(OUT, deflate=True, garbage=4)
     doc.close()
