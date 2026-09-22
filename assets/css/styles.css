@@ -374,6 +374,13 @@ strong {
   margin-bottom: 0;
 }
 
+.service-aside {
+  color: var(--faint);
+  font-size: 0.82em;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
 .note-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
