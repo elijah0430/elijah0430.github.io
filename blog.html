@@ -4,22 +4,25 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blog - Jongwon Lim</title>
-  <meta name="description" content="Reading notes, paper lists, and blog posts by Jongwon Lim." />
+  <meta name="description" content="Research notes and writing by Jongwon Lim." />
   <meta name="author" content="Jongwon Lim" />
+  <link rel="canonical" href="https://elijah0430.github.io/blog.html" />
   <meta property="og:title" content="Blog - Jongwon Lim" />
-  <meta property="og:description" content="Reading notes, paper lists, and blog posts by Jongwon Lim." />
+  <meta property="og:description" content="Research notes and writing by Jongwon Lim." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="assets/img/profile.jpg?v=2" />
+  <meta property="og:url" content="https://elijah0430.github.io/blog.html" />
+  <meta property="og:image" content="https://elijah0430.github.io/assets/img/profile.jpg?v=2" />
   <meta name="theme-color" content="#f5f8fb" />
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/styles.css" />
   <script>document.documentElement.classList.add('js');</script>
   <script defer src="assets/js/main.js"></script>
+  <script defer src="assets/js/blog.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="site-header">
+  <header class="site-header" data-header>
     <div class="page">
       <nav class="nav" aria-label="Primary navigation">
         <a href="index.html" class="brand">Jongwon Lim</a>
@@ -40,49 +43,122 @@
     </div>
   </header>
 
-  <main id="main" class="page">
-    <section class="page-hero">
-      <p class="kicker">Notes and Writing</p>
-      <h1>Blog</h1>
+  <main id="main" class="page blog-page" data-blog-app>
+    <header class="blog-header">
+      <div>
+        <p class="kicker">Notes and Writing</p>
+        <h1>Blog</h1>
+        <p class="blog-intro">Research notes, paper thoughts, and occasional essays.</p>
+      </div>
+      <div class="blog-actions">
+        <button class="text-button" type="button" data-blog-write>Write</button>
+        <button class="text-button" type="button" data-blog-login>Sign in</button>
+        <button class="text-button" type="button" data-blog-logout hidden>Sign out</button>
+      </div>
+    </header>
+
+    <section class="blog-auth" data-blog-auth hidden aria-labelledby="blog-sign-in-title">
+      <div class="blog-panel-heading">
+        <div>
+          <p class="venue">Admin</p>
+          <h2 id="blog-sign-in-title">Sign in to write</h2>
+        </div>
+        <button class="quiet-button" type="button" data-blog-auth-close>Close</button>
+      </div>
+      <form class="blog-form blog-login-form" data-blog-login-form>
+        <label>
+          Username
+          <input name="username" type="text" autocomplete="username" required />
+        </label>
+        <label>
+          Password
+          <input name="password" type="password" autocomplete="current-password" required />
+        </label>
+        <div class="blog-form-actions">
+          <button class="primary-button" type="submit">Sign in</button>
+          <p class="form-status" data-blog-auth-status aria-live="polite"></p>
+        </div>
+      </form>
     </section>
 
-    <section class="section">
-      <div class="section-title">
-        <h2>Collections</h2>
+    <section class="blog-list-view" data-blog-list-view>
+      <div class="blog-feed-heading">
+        <h2>Latest</h2>
+        <span data-blog-count></span>
       </div>
-      <div class="section-body note-grid">
-        <article class="note">
-          <p class="venue">Reading</p>
-          <h3>Papers I Like</h3>
-          <a href="#" aria-disabled="true">Coming soon</a>
-        </article>
-        <article class="note">
-          <p class="venue">Notes</p>
-          <h3>Papers I Read</h3>
-          <a href="#" aria-disabled="true">Coming soon</a>
-        </article>
-        <article class="note">
-          <p class="venue">Writing</p>
-          <h3>Blog Posts</h3>
-          <a href="#" aria-disabled="true">Coming soon</a>
-        </article>
-      </div>
+      <p class="blog-status" data-blog-status aria-live="polite">Loading posts…</p>
+      <div class="blog-feed" data-blog-list></div>
     </section>
 
-    <section class="section">
-      <div class="section-title">
-        <h2>Recent</h2>
-      </div>
-      <div class="section-body">
-        <article class="entry">
-          <time>Drafts</time>
-          <div>
-            <h3>No posts yet</h3>
-            <p>This page is ready for paper notes and blog posts.</p>
+    <section class="blog-post-view" data-blog-post-view hidden>
+      <button class="back-button" type="button" data-blog-back>← All posts</button>
+      <article class="blog-post">
+        <p class="blog-post-meta" data-blog-post-meta></p>
+        <h1 data-blog-post-title></h1>
+        <p class="blog-post-summary" data-blog-post-summary></p>
+        <div class="blog-post-body" data-blog-post-body></div>
+        <button class="text-button blog-edit-button" type="button" data-blog-edit hidden>Edit post</button>
+      </article>
+
+      <section class="comments" aria-labelledby="comments-title">
+        <div class="comments-heading">
+          <h2 id="comments-title">Comments</h2>
+          <span data-comment-count></span>
+        </div>
+        <div class="comment-list" data-comment-list></div>
+        <form class="blog-form comment-form" data-comment-form>
+          <label>
+            Name
+            <input name="author" type="text" maxlength="60" autocomplete="name" required />
+          </label>
+          <label>
+            Comment
+            <textarea name="body" rows="4" maxlength="2000" required></textarea>
+          </label>
+          <label class="honeypot" aria-hidden="true">
+            Website
+            <input name="website" type="text" tabindex="-1" autocomplete="off" />
+          </label>
+          <div class="blog-form-actions">
+            <button class="primary-button" type="submit">Comment</button>
+            <p class="form-status" data-comment-status aria-live="polite"></p>
           </div>
-        </article>
-      </div>
+        </form>
+      </section>
     </section>
+
+    <section class="blog-editor" data-blog-editor hidden aria-labelledby="editor-title">
+      <div class="blog-panel-heading">
+        <div>
+          <p class="venue">Editor</p>
+          <h2 id="editor-title" data-editor-title>New post</h2>
+        </div>
+        <button class="quiet-button" type="button" data-editor-cancel>Cancel</button>
+      </div>
+      <form class="blog-form" data-blog-editor-form>
+        <input name="id" type="hidden" />
+        <label>
+          Title
+          <input name="title" type="text" maxlength="180" required />
+        </label>
+        <label>
+          Summary
+          <textarea name="summary" rows="2" maxlength="360" placeholder="A short description for the post list"></textarea>
+        </label>
+        <label>
+          Body
+          <textarea class="post-editor-body" name="body" rows="18" required placeholder="Write in plain text. Blank lines create new paragraphs."></textarea>
+        </label>
+        <div class="blog-form-actions">
+          <button class="primary-button" type="submit">Publish</button>
+          <p class="form-status" data-editor-status aria-live="polite"></p>
+        </div>
+      </form>
+    </section>
+
+    <noscript>
+      <p class="blog-status">JavaScript is required to load posts and comments.</p>
+    </noscript>
   </main>
 
   <footer class="site-footer page">
