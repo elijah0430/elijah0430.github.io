@@ -378,8 +378,7 @@
     wordCount.textContent = `${countWords(bodyInput.value)} words · ${readingTime(bodyInput.value)} min read`;
     if (!bodyInput.value.trim()) {
       preview.replaceChildren();
-      const placeholder = makeTextElement('div', 'preview-placeholder', 'A thought, taking shape.');
-      placeholder.append(makeTextElement('small', '', 'Your writing and equations appear here as you type.'));
+      const placeholder = makeTextElement('div', 'preview-placeholder', 'Preview appears here.');
       preview.append(placeholder);
       return;
     }
@@ -424,7 +423,7 @@
     italic: ['*', '*', 'italic text'],
     link: ['[', '](https://example.com)', 'link text'],
     list: ['- ', '', 'First point\n- Second point', true],
-    quote: ['> ', '', 'A thought worth keeping.', true],
+    quote: ['> ', '', 'Quote', true],
     code: ['```\n', '\n```', 'code', true],
   };
   app.querySelectorAll('[data-format]').forEach((button) => button.addEventListener('click', () => insertText(...formats[button.dataset.format])));

@@ -4,11 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blog - Jongwon Lim</title>
-  <meta name="description" content="Research notes and writing by Jongwon Lim." />
+  <meta name="description" content="Blog by Jongwon Lim." />
   <meta name="author" content="Jongwon Lim" />
   <link rel="canonical" href="https://elijah0430.github.io/blog.html" />
   <meta property="og:title" content="Blog - Jongwon Lim" />
-  <meta property="og:description" content="Research notes and writing by Jongwon Lim." />
+  <meta property="og:description" content="Blog by Jongwon Lim." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://elijah0430.github.io/blog.html" />
   <meta property="og:image" content="https://elijah0430.github.io/assets/img/profile.jpg?v=2" />
@@ -16,14 +16,14 @@
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/styles.css?v=20261002" />
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css" />
-  <link rel="stylesheet" href="assets/css/blog.css?v=20261002-2" />
+  <link rel="stylesheet" href="assets/css/blog.css?v=20261003" />
   <script>document.documentElement.classList.add('js');</script>
   <script defer src="assets/js/main.js"></script>
   <script defer src="assets/vendor/marked/marked.umd.js"></script>
   <script defer src="assets/vendor/dompurify/purify.min.js"></script>
   <script defer src="assets/vendor/katex/katex.min.js"></script>
   <script defer src="assets/js/blog-markdown.js?v=20261002-2"></script>
-  <script defer src="assets/js/blog.js?v=20261002-2"></script>
+  <script defer src="assets/js/blog.js?v=20261003"></script>
 </head>
 <body class="blog-site">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -52,9 +52,7 @@
   <main id="main" class="page blog-page" data-blog-app>
     <header class="blog-header">
       <div>
-        <p class="kicker">Jongwon's notebook</p>
         <h1>Blog</h1>
-        <p class="blog-intro">On language, learning, and the ideas in between.</p>
       </div>
       <div class="blog-actions">
         <button class="primary-button write-button" type="button" data-blog-write><span aria-hidden="true">＋</span> Write a post</button>
@@ -66,7 +64,6 @@
     <section class="blog-auth" data-blog-auth hidden aria-labelledby="blog-sign-in-title">
       <div class="blog-panel-heading">
         <div>
-          <p class="venue">Welcome back</p>
           <h2 id="blog-sign-in-title">Sign in to write</h2>
         </div>
         <button class="quiet-button" type="button" data-blog-auth-close>Close</button>
@@ -89,15 +86,14 @@
 
     <section class="blog-list-view" data-blog-list-view>
       <div class="blog-feed-heading">
-        <h2>All writing</h2>
+        <h2>Posts</h2>
         <span data-blog-count></span>
       </div>
       <p class="blog-status" data-blog-status aria-live="polite">Loading posts…</p>
       <div class="blog-feed" data-blog-list></div>
       <div class="blog-empty" data-blog-empty hidden>
         <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M11 9h19l7 7v23H11V9Z M29 9v8h8 M18 24h12 M18 30h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <h3>A little room for ideas.</h3>
-        <p>Paper notes, open questions, and things worth writing down.<br>The first post is on its way.</p>
+        <h3>No posts yet.</h3>
       </div>
     </section>
 
@@ -142,7 +138,7 @@
       <form id="post-editor" data-blog-editor-form novalidate>
         <div class="editor-topbar">
           <div class="editor-breadcrumb">
-            <button class="quiet-button" type="button" data-editor-cancel>← All writing</button>
+            <button class="quiet-button" type="button" data-editor-cancel>← All posts</button>
             <span aria-hidden="true">/</span>
             <h2 id="editor-title" data-editor-title>New post</h2>
           </div>
@@ -155,9 +151,9 @@
           <div class="editor-metadata">
             <input name="id" type="hidden" />
             <label class="sr-only" for="post-title">Title</label>
-            <textarea id="post-title" class="editor-title-input" name="title" rows="1" maxlength="180" required placeholder="Give your idea a title…" autocomplete="off"></textarea>
+            <textarea id="post-title" class="editor-title-input" name="title" rows="1" maxlength="180" required placeholder="Title" autocomplete="off"></textarea>
             <label class="sr-only" for="post-summary">Summary</label>
-            <textarea id="post-summary" class="editor-summary-input" name="summary" rows="2" maxlength="360" placeholder="A short introduction (optional)"></textarea>
+            <textarea id="post-summary" class="editor-summary-input" name="summary" rows="2" maxlength="360" placeholder="Summary (optional)"></textarea>
           </div>
           <div class="editor-controls">
             <div class="format-toolbar" role="group" aria-label="Formatting">
@@ -184,15 +180,15 @@
           </div>
           <div class="editor-workspace" data-editor-workspace data-mode="split">
             <div class="editor-source" data-editor-source>
-              <div class="pane-heading"><label for="post-body">Your words</label><span>Markdown + LaTeX</span></div>
-              <textarea id="post-body" class="post-editor-body" name="body" required maxlength="100000" spellcheck="true" placeholder="Start with a thought…&#10;&#10;Use the toolbar for formatting and equations.&#10;Your preview updates as you write."></textarea>
+              <div class="pane-heading"><label for="post-body">Body</label><span>Markdown + LaTeX</span></div>
+              <textarea id="post-body" class="post-editor-body" name="body" required maxlength="100000" spellcheck="true" placeholder="Write in Markdown or LaTeX."></textarea>
             </div>
             <section class="editor-preview" data-editor-preview-panel aria-label="Post preview" tabindex="0">
               <div class="pane-heading"><span>Preview</span><span class="live-indicator">Live</span></div>
               <div class="prose preview-content" data-editor-preview></div>
             </section>
           </div>
-          <div class="editor-footnote"><span data-word-count>0 words</span><span>Autosaved here. Published only when you're ready.</span></div>
+          <div class="editor-footnote"><span data-word-count>0 words</span><span>Drafts are saved in this browser.</span></div>
         </div>
         <div class="editor-bottom-bar">
           <details class="writing-help">
