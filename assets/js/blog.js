@@ -14,6 +14,10 @@
     posts: [],
     activePost: null,
     session: readSession(),
+    pendingPost: null,
+    editorOpen: false,
+    draftStored: true,
+    mode: window.matchMedia('(max-width: 900px)').matches ? 'write' : 'split',
   };
 
   const listView = app.querySelector('[data-blog-list-view]');
@@ -36,6 +40,17 @@
   const commentStatus = app.querySelector('[data-comment-status]');
   const commentList = app.querySelector('[data-comment-list]');
   const commentCount = app.querySelector('[data-comment-count]');
+  const emptyState = app.querySelector('[data-blog-empty]');
+  const bodyInput = editorForm.elements.namedItem('body');
+  const draftStatus = app.querySelector('[data-draft-status]');
+  const workspace = app.querySelector('[data-editor-workspace]');
+  const preview = app.querySelector('[data-editor-preview]');
+  const wordCount = app.querySelector('[data-word-count]');
+  const mathTools = app.querySelector('[data-math-tools]');
+  const mathToggle = app.querySelector('[data-math-toggle]');
+  let draftTimer;
+  let previewTimer;
+  let refreshRequest;
 
   function readSession() {
     try {
@@ -49,16 +64,38 @@
 
   function saveSession(session) {
     state.session = session;
-    if (session) {
-      window.localStorage.setItem(sessionKey, JSON.stringify(session));
-    } else {
-      window.localStorage.removeItem(sessionKey);
-    }
+    try {
+      if (session) window.localStorage.setItem(sessionKey, JSON.stringify(session));
+      else window.localStorage.removeItem(sessionKey);
+    } catch (_error) { /* Login still works for this page when storage is unavailable. */ }
     syncAuthUi();
   }
 
   function hasActiveSession() {
     return Boolean(state.session && Number(state.session.expires_at) > Date.now() / 1000 + 15);
+  }
+
+  async function ensureSession() {
+    if (hasActiveSession()) return true;
+    if (!state.session?.refresh_token) return false;
+    if (refreshRequest) return refreshRequest;
+    refreshRequest = (async () => {
+      try {
+        const response = await window.fetch(`${config.url}/auth/v1/token?grant_type=refresh_token`, {
+          method: 'POST',
+          headers: { apikey: config.anonKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: state.session.refresh_token }),
+        });
+        const data = await parseResponse(response);
+        saveSession({ access_token: data.access_token, refresh_token: data.refresh_token,
+          expires_at: Math.floor(Date.now() / 1000) + Number(data.expires_in || 3600) });
+        return true;
+      } catch (error) {
+        if (error.status === 400 || error.status === 401 || error.status === 403) saveSession(null);
+        return false;
+      } finally { refreshRequest = null; }
+    })();
+    return refreshRequest;
   }
 
   function syncAuthUi() {
@@ -121,6 +158,9 @@
   }
 
   function showView(name) {
+    if (state.editorOpen && name !== 'editor') persistDraft();
+    state.editorOpen = name === 'editor';
+    app.dataset.view = name;
     listView.hidden = name !== 'list';
     postView.hidden = name !== 'post';
     editorView.hidden = name !== 'editor';
@@ -140,8 +180,9 @@
     listEl.replaceChildren();
     countEl.textContent = state.posts.length ? `${state.posts.length} post${state.posts.length === 1 ? '' : 's'}` : '';
 
+    emptyState.hidden = state.posts.length > 0;
     if (!state.posts.length) {
-      listStatus.textContent = 'No posts yet.';
+      listStatus.textContent = '';
       return;
     }
 
@@ -154,10 +195,10 @@
       link.href = `#post/${encodeURIComponent(post.slug)}`;
       link.className = 'blog-feed-link';
       link.append(
+        makeTextElement('p', 'blog-feed-meta', `${formatDate(post.published_at)} · ${readingTime(post.body)} min read`),
         makeTextElement('h2', '', post.title),
-        makeTextElement('p', 'blog-feed-summary', post.summary || 'Open post'),
-        makeTextElement('p', 'blog-feed-meta', `${formatDate(post.published_at)} · Jongwon Lim`),
       );
+      if (post.summary) link.append(makeTextElement('p', 'blog-feed-summary', post.summary));
 
       item.append(link);
       listEl.append(item);
@@ -165,6 +206,7 @@
   }
 
   async function loadPosts() {
+    emptyState.hidden = true;
     listStatus.textContent = 'Loading posts…';
     try {
       state.posts = await restRequest('blog_posts?select=id,slug,title,summary,body,published_at,updated_at&order=published_at.desc');
@@ -181,12 +223,7 @@
   }
 
   function renderBody(container, body) {
-    container.replaceChildren();
-    String(body || '')
-      .split(/\n\s*\n/)
-      .map((paragraph) => paragraph.trim())
-      .filter(Boolean)
-      .forEach((paragraph) => container.append(makeTextElement('p', '', paragraph)));
+    return window.BlogMarkdown.render(container, body);
   }
 
   async function openPost(slug) {
@@ -197,7 +234,7 @@
     }
 
     state.activePost = post;
-    app.querySelector('[data-blog-post-meta]').textContent = `${formatDate(post.published_at)} · Jongwon Lim`;
+    app.querySelector('[data-blog-post-meta]').textContent = `Jongwon Lim · ${formatDate(post.published_at)} · ${readingTime(post.body)} min read`;
     app.querySelector('[data-blog-post-title]').textContent = post.title;
     app.querySelector('[data-blog-post-summary]').textContent = post.summary || '';
     renderBody(app.querySelector('[data-blog-post-body]'), post.body);
@@ -218,10 +255,9 @@
     comments.forEach((comment) => {
       const item = document.createElement('article');
       item.className = 'comment';
-      item.append(
-        makeTextElement('p', 'comment-meta', `${comment.author_name} · ${formatDate(comment.created_at)}`),
-        makeTextElement('p', 'comment-body', comment.body),
-      );
+      const body = makeTextElement('div', 'comment-body prose', '');
+      renderBody(body, comment.body);
+      item.append(makeTextElement('p', 'comment-meta', `${comment.author_name} · ${formatDate(comment.created_at)}`), body);
       commentList.append(item);
     });
   }
@@ -262,23 +298,192 @@
     authForm.elements.namedItem('username').focus();
   }
 
-  function openEditor(post = null) {
-    if (!hasActiveSession()) {
+  async function openEditor(post = null) {
+    if (state.editorOpen && editorForm.elements.namedItem('id').value === (post?.id || '')) return;
+    state.pendingPost = post;
+    if (!(await ensureSession())) {
       openAuth();
       return;
     }
 
+    if (state.editorOpen) persistDraft();
+    state.activePost = post;
     editorForm.reset();
     editorStatus.textContent = '';
     editorForm.elements.namedItem('id').value = post?.id || '';
     editorForm.elements.namedItem('title').value = post?.title || '';
     editorForm.elements.namedItem('summary').value = post?.summary || '';
     editorForm.elements.namedItem('body').value = post?.body || '';
+    let restored = false;
+    try {
+      const draft = JSON.parse(window.localStorage.getItem(draftKey()) || 'null');
+      if (draft && typeof draft.title === 'string' && typeof draft.summary === 'string' && typeof draft.body === 'string'
+        && (!post || draft.savedAt > Date.parse(post.updated_at))) {
+        ['title', 'summary', 'body'].forEach((field) => { editorForm.elements.namedItem(field).value = draft[field]; });
+        restored = true;
+      }
+    } catch (_error) { /* Keep the server version if a saved draft cannot be read. */ }
+    draftStatus.textContent = restored ? 'Draft restored · this browser' : 'Draft · only on this browser';
+    state.draftStored = true;
     editorTitle.textContent = post ? 'Edit post' : 'New post';
     editorForm.querySelector('button[type="submit"]').textContent = post ? 'Save changes' : 'Publish';
     showView('editor');
-    editorForm.elements.namedItem('title').focus();
+    window.history.replaceState(null, '', post ? `#edit/${encodeURIComponent(post.id)}` : '#write');
+    setEditorMode(state.mode);
+    updatePreview();
+    editorForm.elements.namedItem('title').focus({ preventScroll: true });
+    editorForm.elements.namedItem('title').setSelectionRange(0, 0);
   }
+
+  function draftKey() {
+    return `jongwon-blog-draft-v1:${editorForm.elements.namedItem('id').value || 'new'}`;
+  }
+
+  function draftContent() {
+    return Object.fromEntries(['title', 'summary', 'body'].map((key) => [key, editorForm.elements.namedItem(key).value]));
+  }
+
+  function persistDraft() {
+    if (!state.editorOpen) return;
+    clearTimeout(draftTimer);
+    const draft = draftContent();
+    try {
+      if (Object.values(draft).some((value) => value.trim())) {
+        window.localStorage.setItem(draftKey(), JSON.stringify({ ...draft, savedAt: Date.now() }));
+        const time = new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(new Date());
+        draftStatus.textContent = `Saved ${time} · this browser`;
+      } else {
+        window.localStorage.removeItem(draftKey());
+        draftStatus.textContent = 'Draft · only on this browser';
+      }
+      state.draftStored = true;
+    } catch (_error) {
+      state.draftStored = false;
+      draftStatus.textContent = 'Autosave unavailable · download your draft';
+    }
+  }
+
+  function countWords(body) {
+    return String(body || '').trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  function readingTime(body) { return Math.max(1, Math.ceil(countWords(body) / 220)); }
+
+  function updatePreview() {
+    ['title', 'summary'].forEach((name) => {
+      const field = editorForm.elements.namedItem(name);
+      field.style.height = 'auto';
+      field.style.height = `${field.scrollHeight}px`;
+    });
+    wordCount.textContent = `${countWords(bodyInput.value)} words · ${readingTime(bodyInput.value)} min read`;
+    if (!bodyInput.value.trim()) {
+      preview.replaceChildren();
+      const placeholder = makeTextElement('div', 'preview-placeholder', 'A thought, taking shape.');
+      placeholder.append(makeTextElement('small', '', 'Your writing and equations appear here as you type.'));
+      preview.append(placeholder);
+      return;
+    }
+    const result = renderBody(preview, bodyInput.value);
+    if (!result.available) editorStatus.textContent = 'Formatting is unavailable. Your text is still saved; reload to try again.';
+  }
+
+  function setEditorMode(mode) {
+    state.mode = mode;
+    workspace.dataset.mode = mode;
+    app.querySelector('[data-editor-source]').hidden = mode === 'preview';
+    app.querySelector('[data-editor-preview-panel]').hidden = mode === 'write';
+    app.querySelectorAll('[data-editor-mode]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.editorMode === mode)));
+    updatePreview();
+  }
+
+  function changed() {
+    state.draftStored = false;
+    draftStatus.textContent = 'Saving…';
+    clearTimeout(draftTimer);
+    clearTimeout(previewTimer);
+    draftTimer = window.setTimeout(persistDraft, 650);
+    previewTimer = window.setTimeout(updatePreview, 160);
+  }
+
+  function insertText(before, after = '', fallback = '', block = false) {
+    if (state.mode === 'preview') setEditorMode('split');
+    const start = bodyInput.selectionStart;
+    const end = bodyInput.selectionEnd;
+    const selected = bodyInput.value.slice(start, end) || fallback;
+    const prefix = block && start > 0 && !bodyInput.value.slice(0, start).endsWith('\n\n') ? '\n\n' : '';
+    const suffix = block && end < bodyInput.value.length && !bodyInput.value.slice(end).startsWith('\n\n') ? '\n\n' : '';
+    bodyInput.setRangeText(prefix + before + selected + after + suffix, start, end, 'end');
+    bodyInput.focus();
+    bodyInput.setSelectionRange(start + prefix.length + before.length, start + prefix.length + before.length + selected.length);
+    changed();
+  }
+
+  const formats = {
+    heading: ['## ', '', 'Section heading', true],
+    bold: ['**', '**', 'bold text'],
+    italic: ['*', '*', 'italic text'],
+    link: ['[', '](https://example.com)', 'link text'],
+    list: ['- ', '', 'First point\n- Second point', true],
+    quote: ['> ', '', 'A thought worth keeping.', true],
+    code: ['```\n', '\n```', 'code', true],
+  };
+  app.querySelectorAll('[data-format]').forEach((button) => button.addEventListener('click', () => insertText(...formats[button.dataset.format])));
+  app.querySelectorAll('[data-editor-mode]').forEach((button) => button.addEventListener('click', () => setEditorMode(button.dataset.editorMode)));
+  mathToggle.addEventListener('click', () => {
+    mathTools.hidden = !mathTools.hidden;
+    mathToggle.setAttribute('aria-expanded', String(!mathTools.hidden));
+  });
+
+  const templates = [
+    { name: 'Inline', latex: 'x^2', inline: true },
+    { name: 'Display', latex: 'E = mc^2' },
+    { name: 'Fraction', latex: '\\frac{a}{b}' },
+    { name: 'Sum', latex: '\\sum_{i=1}^{n} x_i' },
+    { name: 'Expectation', latex: '\\mathbb{E}_{x \\sim p}[f(x)]' },
+    { name: 'Gradient', latex: '\\nabla_{\\theta} \\mathcal{L}(\\theta)' },
+    { name: 'Matrix', latex: '\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}' },
+    { name: 'Aligned', latex: ['\\begin{aligned}', 'a &= b + c \\\\', '&= d', '\\end{aligned}'].join('\n'), thumbnail: 'a = b + c' },
+  ];
+  templates.forEach((template) => {
+    const button = makeTextElement('button', '', '');
+    button.type = 'button';
+    button.setAttribute('aria-label', `Insert ${template.name.toLowerCase()} equation`);
+    const sample = makeTextElement('span', '', '');
+    renderBody(sample, `$${template.thumbnail || template.latex}$`);
+    button.append(sample, makeTextElement('span', 'template-label', template.name));
+    button.addEventListener('click', () => {
+      insertText(template.inline ? '$' : '$$\n', template.inline ? '$' : '\n$$', template.latex, !template.inline);
+    });
+    app.querySelector('[data-math-templates]').append(button);
+  });
+
+  editorForm.addEventListener('input', changed);
+  editorForm.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && ['b', 'i', 's'].includes(event.key.toLowerCase())) {
+      if (event.key.toLowerCase() !== 's' && event.target !== bodyInput) return;
+      event.preventDefault();
+      if (event.key.toLowerCase() === 's') persistDraft();
+      else insertText(...formats[event.key.toLowerCase() === 'b' ? 'bold' : 'italic']);
+    }
+  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) persistDraft(); });
+  window.addEventListener('pagehide', persistDraft);
+  window.addEventListener('resize', () => { if (state.editorOpen) updatePreview(); });
+  window.addEventListener('beforeunload', (event) => {
+    persistDraft();
+    if (state.editorOpen && !state.draftStored) { event.preventDefault(); event.returnValue = ''; }
+  });
+  app.querySelector('[data-draft-download]').addEventListener('click', () => {
+    persistDraft();
+    const draft = draftContent();
+    const content = `# ${draft.title || 'Untitled'}\n\n${draft.summary ? `${draft.summary}\n\n` : ''}${draft.body}\n`;
+    const url = URL.createObjectURL(new Blob([content], { type: 'text/markdown;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${slugify(draft.title || 'draft')}.md`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
 
   async function savePost(formData) {
     const id = String(formData.get('id') || '');
@@ -305,6 +510,12 @@
   }
 
   async function route() {
+    if (window.location.hash === '#write') { await openEditor(); return; }
+    const editMatch = window.location.hash.match(/^#edit\/(.+)$/);
+    if (editMatch) {
+      const post = state.posts.find((item) => item.id === decodeURIComponent(editMatch[1]));
+      if (post) { await openEditor(post); return; }
+    }
     const match = window.location.hash.match(/^#post\/(.+)$/);
     if (match) {
       await openPost(decodeURIComponent(match[1]));
@@ -319,6 +530,7 @@
   writeButton.addEventListener('click', () => openEditor());
   logoutButton.addEventListener('click', () => {
     saveSession(null);
+    window.location.hash = '';
     showView('list');
   });
   app.querySelector('[data-blog-auth-close]').addEventListener('click', () => showView('list'));
@@ -330,6 +542,7 @@
       window.location.hash = `#post/${encodeURIComponent(state.activePost.slug)}`;
       showView('post');
     } else {
+      window.location.hash = '';
       showView('list');
     }
   });
@@ -344,7 +557,7 @@
     try {
       await signIn(String(formData.get('username') || '').trim(), String(formData.get('password') || ''));
       authForm.reset();
-      openEditor();
+      openEditor(state.pendingPost);
     } catch (error) {
       console.error(error);
       authStatus.textContent = 'Incorrect username or password.';
@@ -355,19 +568,33 @@
 
   editorForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!hasActiveSession()) {
-      saveSession(null);
+    persistDraft();
+    if (!(await ensureSession())) {
+      state.pendingPost = state.activePost;
       openAuth();
+      authStatus.textContent = 'Sign in again to publish. Your draft has been saved in this browser.';
       return;
     }
 
-    const submit = editorForm.querySelector('button[type="submit"]');
-    submit.disabled = true;
+    if (!editorForm.elements.namedItem('title').value.trim() || !bodyInput.value.trim()) {
+      setEditorMode('write');
+      editorStatus.textContent = 'Add a title and some text before publishing.';
+      (!editorForm.elements.namedItem('title').value.trim() ? editorForm.elements.namedItem('title') : bodyInput).focus();
+      return;
+    }
+
+    const formData = new FormData(editorForm);
+    editorForm.querySelectorAll('button').forEach((button) => { button.disabled = true; });
+    editorForm.querySelectorAll('input, textarea').forEach((field) => { field.readOnly = true; });
     editorStatus.textContent = 'Saving…';
     try {
-      const rows = await savePost(new FormData(editorForm));
-      await loadPosts();
+      const rows = await savePost(formData);
       const saved = Array.isArray(rows) ? rows[0] : null;
+      if (!saved) throw new Error('The server did not confirm the saved post.');
+      clearTimeout(draftTimer);
+      try { window.localStorage.removeItem(draftKey()); } catch (_error) { /* Publishing already succeeded. */ }
+      state.editorOpen = false;
+      await loadPosts();
       editorStatus.textContent = 'Saved.';
       window.location.hash = saved?.slug ? `#post/${encodeURIComponent(saved.slug)}` : '';
       await route();
@@ -378,7 +605,8 @@
         ? 'A post with this title already exists.'
         : 'The post could not be saved.';
     } finally {
-      submit.disabled = false;
+      editorForm.querySelectorAll('button').forEach((button) => { button.disabled = false; });
+      editorForm.querySelectorAll('input, textarea').forEach((field) => { field.readOnly = false; });
     }
   });
 
@@ -411,6 +639,6 @@
   });
 
   window.addEventListener('hashchange', route);
-  syncAuthUi();
+  ensureSession().then(syncAuthUi);
   loadPosts().then(route);
 }());

@@ -14,12 +14,18 @@
   <meta property="og:image" content="https://elijah0430.github.io/assets/img/profile.jpg?v=2" />
   <meta name="theme-color" content="#f5f8fb" />
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20261002" />
+  <link rel="stylesheet" href="assets/vendor/katex/katex.min.css" />
+  <link rel="stylesheet" href="assets/css/blog.css?v=20261002-2" />
   <script>document.documentElement.classList.add('js');</script>
   <script defer src="assets/js/main.js"></script>
-  <script defer src="assets/js/blog.js"></script>
+  <script defer src="assets/vendor/marked/marked.umd.js"></script>
+  <script defer src="assets/vendor/dompurify/purify.min.js"></script>
+  <script defer src="assets/vendor/katex/katex.min.js"></script>
+  <script defer src="assets/js/blog-markdown.js?v=20261002-2"></script>
+  <script defer src="assets/js/blog.js?v=20261002-2"></script>
 </head>
-<body>
+<body class="blog-site">
   <a class="skip-link" href="#main">Skip to content</a>
 
   <header class="site-header" data-header>
@@ -46,12 +52,12 @@
   <main id="main" class="page blog-page" data-blog-app>
     <header class="blog-header">
       <div>
-        <p class="kicker">Notes and Writing</p>
+        <p class="kicker">Jongwon's notebook</p>
         <h1>Blog</h1>
-        <p class="blog-intro">Research notes, paper thoughts, and occasional essays.</p>
+        <p class="blog-intro">On language, learning, and the ideas in between.</p>
       </div>
       <div class="blog-actions">
-        <button class="text-button" type="button" data-blog-write>Write</button>
+        <button class="primary-button write-button" type="button" data-blog-write><span aria-hidden="true">＋</span> Write a post</button>
         <button class="text-button" type="button" data-blog-login>Sign in</button>
         <button class="text-button" type="button" data-blog-logout hidden>Sign out</button>
       </div>
@@ -60,7 +66,7 @@
     <section class="blog-auth" data-blog-auth hidden aria-labelledby="blog-sign-in-title">
       <div class="blog-panel-heading">
         <div>
-          <p class="venue">Admin</p>
+          <p class="venue">Welcome back</p>
           <h2 id="blog-sign-in-title">Sign in to write</h2>
         </div>
         <button class="quiet-button" type="button" data-blog-auth-close>Close</button>
@@ -83,11 +89,16 @@
 
     <section class="blog-list-view" data-blog-list-view>
       <div class="blog-feed-heading">
-        <h2>Latest</h2>
+        <h2>All writing</h2>
         <span data-blog-count></span>
       </div>
       <p class="blog-status" data-blog-status aria-live="polite">Loading posts…</p>
       <div class="blog-feed" data-blog-list></div>
+      <div class="blog-empty" data-blog-empty hidden>
+        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M11 9h19l7 7v23H11V9Z M29 9v8h8 M18 24h12 M18 30h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h3>A little room for ideas.</h3>
+        <p>Paper notes, open questions, and things worth writing down.<br>The first post is on its way.</p>
+      </div>
     </section>
 
     <section class="blog-post-view" data-blog-post-view hidden>
@@ -96,7 +107,7 @@
         <p class="blog-post-meta" data-blog-post-meta></p>
         <h1 data-blog-post-title></h1>
         <p class="blog-post-summary" data-blog-post-summary></p>
-        <div class="blog-post-body" data-blog-post-body></div>
+        <div class="blog-post-body prose" data-blog-post-body></div>
         <button class="text-button blog-edit-button" type="button" data-blog-edit hidden>Edit post</button>
       </article>
 
@@ -128,31 +139,73 @@
     </section>
 
     <section class="blog-editor" data-blog-editor hidden aria-labelledby="editor-title">
-      <div class="blog-panel-heading">
-        <div>
-          <p class="venue">Editor</p>
-          <h2 id="editor-title" data-editor-title>New post</h2>
+      <form id="post-editor" data-blog-editor-form novalidate>
+        <div class="editor-topbar">
+          <div class="editor-breadcrumb">
+            <button class="quiet-button" type="button" data-editor-cancel>← All writing</button>
+            <span aria-hidden="true">/</span>
+            <h2 id="editor-title" data-editor-title>New post</h2>
+          </div>
+          <div class="editor-publish-actions">
+            <span class="draft-status" data-draft-status role="status">Draft · only on this browser</span>
+            <button class="primary-button" type="submit">Publish <span aria-hidden="true">↗</span></button>
+          </div>
         </div>
-        <button class="quiet-button" type="button" data-editor-cancel>Cancel</button>
-      </div>
-      <form class="blog-form" data-blog-editor-form>
-        <input name="id" type="hidden" />
-        <label>
-          Title
-          <input name="title" type="text" maxlength="180" required />
-        </label>
-        <label>
-          Summary
-          <textarea name="summary" rows="2" maxlength="360" placeholder="A short description for the post list"></textarea>
-        </label>
-        <label>
-          Body
-          <textarea class="post-editor-body" name="body" rows="18" required placeholder="Write in plain text. Blank lines create new paragraphs."></textarea>
-        </label>
-        <div class="blog-form-actions">
-          <button class="primary-button" type="submit">Publish</button>
-          <p class="form-status" data-editor-status aria-live="polite"></p>
+        <div class="editor-paper">
+          <div class="editor-metadata">
+            <input name="id" type="hidden" />
+            <label class="sr-only" for="post-title">Title</label>
+            <textarea id="post-title" class="editor-title-input" name="title" rows="1" maxlength="180" required placeholder="Give your idea a title…" autocomplete="off"></textarea>
+            <label class="sr-only" for="post-summary">Summary</label>
+            <textarea id="post-summary" class="editor-summary-input" name="summary" rows="2" maxlength="360" placeholder="A short introduction (optional)"></textarea>
+          </div>
+          <div class="editor-controls">
+            <div class="format-toolbar" role="group" aria-label="Formatting">
+              <button type="button" data-format="heading" title="Heading" aria-label="Insert heading">H<span class="subscript">2</span></button>
+              <button type="button" data-format="bold" title="Bold (Ctrl+B)" aria-label="Bold"><strong>B</strong></button>
+              <button type="button" data-format="italic" title="Italic (Ctrl+I)" aria-label="Italic"><em>I</em></button>
+              <span class="toolbar-divider" aria-hidden="true"></span>
+              <button type="button" data-format="link" title="Link" aria-label="Insert link">↗</button>
+              <button type="button" data-format="list" title="List" aria-label="Insert list">≡</button>
+              <button type="button" data-format="quote" title="Quote" aria-label="Insert quote">“</button>
+              <button type="button" data-format="code" title="Code block" aria-label="Insert code block">&lt;/&gt;</button>
+              <span class="toolbar-divider" aria-hidden="true"></span>
+              <button type="button" class="math-trigger" data-math-toggle aria-expanded="false" aria-controls="math-tools"><span aria-hidden="true">∑</span> Equation</button>
+            </div>
+            <div class="view-switch" role="group" aria-label="Editor view">
+              <button type="button" data-editor-mode="write" aria-pressed="false">Write</button>
+              <button type="button" data-editor-mode="split" aria-pressed="true">Split</button>
+              <button type="button" data-editor-mode="preview" aria-pressed="false">Preview</button>
+            </div>
+          </div>
+          <div id="math-tools" class="math-tools" data-math-tools hidden>
+            <div class="math-tools-heading"><span>Insert an equation</span><span class="math-note">Select a template, then edit the LaTeX.</span></div>
+            <div class="math-templates" data-math-templates></div>
+          </div>
+          <div class="editor-workspace" data-editor-workspace data-mode="split">
+            <div class="editor-source" data-editor-source>
+              <div class="pane-heading"><label for="post-body">Your words</label><span>Markdown + LaTeX</span></div>
+              <textarea id="post-body" class="post-editor-body" name="body" required maxlength="100000" spellcheck="true" placeholder="Start with a thought…&#10;&#10;Use the toolbar for formatting and equations.&#10;Your preview updates as you write."></textarea>
+            </div>
+            <section class="editor-preview" data-editor-preview-panel aria-label="Post preview" tabindex="0">
+              <div class="pane-heading"><span>Preview</span><span class="live-indicator">Live</span></div>
+              <div class="prose preview-content" data-editor-preview></div>
+            </section>
+          </div>
+          <div class="editor-footnote"><span data-word-count>0 words</span><span>Autosaved here. Published only when you're ready.</span></div>
         </div>
+        <div class="editor-bottom-bar">
+          <details class="writing-help">
+            <summary>Formatting guide</summary>
+            <div class="writing-help-content">
+              <p><code>## Heading</code> · <code>**bold**</code> · <code>[text](url)</code></p>
+              <p>Inline math: <code>$x^2$</code> &nbsp; Display math: <code>$$E = mc^2$$</code></p>
+              <p>LaTeX delimiters <code>\( … \)</code> and <code>\[ … \]</code> work too. Use Equation for fractions, sums, matrices, and aligned equations.</p>
+            </div>
+          </details>
+          <button class="quiet-button" type="button" data-draft-download>Download draft ↓</button>
+        </div>
+        <p class="form-status editor-status" data-editor-status role="status"></p>
       </form>
     </section>
 
