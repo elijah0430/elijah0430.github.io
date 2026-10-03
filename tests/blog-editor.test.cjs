@@ -17,7 +17,7 @@ function setup() {
   scripts.forEach(script => window.eval(script));
   let source = '';
   const api = window.BlogEditor.create({ element: window.document.querySelector('#editor'),
-    onChange: value => { source = value; }, onEquation() {}, onError: error => { throw error; } });
+    onChange: value => { source = value; }, onError: error => { throw error; } });
   const rendered = window.document.querySelector('#rendered');
   return { dom, window, api, rendered, get source() { return source; },
     render() { window.BlogMarkdown.render(rendered, api.editor.getMarkdown()); return rendered; },
@@ -128,11 +128,119 @@ test('new equations are editable and Markdown serialization keeps LaTeX', () => 
   app.api.editor.commands.setTextSelection(7);
   app.api.equation('x_i^2', false);
   assert.match(app.source, /\$x_i\^2\$/);
+  assert.equal(app.api.editor.state.selection.$from.parent.type.name, 'inlineMath');
+  assert.equal(app.api.editor.state.selection.$from.parent.isAtom, false);
   let position;
   app.api.editor.state.doc.descendants((node, pos) => { if (node.type.name === 'inlineMath') position = pos; });
   app.api.equation('\\frac{a}{b}', false, position);
   assert.match(app.source, /\\frac\{a\}\{b\}/);
   assert.equal(app.render().querySelectorAll('.katex').length, 1);
+  app.close();
+});
+
+test('equations are directly editable text; literal edits, paste, undo and multiline LaTeX survive', () => {
+  const app = setup();
+  app.api.load('Before $x_i$ after.\n\n$$\na = b\n$$');
+  const findMath = type => {
+    let found;
+    app.api.editor.state.doc.descendants((node, pos) => { if (node.type.name === type) found = { node, pos }; });
+    return found;
+  };
+  const inline = findMath('inlineMath');
+  app.api.editor.commands.setTextSelection({ from: inline.pos + 1, to: inline.pos + 1 + inline.node.content.size });
+  app.api.editor.view.dispatch(app.api.editor.state.tr.insertText('\\alpha_i + x_j'));
+  assert.match(app.source, /Before \$\\alpha_i \+ x_j\$ after/);
+  const block = findMath('blockMath');
+  app.api.editor.commands.setTextSelection({ from: block.pos + 1, to: block.pos + 1 + block.node.content.size });
+  const latex = String.raw`\begin{aligned}
+a_i &= b_i \\
+c &= \frac{1}{2}
+\end{aligned}`;
+  const paste = new app.window.Event('paste', { bubbles: true, cancelable: true });
+  Object.defineProperty(paste, 'clipboardData', { value: { getData: type => type === 'text/plain' ? latex : '' } });
+  app.api.editor.view.dom.dispatchEvent(paste);
+  assert.ok(app.source.includes(`$$\n${latex}\n$$`));
+  const markup = app.window.document.querySelector('.math-source-block');
+  assert.equal(markup.textContent, latex);
+  assert.equal(markup.getAttribute('contenteditable'), null);
+  assert.equal(markup.getAttribute('role'), null);
+  assert.equal(markup.querySelector('.katex'), null);
+  assert.equal(app.render().querySelectorAll('.katex').length, 2);
+  const markdown = app.api.editor.getMarkdown();
+  app.api.load(markdown, true);
+  assert.equal(app.api.editor.getMarkdown(), markdown);
+  app.api.equation('z_k', false);
+  app.api.format('undo');
+  assert.equal(app.api.editor.getMarkdown(), markdown);
+  app.close();
+});
+
+test('copying body text keeps Markdown, math delimiters, matrices, and footnotes; partial LaTeX is literal', () => {
+  const app = setup();
+  const latex = String.raw`\begin{bmatrix} a_i & b \\ c & d_j \end{bmatrix}`;
+  app.api.load(`**Before** $x_i$ after[^a].\n\n$$\n${latex}\n$$\n\n[^a]: A note with $y_j$.`);
+  app.api.editor.commands.selectAll();
+  const copy = () => app.api.editor.view.serializeForClipboard(app.api.editor.state.selection.content()).text;
+  const whole = copy();
+  assert.equal(whole, app.api.editor.getMarkdown());
+  assert.ok(whole.includes(`$$\n${latex}\n$$`));
+  assert.match(whole, /\[\^a\]: A note with \$y_j\$/);
+  const richCopy = app.api.editor.view.serializeForClipboard(app.api.editor.state.selection.content()).dom;
+  assert.ok(richCopy.textContent.includes('$x_i$'));
+  assert.ok(richCopy.textContent.includes(`$$\n${latex}\n$$`));
+  let pos;
+  app.api.editor.state.doc.descendants((node, at) => { if (node.type.name === 'blockMath') pos = at; });
+  app.api.editor.commands.setTextSelection({ from: pos + 1, to: pos + 1 + latex.length });
+  assert.equal(copy(), latex);
+  app.api.editor.commands.setTextSelection({ from: pos + 1, to: pos + 7 });
+  assert.equal(copy(), '\\begin');
+  app.api.load(whole, true);
+  assert.equal(app.api.editor.getMarkdown(), whole);
+  assert.equal(app.render().querySelectorAll('.katex').length, 3);
+  app.close();
+});
+
+test('typing math creates editable source; keyboard navigation and newlines do not trap the cursor', () => {
+  const app = setup();
+  app.api.load('');
+  const type = text => {
+    for (const character of text) {
+      const { from, to } = app.api.editor.state.selection;
+      if (!app.api.editor.view.someProp('handleTextInput', fn => fn(app.api.editor.view, from, to, character))) {
+        app.api.editor.view.dispatch(app.api.editor.state.tr.insertText(character, from, to));
+      }
+    }
+  };
+  const key = (name, options = {}) => app.api.editor.view.dom.dispatchEvent(new app.window.KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true, ...options }));
+  type('$x_i$');
+  assert.equal(app.api.editor.state.doc.firstChild.firstChild.type.name, 'inlineMath');
+  assert.equal(app.api.editor.getMarkdown(), '$x_i$');
+  app.api.editor.commands.setTextSelection(5);
+  key('ArrowRight');
+  type(' after');
+  assert.equal(app.api.editor.getMarkdown(), '$x_i$ after');
+  app.api.load('');
+  type('$$x_i$$');
+  assert.equal(app.api.editor.state.doc.firstChild.type.name, 'blockMath');
+  assert.match(app.api.editor.getMarkdown(), /\$\$\nx_i\n\$\$/);
+  app.api.editor.commands.setTextSelection(4);
+  key('Enter');
+  type('y_j');
+  assert.match(app.api.editor.getMarkdown(), /x_i\ny_j/);
+  key('Enter', { ctrlKey: true });
+  type('Outside');
+  assert.equal(app.api.editor.state.selection.$from.parent.type.name, 'paragraph');
+  assert.match(app.api.editor.getMarkdown(), /\$\$\n\nOutside$/);
+  app.close();
+});
+
+test('inline display math keeps its display delimiters after edits', () => {
+  const app = setup();
+  app.api.load('Before $$x_i$$ after.');
+  assert.equal(app.api.editor.getMarkdown(), 'Before $$x_i$$ after.');
+  app.api.editor.commands.setTextSelection(1);
+  app.api.editor.commands.insertContent('New ');
+  assert.match(app.source, /Before \$\$x_i\$\$ after/);
   app.close();
 });
 
@@ -309,6 +417,12 @@ test('full app autosaves rich toggles, restores them, and publishes only explici
   // Opening an existing draft must not normalize/overwrite its original source.
   assert.equal(window.document.querySelector('#post-body').value, toggleSource);
   api.editor.commands.insertContent('한글 입력 ');
+  window.document.querySelector('[data-math-toggle]').click();
+  window.document.querySelector('[aria-label="Insert inline equation"]').click();
+  assert.equal(window.document.querySelector('[data-equation-dialog]'), null);
+  assert.equal(api.editor.state.selection.$from.parent.type.name, 'inlineMath');
+  api.editor.view.dispatch(api.editor.state.tr.insertText('\\alpha_i'));
+  api.editor.commands.setTextSelection(api.editor.state.selection.$from.after());
   window.document.querySelector('[data-insert-footnote]').click();
   window.document.querySelector('[data-footnote-input]').value = '설명과 $x_i$.';
   window.document.querySelector('[data-footnote-form]').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
@@ -317,6 +431,7 @@ test('full app autosaves rich toggles, restores them, and publishes only explici
   const draft = JSON.parse(window.localStorage.getItem('jongwon-blog-draft-v1:new'));
   assert.match(draft.body, /한글 입력/);
   assert.match(draft.body, /Hidden/);
+  assert.match(draft.body, /\$\\alpha_i\$/);
   assert.match(draft.body, /\[\^note-1\]: 설명과 \$x_i\$\./);
   assert.equal(calls.filter(call => call.method === 'POST').length, 0);
   window.document.querySelector('[data-editor-mode="source"]').click();

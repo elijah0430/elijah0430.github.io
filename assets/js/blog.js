@@ -53,9 +53,6 @@
   let refreshRequest;
   let richEditor;
   let editorFailed = false;
-  let equationTarget;
-  const equationDialog = app.querySelector('[data-equation-dialog]');
-  const equationInput = app.querySelector('[data-equation-input]');
   const linkDialog = app.querySelector('[data-link-dialog]');
   const footnoteDialog = app.querySelector('[data-footnote-dialog]');
   const footnoteInput = app.querySelector('[data-footnote-input]');
@@ -71,22 +68,11 @@
     footnoteInput.focus();
   }
 
-  function openEquation(latex, block, pos = null) {
-    equationTarget = { block, pos };
-    equationInput.value = latex;
-    app.querySelector('[data-equation-status]').textContent = '';
-    renderBody(app.querySelector('[data-equation-preview]'), `$$\n${latex}\n$$`);
-    equationDialog.showModal();
-    equationInput.focus();
-    equationInput.select();
-  }
-
   function prepareRichEditor() {
     if (!window.BlogEditor) return false;
     if (!richEditor) richEditor = window.BlogEditor.create({
       element: app.querySelector('[data-block-editor]'),
       onChange(markdown) { bodyInput.value = markdown; editorFailed = false; changed(); },
-      onEquation: openEquation,
       onFootnote: openFootnote,
       onError(error) { console.error(error); editorFailed = true; editorStatus.textContent = 'The editor could not convert this change. Undo it before publishing.'; },
     });
@@ -525,8 +511,10 @@
     renderBody(sample, `$${template.thumbnail || template.latex}$`);
     button.append(sample, makeTextElement('span', 'template-label', template.name));
     button.addEventListener('click', () => {
-      if (state.mode === 'write' && richEditor) openEquation(template.latex, !template.inline);
+      if (state.mode === 'write' && richEditor) richEditor.equation(template.latex, !template.inline);
       else insertText(template.inline ? '$' : '$$\n', template.inline ? '$' : '\n$$', template.latex, !template.inline);
+      mathTools.hidden = true;
+      mathToggle.setAttribute('aria-expanded', 'false');
     });
     app.querySelector('[data-math-templates]').append(button);
   });
@@ -561,17 +549,6 @@
   app.querySelector('[data-footnote-remove]').addEventListener('click', () => {
     try { richEditor.removeFootnote(footnoteTarget.pos); footnoteDialog.close(); richEditor.focus(); }
     catch (error) { app.querySelector('[data-footnote-status]').textContent = error.message; }
-  });
-  equationInput.addEventListener('input', () => renderBody(app.querySelector('[data-equation-preview]'), `$$\n${equationInput.value}\n$$`));
-  app.querySelector('[data-equation-cancel]').addEventListener('click', () => equationDialog.close());
-  app.querySelector('[data-equation-form]').addEventListener('submit', (event) => {
-    event.preventDefault();
-    if (!equationInput.value.trim()) return;
-    try {
-      richEditor.equation(equationInput.value.trim(), equationTarget.block, equationTarget.pos);
-      equationDialog.close();
-      richEditor.focus();
-    } catch (error) { app.querySelector('[data-equation-status]').textContent = error.message; }
   });
   app.querySelector('[data-link-cancel]').addEventListener('click', () => linkDialog.close());
   app.querySelector('[data-link-form]').addEventListener('submit', (event) => {

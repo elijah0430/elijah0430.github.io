@@ -16,15 +16,15 @@
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/styles.css?v=20261002" />
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css" />
-  <link rel="stylesheet" href="assets/css/blog.css?v=20261003-footnotes" />
+  <link rel="stylesheet" href="assets/css/blog.css?v=20261003-inline-math" />
   <script>document.documentElement.classList.add('js');</script>
   <script defer src="assets/js/main.js"></script>
   <script defer src="assets/vendor/marked/marked.umd.js"></script>
   <script defer src="assets/vendor/dompurify/purify.min.js"></script>
   <script defer src="assets/vendor/katex/katex.min.js"></script>
-  <script defer src="assets/js/blog-markdown.js?v=20261003-footnotes"></script>
-  <script defer src="assets/js/blog-editor.js?v=20261003-footnotes"></script>
-  <script defer src="assets/js/blog.js?v=20261003-footnotes"></script>
+  <script defer src="assets/js/blog-markdown.js?v=20261003-inline-math"></script>
+  <script defer src="assets/js/blog-editor.js?v=20261003-inline-math"></script>
+  <script defer src="assets/js/blog.js?v=20261003-inline-math"></script>
 </head>
 <body class="blog-site">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -184,7 +184,7 @@
             </div>
           </div>
           <div id="math-tools" class="math-tools" data-math-tools hidden>
-            <div class="math-tools-heading"><span>Insert an equation</span><span class="math-note">Select a template, then edit the LaTeX.</span></div>
+            <div class="math-tools-heading"><span>Insert an equation</span><span class="math-note">Edit LaTeX directly in the body. See the result in Preview.</span></div>
             <div class="math-templates" data-math-templates></div>
           </div>
           <div class="editor-workspace" data-editor-workspace data-mode="write">
@@ -206,7 +206,8 @@
             <div class="writing-help-content">
               <p><code>## Heading</code> · <code>**bold**</code> · <code>[text](url)</code></p>
               <p>Type <code>/toggle</code> then Space for a collapsible block. Edit its title, press Enter, and write inside. Click the arrow to collapse it. Use ↳ to write after it, or ⇤ to unwrap it without deleting its contents.</p>
-              <p>Click an equation to edit its LaTeX. Ctrl/Cmd+Z undoes edits; Ctrl/Cmd+S saves the draft.</p>
+              <p>Edit and copy LaTeX directly in the body, without a separate dialog. Preview shows the rendered equations. Ctrl/Cmd+Enter continues after an equation. Copying body text keeps its Markdown and LaTeX.</p>
+              <p>Ctrl/Cmd+Z undoes edits; Ctrl/Cmd+S saves the draft.</p>
               <p>Use Footnote to add a note, or click a superscript number to edit it. Notes are numbered automatically. Markdown: <code>Text[^note]</code> and, on a separate line, <code>[^note]: Explanation</code>.</p>
               <p>Inline math: <code>$x^2$</code> &nbsp; Display math: <code>$$E = mc^2$$</code></p>
               <p>LaTeX delimiters <code>\( … \)</code> and <code>\[ … \]</code> work too. Use Equation for fractions, sums, matrices, and aligned equations.</p>
@@ -218,16 +219,6 @@
       </form>
     </section>
 
-    <dialog class="editor-dialog" data-equation-dialog aria-labelledby="equation-dialog-title">
-      <form method="dialog" data-equation-form>
-        <h2 id="equation-dialog-title">Equation</h2>
-        <label for="equation-latex">LaTeX</label>
-        <textarea id="equation-latex" rows="4" spellcheck="false" required data-equation-input></textarea>
-        <div class="prose equation-dialog-preview" data-equation-preview></div>
-        <p class="form-status" data-equation-status role="status"></p>
-        <div class="dialog-actions"><button class="quiet-button" type="button" data-equation-cancel>Cancel</button><button class="primary-button" type="submit">Apply</button></div>
-      </form>
-    </dialog>
     <dialog class="editor-dialog" data-footnote-dialog aria-labelledby="footnote-dialog-title">
       <form method="dialog" data-footnote-form>
         <h2 id="footnote-dialog-title">Footnote</h2>

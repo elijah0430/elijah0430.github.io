@@ -259,7 +259,8 @@
       if (!equation) return;
       if (options.editor) {
         node.setAttribute('data-type', equation.display && node.tagName === 'DIV' ? 'block-math' : 'inline-math');
-        node.setAttribute('data-latex', equation.text);
+        node.setAttribute('data-display', String(equation.display));
+        node.textContent = equation.text;
         node.removeAttribute('data-blog-math');
         return;
       }

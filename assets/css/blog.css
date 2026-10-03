@@ -199,9 +199,11 @@ html[data-theme='dark'] .blog-site {
 .blog-toggle > summary::marker { color: var(--muted); font-size: .8em; }
 .blog-toggle > div { margin: 8px 0 8px 6px; padding-left: 18px; border-left: 1px solid var(--line); }
 .blog-toggle > div > :first-child { margin-top: 0; }
-.editor-math { cursor: pointer; border-radius: 3px; }
-.editor-math:hover { background: var(--link-bg); }
-.editor-math.math-block { display: block; padding: 8px; overflow-x: auto; }
+.block-editor .math-source { cursor: text; font-family: Consolas, 'Courier New', monospace; font-size: .88em; color: var(--link); white-space: pre-wrap; overflow-wrap: anywhere; }
+.math-source::before, .math-source::after { content: '$'; color: var(--muted); }
+.math-source[data-display='true']::before, .math-source[data-display='true']::after { content: '$$'; }
+.block-editor .math-source-block { display: block; margin: 1.3em 0; line-height: 1.7; }
+.math-source-block::before, .math-source-block::after { display: block; }
 .format-toolbar .toggle-tool { white-space: nowrap; font-size: .83rem; }
 .block-editor table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .block-editor td, .block-editor th { border: 1px solid var(--line); padding: 6px 10px; vertical-align: top; }
@@ -215,7 +217,6 @@ html[data-theme='dark'] .blog-site {
 .editor-dialog textarea, .editor-dialog input { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 12px; }
 .editor-dialog textarea { font-family: Consolas, monospace; resize: vertical; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; }
-.equation-dialog-preview { padding: 10px 0; overflow-x: auto; }
 .format-toolbar .footnote-tool { white-space: nowrap; font-size: .83rem; }
 .editor-footnote-ref, .blog-footnote-ref { font-family: var(--font-main); font-size: .72em; vertical-align: super; line-height: 0; }
 .editor-footnote-ref { cursor: pointer; color: var(--link); padding: 3px; border-radius: 3px; }

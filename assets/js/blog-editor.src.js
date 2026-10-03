@@ -1,6 +1,7 @@
 // Build with `npm run build:editor`. The checked-in bundle runs on GitHub Pages.
 import { Editor, Node, InputRule, mergeAttributes } from '@tiptap/core';
 import { TextSelection } from '@tiptap/pm/state';
+import { DOMSerializer } from '@tiptap/pm/model';
 import { closeHistory } from '@tiptap/pm/history';
 import StarterKit from '@tiptap/starter-kit';
 import { Details, DetailsSummary, DetailsContent } from '@tiptap/extension-details';
@@ -92,53 +93,71 @@ function footnoteNode(editNote, definition = false) {
   });
 }
 
-function mathNode(block, editMath) {
+function mathSource(node, block) {
+  const latex = (node.content || []).map(child => child.text || '').join('');
+  return block ? `$$\n${latex}\n$$` : `${node.attrs?.display ? '$$' : '$'}${latex}${node.attrs?.display ? '$$' : '$'}`;
+}
+
+function mathNode(block) {
   const name = block ? 'blockMath' : 'inlineMath';
   const kind = block ? 'block-math' : 'inline-math';
   const tag = block ? 'div' : 'span';
   return Node.create({
-    name, group: block ? 'block' : 'inline', inline: !block, atom: true,
-    addAttributes() { return { latex: { default: '', parseHTML: el => el.getAttribute('data-latex'), renderHTML: attrs => ({ 'data-latex': attrs.latex }) } }; },
-    parseHTML() { return [{ tag: `${tag}[data-type="${kind}"]` }]; },
-    renderHTML({ HTMLAttributes }) { return [tag, mergeAttributes(HTMLAttributes, { 'data-type': kind })]; },
-    renderMarkdown(node) { return block ? `$$\n${node.attrs.latex}\n$$` : `$${node.attrs.latex}$`; },
+    name, group: block ? 'block' : 'inline', inline: !block,
+    content: 'text*', marks: '', code: true,
+    addAttributes() { return { display: { default: block, parseHTML: el => el.dataset.display === 'true', renderHTML: attrs => ({ 'data-display': String(attrs.display) }) } }; },
+    parseHTML() { return [{ tag: `${tag}[data-type="${kind}"]`, preserveWhitespace: 'full' }]; },
+    renderHTML({ HTMLAttributes }) {
+      return [tag, mergeAttributes(HTMLAttributes, { 'data-type': kind, class: `editor-math math-source${block ? ' math-source-block' : ''}`, spellcheck: 'false' }), 0];
+    },
+    renderMarkdown(node) { return mathSource(node, block); },
+    renderText({ node }) { return mathSource(node.toJSON(), block); },
     addInputRules() {
       return [new InputRule({
         find: block ? /^\$\$([^$]+)\$\$$/ : /(?<!\$)\$([^$\n]+)\$$/,
         handler: ({ state, range, match }) => {
           if (/^\s|\s$/.test(match[1]) || !block && /^\d+\s/.test(match[1])) return null;
-          const node = this.type.create({ latex: match[1] });
-          state.tr.replaceWith(range.from, range.to, node);
+          const node = this.type.create(null, state.schema.text(match[1]));
+          const $from = state.tr.doc.resolve(range.from);
+          const $to = state.tr.doc.resolve(range.to);
+          if (block && $from.sameParent($to) && $from.parentOffset === 0 && $to.parentOffset === $to.parent.content.size) {
+            state.tr.replaceWith($from.before(), $to.after(), node);
+          } else state.tr.replaceRangeWith(range.from, range.to, node);
         },
       })];
     },
-    addNodeView() {
-      return ({ node, getPos, editor }) => {
-        const dom = document.createElement(tag);
-        dom.className = `editor-math ${block ? 'math-block' : 'math-inline'}`;
-        dom.contentEditable = 'false';
-        dom.setAttribute('role', 'button');
-        dom.setAttribute('tabindex', '0');
-        dom.setAttribute('aria-label', 'Edit equation');
-        let current = node;
-        const render = () => {
-          try { window.katex.render(current.attrs.latex, dom, { displayMode: block, throwOnError: true, trust: false, strict: 'ignore', maxExpand: 500, maxSize: 20 }); }
-          catch (_) { dom.textContent = current.attrs.latex; dom.classList.add('math-error'); }
-        };
-        const edit = () => {
-          const pos = getPos();
-          if (editor.isEditable && typeof pos === 'number') editMath(current.attrs.latex, block, pos);
-        };
-        dom.addEventListener('click', edit);
-        dom.addEventListener('keydown', event => { if (['Enter', ' '].includes(event.key)) { event.preventDefault(); edit(); } });
-        render();
-        return { dom, update(next) { if (next.type !== current.type) return false; current = next; dom.classList.remove('math-error'); render(); return true; }, stopEvent: () => true };
+    addKeyboardShortcuts() {
+      const exit = () => {
+        const { $from } = this.editor.state.selection;
+        if ($from.parent.type.name !== name) return false;
+        if (block) {
+          const next = this.editor.state.doc.nodeAt($from.after());
+          if (next?.isTextblock && !next.type.spec.code) return this.editor.commands.setTextSelection($from.after() + 1);
+          return this.editor.commands.exitCode();
+        }
+        return this.editor.commands.setTextSelection($from.after());
+      };
+      return {
+        'Mod-Enter': exit,
+        Enter: () => {
+          if (this.editor.state.selection.$from.parent.type.name !== name) return false;
+          if (block) return this.editor.commands.command(({ tr }) => { tr.insertText('\n'); return true; });
+          exit(); return this.editor.commands.splitBlock();
+        },
+        ArrowRight: () => {
+          const { empty, $from } = this.editor.state.selection;
+          return !block && empty && $from.parent.type.name === name && $from.parentOffset === $from.parent.content.size ? exit() : false;
+        },
+        ArrowLeft: () => {
+          const { empty, $from } = this.editor.state.selection;
+          return !block && empty && $from.parent.type.name === name && $from.parentOffset === 0 ? this.editor.commands.setTextSelection($from.before()) : false;
+        },
       };
     },
   });
 }
 
-export function create({ element, onChange, onEquation, onFootnote, onError }) {
+export function create({ element, onChange, onFootnote, onError }) {
   let currentSource = null;
   const editor = new Editor({
     element,
@@ -154,11 +173,18 @@ export function create({ element, onChange, onEquation, onFootnote, onError }) {
         includeChildren: true,
         placeholder: ({ node }) => node.type.name === 'detailsSummary' ? 'Toggle title' : 'Write, or type /toggle…',
       }),
-      mathNode(false, onEquation), mathNode(true, onEquation),
+      mathNode(false), mathNode(true),
       Markdown,
     ],
     editorProps: {
       attributes: { class: 'prose block-editor', 'aria-label': 'Post body', role: 'textbox', 'aria-multiline': 'true', spellcheck: 'true' },
+      clipboardTextSerializer(slice, view) {
+        const { $from, $to } = view.state.selection;
+        // A selection within LaTeX/code is literal text. Larger selections carry
+        // Markdown delimiters, including equations and footnote definitions.
+        if ($from.sameParent($to) && $from.parent.type.spec.code) return view.state.doc.textBetween($from.pos, $to.pos);
+        return editor.markdown.serialize({ type: 'doc', content: slice.content.toJSON() || [] });
+      },
       // Keep external pasted HTML out of the document. Markdown/plain text is
       // imported through the same sanitizer used by the public reading view.
       handlePaste(view, event) {
@@ -175,6 +201,13 @@ export function create({ element, onChange, onEquation, onFootnote, onError }) {
       catch (error) { onError(error); }
     },
   });
+  // Rich-text destinations may prefer text/html over text/plain. Include the
+  // delimiters there too, without copying KaTeX's visual/MathML duplicates.
+  editor.setOptions({ editorProps: { ...editor.options.editorProps, clipboardSerializer: new DOMSerializer({
+    ...DOMSerializer.nodesFromSchema(editor.schema),
+    inlineMath: node => ['span', {}, mathSource(node.toJSON(), false)],
+    blockMath: node => ['pre', {}, mathSource(node.toJSON(), true)],
+  }, DOMSerializer.marksFromSchema(editor.schema)) } });
   const numberFootnotes = () => {
     const numbers = new Map();
     editor.state.doc.descendants(node => {
@@ -235,11 +268,24 @@ export function create({ element, onChange, onEquation, onFootnote, onError }) {
     },
     equation(latex, block, pos = null) {
       historyBoundary();
-      if (pos !== null) {
-        const current = editor.state.doc.nodeAt(pos);
-        if (!current || !['blockMath', 'inlineMath'].includes(current.type.name)) throw new Error('Select the equation again.');
-        editor.chain().focus().command(({ tr }) => { tr.setNodeMarkup(pos, undefined, { latex }); return true; }).run();
-      } else editor.chain().focus().insertContent({ type: block ? 'blockMath' : 'inlineMath', attrs: { latex } }).run();
+      editor.chain().focus().command(({ tr, state }) => {
+        if (pos === null && state.selection.$from.parent.type.spec.code) {
+          tr.insertText(latex); return true;
+        }
+        const current = pos === null ? null : tr.doc.nodeAt(pos);
+        if (pos !== null && !['blockMath', 'inlineMath'].includes(current?.type.name)) throw new Error('Select the equation again.');
+        const type = current?.type || state.schema.nodes[block ? 'blockMath' : 'inlineMath'];
+        const node = type.create(current?.attrs, latex ? state.schema.text(latex) : null);
+        if (pos !== null) tr.replaceWith(pos, pos + current.nodeSize, node);
+        else tr.replaceSelectionWith(node, false);
+        // Select the inserted source so a template can be replaced immediately.
+        tr.mapping.maps.at(-1)?.forEach((_oldStart, _oldEnd, start, end) => {
+          tr.doc.nodesBetween(start, end, (child, at) => {
+            if (child === node) tr.setSelection(TextSelection.create(tr.doc, at + 1, at + 1 + node.content.size));
+          });
+        });
+        return true;
+      }).run();
       historyBoundary();
     },
     footnote(body, pos = null) {

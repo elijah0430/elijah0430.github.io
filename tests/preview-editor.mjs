@@ -31,7 +31,7 @@ http.createServer(async (req, res) => {
     const file = resolve(root, '.' + (pathname === '/' ? '/blog.html' : pathname));
     if (!file.startsWith(resolve(root) + sep) || pathname.includes('node_modules') || pathname.includes('.git')) { res.writeHead(403); res.end(); return; }
     let data = await readFile(file);
-    if (file.endsWith('blog.html')) data = data.toString().replace('<head>', '<head>' + setup);
+    if (file.endsWith('blog.html')) data = data.toString().replace('<head>', () => '<head>' + setup);
     res.writeHead(200, { 'Content-Type':mime[extname(file)] || 'application/octet-stream', 'Cache-Control':'no-store', 'Content-Security-Policy':"connect-src 'none'" });
     res.end(data);
   } catch { res.writeHead(404); res.end('Not found'); }
