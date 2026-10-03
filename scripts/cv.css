@@ -1,0 +1,25 @@
+/* Layout only. All CV content comes from index.html and research.html. */
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; color: #243244; background: #fff; font: 10.5pt/1.45 Arial, Helvetica, sans-serif; }
+main { max-width: 8.5in; margin: auto; padding: .55in .65in; }
+header { display: flex; justify-content: space-between; gap: 20px; border-bottom: 1px solid #d8e0e8; padding-bottom: 16px; }
+header > div { flex: 1; }
+h1 { font-size: 24pt; margin: 0 0 6px; line-height: 1.1; }
+.subtitle { color: #5f6b7a; }
+.headshot { width: .9in; height: .9in; object-fit: cover; }
+a { color: #285f88; text-decoration: none; }
+p { margin: 0 0 4px; }
+.contact, .links, .venue, .date, .meta { font-size: 9pt; color: #5f6b7a; }
+section { margin-top: 18px; }
+h2 { font-size: 11pt; text-transform: uppercase; border-bottom: 1px solid #d8e0e8; padding-bottom: 4px; margin: 0 0 10px; break-after: avoid; }
+h3 { font-size: 10.5pt; line-height: 1.35; margin: 0 0 3px; }
+.item { display: grid; grid-template-columns: 1.15in 1fr; gap: 14px; }
+.item, .paper { margin-bottom: 12px; break-inside: avoid; }
+.summary { color: #5f6b7a; font-size: 9.5pt; }
+ul { margin: 4px 0; padding-left: 16px; }
+li { margin-bottom: 3px; }
+.updated { text-align: right; color: #5f6b7a; font-size: 9pt; margin-top: 20px; }
+@page { size: Letter; margin: .55in .65in; }
+@media print { main { padding: 0; max-width: none; } }
+@media screen and (max-width: 600px) { main { padding: 24px; } .item { grid-template-columns: 1fr; gap: 3px; } .headshot { width: 60px; height: 60px; } }

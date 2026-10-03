@@ -1,0 +1,96 @@
+name: Sync CV from homepage
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - research.html
+      - cv.html
+      - cv.pdf
+      - assets/img/**
+      - scripts/**
+      - tests/test_cv.py
+      - .github/workflows/sync-cv.yml
+  pull_request:
+    paths:
+      - index.html
+      - research.html
+      - assets/img/**
+      - scripts/**
+      - tests/test_cv.py
+      - .github/workflows/sync-cv.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scripts/requirements-cv.txt
+      - run: pip install -r scripts/requirements-cv.txt
+      - run: python -m unittest discover -s tests -p 'test_cv.py' -v
+
+  sync:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    concurrency:
+      group: sync-cv-main
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # A queued run always builds the latest main, never an older event SHA.
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scripts/requirements-cv.txt
+      - run: pip install -r scripts/requirements-cv.txt
+      - name: Generate, validate, and commit only CV outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            python -m unittest discover -s tests -p 'test_cv.py' -v
+            python scripts/generate_cv_pdf.py
+            git add -- cv.html cv.pdf
+            if git diff --cached --quiet; then
+              break
+            fi
+            git commit -m "Update CV from homepage"
+            if git push origin HEAD:main; then
+              break
+            fi
+            if [ "$attempt" = 3 ]; then
+              echo "::error::Could not push generated CV. Check main branch rules."
+              exit 1
+            fi
+            # Fresh checkout in this disposable runner; regenerate if main advanced.
+            # Never force-push or overwrite another user's homepage edits.
+            git fetch origin main
+            git checkout --detach origin/main
+          done
+      - name: Rebuild existing branch-based GitHub Pages site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Bot commits do not trigger Pages automatically. Explicitly request a
+          # build from latest main, including on a retry with no new CV changes.
+          gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds"

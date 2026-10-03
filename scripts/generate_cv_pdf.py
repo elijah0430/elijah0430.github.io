@@ -1,281 +1,306 @@
+"""Generate both CV formats from the visible homepage; never maintain a second CV."""
+
+import argparse
+import hashlib
+import html
+import json
+import re
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urljoin, urlsplit
 
-import fitz
-
+from bs4 import BeautifulSoup, NavigableString
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.utils import ImageReader
+from reportlab.platypus import (
+    HRFlowable, Image, KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table,
+    TableStyle,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "cv.pdf"
-PROFILE = ROOT / "assets" / "img" / "cv-photo.png"
-
-PAGE_W, PAGE_H = fitz.paper_size("letter")
-MARGIN_X = 54
-MARGIN_TOP = 48
-MARGIN_BOTTOM = 48
-CONTENT_W = PAGE_W - (MARGIN_X * 2)
-DATE_W = 96
-GAP = 14
-TEXT_X = MARGIN_X + DATE_W + GAP
-TEXT_W = CONTENT_W - DATE_W - GAP
-
-TEXT = (0.11, 0.16, 0.23)
-MUTED = (0.37, 0.42, 0.48)
-LINE = (0.82, 0.85, 0.89)
-ACCENT = (0.11, 0.37, 0.54)
+KST = timezone(timedelta(hours=9))
+BLUE = colors.HexColor("#285f88")
+MUTED = colors.HexColor("#5f6b7a")
+LINE = colors.HexColor("#d8e0e8")
 
 
-def wrap_lines(text, width, fontsize=9.8, fontname="helv"):
-    if not text:
-        return [""]
-    words = text.split()
-    lines = []
-    current = ""
-    for word in words:
-        candidate = f"{current} {word}".strip()
-        if fitz.get_text_length(candidate, fontname=fontname, fontsize=fontsize) <= width:
-            current = candidate
-        else:
-            if current:
-                lines.append(current)
-            current = word
-    if current:
-        lines.append(current)
-    return lines
+def normalized(value):
+    return re.sub(r"\s+", " ", value.translate(str.maketrans({"–": "-", "—": "-", "‑": "-"}))).strip()
 
 
-def textbox_height(text, width, fontsize=9.8, fontname="helv", lineheight=1.25):
-    return max(1, len(wrap_lines(text, width, fontsize, fontname))) * fontsize * lineheight
+def required(parent, selector):
+    node = parent.select_one(selector)
+    if node is None or not node.get_text(strip=True):
+        raise ValueError(f"Missing CV source field: {selector}")
+    return node
 
 
-def ensure_page(doc, page, y, needed):
-    if y + needed <= PAGE_H - MARGIN_BOTTOM:
-        return page, y
-    page = doc.new_page(width=PAGE_W, height=PAGE_H)
-    return page, MARGIN_TOP
+def plain(node):
+    return normalized(node.get_text())
 
 
-def draw_wrapped(page, text, x, y, w, fontsize=9.8, color=TEXT, fontname="helv", lineheight=1.25):
-    line_step = fontsize * lineheight
-    for line in wrap_lines(text, w, fontsize, fontname):
-        page.insert_text((x, y), line, fontsize=fontsize, fontname=fontname, color=color)
-        y += line_step
-    return y
+def safe_url(value, base):
+    url = urljoin(base, value)
+    if urlsplit(url).scheme not in {"https", "http", "mailto"}:
+        raise ValueError(f"Unsupported link in CV source: {value}")
+    return url
 
 
-def section(doc, page, y, title):
-    page, y = ensure_page(doc, page, y, 34)
-    page.insert_text((MARGIN_X, y), title.upper(), fontsize=10.5, fontname="helv", color=TEXT)
-    y += 6
-    page.draw_line((MARGIN_X, y), (MARGIN_X + CONTENT_W, y), color=LINE, width=0.8)
-    return page, y + 12
+def inline(node, base):
+    """Keep text, emphasis and links, not site-specific wrappers or active HTML."""
+    def visit(child):
+        if isinstance(child, NavigableString):
+            return html.escape(str(child))
+        if child.name in {"script", "style"}:
+            return ""
+        content = "".join(visit(part) for part in child.children)
+        if child.name in {"strong", "b", "em", "i"}:
+            return f"<{child.name}>{content}</{child.name}>"
+        if child.name == "a" and child.get("href"):
+            return f'<a href="{html.escape(safe_url(child["href"], base), quote=True)}">{content}</a>'
+        return content
+    return normalized("".join(visit(child) for child in node.children))
 
 
-def item(doc, page, y, date, title, body, meta=None):
-    body_h = textbox_height(body, TEXT_W, 9.4)
-    meta_h = textbox_height(meta, TEXT_W, 9.0) if meta else 0
-    needed = max(28, body_h + meta_h + 18)
-    page, y = ensure_page(doc, page, y, needed)
-    page.insert_text((MARGIN_X, y), date, fontsize=8.8, fontname="helv", color=MUTED)
-    page.insert_text((TEXT_X, y), title, fontsize=9.8, fontname="helv", color=TEXT)
-    y_body = y + 12
-    y_body = draw_wrapped(page, body, TEXT_X, y_body, TEXT_W, fontsize=9.2, color=TEXT)
-    if meta:
-        y_body = draw_wrapped(page, meta, TEXT_X, y_body + 1, TEXT_W, fontsize=8.8, color=MUTED)
-    return page, y_body + 8
+def read_sources(root):
+    home = BeautifulSoup((root / "index.html").read_text(encoding="utf-8"), "html.parser")
+    research = BeautifulSoup((root / "research.html").read_text(encoding="utf-8"), "html.parser")
+    canonical = home.select_one('link[rel="canonical"]')
+    if canonical is None or not canonical.get("href"):
+        raise ValueError("Missing canonical homepage URL")
+    base = canonical["href"]
+    intro = required(home, "#home")
+    portrait = intro.select_one("img.portrait")
+    image_path = urlsplit(portrait["src"]).path if portrait else ""
+    # Never fetch remote images or read outside the repository.
+    if not image_path or urlsplit(portrait["src"]).netloc:
+        raise ValueError("CV requires a local homepage portrait")
+    photo = (root / image_path).resolve()
+    if not photo.is_relative_to(root.resolve()) or not photo.is_file():
+        raise ValueError("Homepage portrait is missing or outside the repository")
+    email = home.select_one('a[href^="mailto:"]')
+    if email is None:
+        raise ValueError("Missing contact email")
+    contacts = [{"label": plain(email), "url": safe_url(email["href"], base)}]
+    contacts.append({"label": urlsplit(base).netloc, "url": base})
+    for link in intro.select(".link-row a[href]"):
+        if Path(urlsplit(link["href"]).path).name not in {"cv.pdf", "cv.html"}:
+            contacts.append({"label": plain(link), "url": safe_url(link["href"], base)})
+
+    sections = []
+    for section in home.select("main > section.section"):
+        if section.get("id") in {"news", "contact"} or section.has_attr("data-cv-exclude"):
+            continue
+        entries = []
+        for article in section.select("article.entry"):
+            entries.append({
+                "date": plain(required(article, "time")),
+                "title": plain(required(article, "h3")),
+                "paragraphs": [inline(p, base) for p in article.select("p")],
+                "bullets": [inline(li, base) for li in article.select("li")],
+            })
+        if not entries:
+            raise ValueError("CV section has no article.entry items; use data-cv-exclude to omit it")
+        sections.append({"id": section.get("id"), "title": plain(required(section, "h2")),
+                         "kind": "entries", "items": entries})
+    for section_id in ("education", "awards", "teaching", "services", "experience"):
+        if not any(s["id"] == section_id for s in sections):
+            raise ValueError(f"Missing homepage CV section: {section_id}")
+
+    papers = []
+    for section_id in ("publications", "preprints"):
+        section = required(research, f"#{section_id}")
+        items = []
+        for article in section.select("article.paper"):
+            summary = article.select_one(".summary")
+            items.append({
+                "venue": plain(required(article, ".venue")),
+                "title": plain(required(article, "h3")),
+                "authors": inline(required(article, ".authors"), base),
+                "summary": inline(summary, base) if summary else "",
+                "links": [{"label": plain(a), "url": safe_url(a["href"], base)}
+                          for a in article.select(".paper-links a[href]")],
+            })
+        if not items:
+            # An explicitly empty section is valid; malformed articles are not.
+            continue
+        papers.append({"id": section_id, "title": plain(required(section, "h2")),
+                       "kind": "papers", "items": items})
+    if len([p for s in papers for p in s["items"]]) != len(research.select("article.paper")):
+        raise ValueError("Found papers outside Publications/Preprints; refusing to omit them")
+    insert_at = next(i for i, s in enumerate(sections) if s["id"] == "awards") + 1
+    sections[insert_at:insert_at] = papers
+    return {
+        "name": plain(required(intro, "h1")),
+        "subtitle": f'{plain(required(intro, ".kicker"))}, {plain(required(intro, ".affiliation"))}',
+        "interests": inline(required(intro, ".bio"), base),
+        "contacts": contacts, "photo": image_path, "sections": sections,
+    }
 
 
-def paper(doc, page, y, venue, title, authors, summary):
-    needed = 16 + textbox_height(title, CONTENT_W, 9.7, "helv") + textbox_height(authors, CONTENT_W, 9.1) + textbox_height(summary, CONTENT_W, 9.0) + 12
-    page, y = ensure_page(doc, page, y, needed)
-    page.insert_text((MARGIN_X, y), venue, fontsize=8.7, fontname="helv", color=MUTED)
-    y += 11
-    y = draw_wrapped(page, title, MARGIN_X, y, CONTENT_W, fontsize=9.7, color=TEXT, fontname="helv")
-    y = draw_wrapped(page, authors, MARGIN_X, y + 1, CONTENT_W, fontsize=9.1, color=TEXT)
-    y = draw_wrapped(page, summary, MARGIN_X, y + 1, CONTENT_W, fontsize=9.0, color=(0.22, 0.25, 0.31))
-    return page, y + 8
+def fingerprint(root, model):
+    digest = hashlib.sha256(json.dumps(model, sort_keys=True, ensure_ascii=False).encode())
+    for path in ("scripts/generate_cv_pdf.py", "scripts/cv.css", "scripts/requirements-cv.txt"):
+        # Canonical newlines keep Windows/local and Linux/CI hashes identical.
+        digest.update((root / path).read_text(encoding="utf-8").encode("utf-8"))
+    digest.update((root / model["photo"]).read_bytes())
+    return digest.hexdigest()
 
 
-def make_pdf():
-    doc = fitz.open()
-    page = doc.new_page(width=PAGE_W, height=PAGE_H)
-    y = MARGIN_TOP
+def last_updated(output, digest, today):
+    if output.exists():
+        previous = BeautifulSoup(output.read_text(encoding="utf-8"), "html.parser")
+        stamp = previous.select_one('meta[name="cv-source-sha256"]')
+        date = previous.select_one('meta[name="cv-updated"]')
+        if stamp and date and stamp.get("content") == digest:
+            return date["content"]
+    return today
 
-    photo_size = 76
-    photo_rect = fitz.Rect(MARGIN_X + CONTENT_W - photo_size, y - 7, MARGIN_X + CONTENT_W, y - 7 + photo_size)
-    if PROFILE.exists():
-        page.insert_image(photo_rect, filename=str(PROFILE), keep_proportion=True)
-        page.draw_rect(photo_rect, color=LINE, width=0.8)
 
-    page.insert_text((MARGIN_X, y), "Jongwon Lim", fontsize=25, fontname="helv", color=TEXT)
-    y += 21
-    page.insert_text(
-        (MARGIN_X, y),
-        "Ph.D. Student, Graduate School of Data Science, Seoul National University",
-        fontsize=10.5,
-        fontname="helv",
-        color=MUTED,
-    )
-    y += 18
-    contact = "elijah0430@snu.ac.kr"
-    page.insert_text((MARGIN_X, y), contact, fontsize=8.8, fontname="helv", color=ACCENT)
-    y += 11
-    y = max(y, photo_rect.y1 + 12)
-    page.draw_line((MARGIN_X, y), (MARGIN_X + CONTENT_W, y), color=LINE, width=0.8)
-    y += 18
+def links_html(links):
+    return " · ".join(f'<a href="{html.escape(link["url"], quote=True)}">{html.escape(link["label"])}</a>'
+                      for link in links)
 
-    page, y = section(doc, page, y, "Research Interests")
-    y = draw_wrapped(
-        page,
-        "I am interested in developing methods for understanding the internal mechanisms of language models, and using those insights to improve practical NLP and LLM applications.",
-        MARGIN_X,
-        y,
-        CONTENT_W,
-        fontsize=9.4,
-    ) + 8
 
-    page, y = section(doc, page, y, "Education")
-    page, y = item(
-        doc,
-        page,
-        y,
-        "2025 - Present",
-        "Seoul National University",
-        "Ph.D. in Data Science, Graduate School of Data Science.",
-        "Advisor: Prof. Yohan Jo, HOLI Lab.",
-    )
-    page, y = item(
-        doc,
-        page,
-        y,
-        "2019 - 2025",
-        "Seoul National University",
-        "B.A. in Linguistics and Data Science for Humanities.",
-    )
+def html_document(root, model, digest, updated):
+    esc = html.escape
+    parts = [
+        "<!doctype html>", '<html lang="en"><head><meta charset="utf-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1">',
+        f'<title>{esc(model["name"])} - CV</title>',
+        f'<meta name="cv-source-sha256" content="{digest}">',
+        f'<meta name="cv-updated" content="{updated}">',
+        "<!-- Generated from index.html and research.html. Do not edit this file directly. -->",
+        f'<style>{(root / "scripts/cv.css").read_text(encoding="utf-8")}</style>',
+        "</head><body><main><header><div>",
+        f'<h1>{esc(model["name"])}</h1><p class="subtitle">{esc(model["subtitle"])}</p>',
+        f'<p class="contact">{links_html(model["contacts"])}</p></div>',
+        f'<img class="headshot" src="{esc(model["photo"])}" alt="{esc(model["name"])}"></header>',
+        f'<section><h2>Research Interests</h2><p>{model["interests"]}</p></section>',
+    ]
+    for section in model["sections"]:
+        parts.append(f'<section id="{esc(section["id"] or "")}"><h2>{esc(section["title"])}</h2>')
+        for entry in section["items"]:
+            if section["kind"] == "papers":
+                parts.extend([
+                    '<article class="paper">',
+                    f'<p class="venue">{esc(entry["venue"])}</p><h3>{esc(entry["title"])}</h3>',
+                    f'<p>{entry["authors"]}</p>',
+                ])
+                if entry["summary"]:
+                    parts.append(f'<p class="summary">{entry["summary"]}</p>')
+                if entry["links"]:
+                    parts.append(f'<p class="links">{links_html(entry["links"])}</p>')
+            else:
+                parts.extend(['<article class="item">', f'<div class="date">{esc(entry["date"])}</div>',
+                              f'<div><h3>{esc(entry["title"])}</h3>'])
+                parts.extend(f"<p>{p}</p>" for p in entry["paragraphs"])
+                if entry["bullets"]:
+                    parts.append("<ul>" + "".join(f"<li>{b}</li>" for b in entry["bullets"]) + "</ul>")
+                parts.append("</div>")
+            parts.append("</article>")
+        if section["kind"] == "papers" and any("*" in p["authors"] for p in section["items"]):
+            parts.append('<p class="meta">* Equal contribution</p>')
+        parts.append("</section>")
+    parts.append(f'<p class="updated">Last updated: {updated}</p></main></body></html>')
+    return "\n".join(parts) + "\n"
 
-    page, y = section(doc, page, y, "Publications")
-    page, y = paper(
-        doc,
-        page,
-        y,
-        "ICML 2026 Regular Paper; Mechanistic Interpretability Workshop @ NeurIPS 2025",
-        "Dual Mechanisms of Value Expression: Intrinsic vs. Prompted Values in Large Language Models",
-        "Jongwook Han*, Jongwon Lim*, Injin Kong, Yohan Jo",
-        "Mechanistic analysis of how language models internally represent and express values under intrinsic and prompted settings.",
-    )
-    page, y = paper(
-        doc,
-        page,
-        y,
-        "ACL Findings 2026",
-        "Learning to Retrieve User History and Generate User Profiles for Personalized Persuasiveness Prediction",
-        "Sejun Park, Yoonah Park, Jongwon Lim, Yohan Jo",
-        "Context-aware user profiling framework for retrieving persuasion-relevant history and generating user profiles for persuasiveness prediction.",
-    )
-    page, y = paper(
-        doc,
-        page,
-        y,
-        "FEVER Workshop @ EMNLP 2024",
-        "DAHL: Domain-specific Automated Hallucination Evaluation of Long-Form Text through a Benchmark Dataset in Biomedicine",
-        "Jean Seo, Jongwon Lim, Dongjun Jang, Hyopil Shin",
-        "Biomedical benchmark and automated evaluation pipeline for factuality assessment in long-form LLM outputs.",
-    )
 
-    page, y = section(doc, page, y, "Preprints")
-    page, y = paper(
-        doc,
-        page,
-        y,
-        "arXiv preprint, 2026",
-        "Your Language Model is Its Own Critic: Reinforcement Learning with Value Estimation from Actor's Internal States",
-        "Yunho Choi*, Jongwon Lim*, Woojin Ahn, Minjae Oh, Jeonghoon Shim, Yohan Jo",
-        "POISE estimates RLVR baselines from the actor's internal hidden states and entropy statistics, reducing rollout overhead while matching DAPO-level performance.",
-    )
-    y = draw_wrapped(page, "* Equal contribution", MARGIN_X, y, CONTENT_W, fontsize=8.8, color=MUTED) + 7
+def pdf_document(root, model, updated, output):
+    styles = getSampleStyleSheet()
+    body = ParagraphStyle("CVBody", fontName="Helvetica", fontSize=9.2, leading=12.4,
+                          textColor=colors.HexColor("#243244"), spaceAfter=3)
+    title = ParagraphStyle("CVTitle", parent=body, fontName="Helvetica-Bold",
+                           fontSize=9.6, leading=12.6, spaceAfter=4)
+    small = ParagraphStyle("CVSmall", parent=body, fontSize=8.3, leading=10.6, textColor=MUTED)
+    section_style = ParagraphStyle("CVSection", parent=title, fontSize=10.3, leading=13,
+                                   spaceBefore=13, spaceAfter=6, keepWithNext=True)
+    name = ParagraphStyle("CVName", parent=styles["Title"], alignment=0, fontName="Helvetica-Bold",
+                          fontSize=23, leading=27, textColor=body.textColor, spaceAfter=7)
 
-    page, y = section(doc, page, y, "Research Experience")
-    page, y = item(
-        doc,
-        page,
-        y,
-        "Oct 2023 - Sep 2024",
-        "Research Intern, CL_NLP Lab, Seoul National University",
-        "Worked on language model training and evaluation, retrieval-augmented generation, experiments, analysis, and academic writing.",
-    )
-    page, y = item(
-        doc,
-        page,
-        y,
-        "May 2024 - Dec 2024",
-        "Head Researcher, SNU Faculty of Liberal Education",
-        "Led work on a benchmark dataset for evaluating morphological capabilities of large language models.",
-    )
-    page, y = item(
-        doc,
-        page,
-        y,
-        "Jan 2024 - Mar 2024",
-        "Kaggle Silver Medalist, LLM - Detect AI-generated Text",
-        "Built ensemble systems for detecting AI-generated text.",
-    )
+    def para(text, style=body):
+        # ReportLab's parser supports the sanitized inline markup from the source.
+        return Paragraph(text, style)
 
-    page, y = section(doc, page, y, "Teaching and Service")
-    page, y = item(
-        doc,
-        page,
-        y,
-        "Spring 2026",
-        "Teaching Assistant, Large Language Models and Conversational AI",
-        "Seoul National University.",
-    )
-    page, y = item(
-        doc,
-        page,
-        y,
-        "2026",
-        "Mentor, 3rd LG AI Youth Camp",
-        "Mentored student participants on AI projects and research-oriented problem solving.",
-    )
-    page, y = item(
-        doc,
-        page,
-        y,
-        "2026",
-        "Reviewer, ICML 2026 Workshops",
-        "Pluralistic Alignment Workshop @ ICML 2026 (2 papers); Mechanistic Interpretability Workshop @ ICML 2026 (8 papers); 3rd AI for Math Workshop @ ICML 2026 (3 papers).",
-    )
+    doc = SimpleDocTemplate(str(output), pagesize=letter, rightMargin=48, leftMargin=48,
+                            topMargin=42, bottomMargin=45, title=f'{model["name"]} - CV',
+                            author=model["name"], invariant=1, pageCompression=1)
+    image_w, image_h = ImageReader(str(root / model["photo"])).getSize()
+    scale = 66 / max(image_w, image_h)
+    photo = Image(str(root / model["photo"]), image_w * scale, image_h * scale)
+    header = Table([[[para(html.escape(model["name"]), name),
+                     para(html.escape(model["subtitle"]), body),
+                     para(links_html(model["contacts"]), small)], photo]], colWidths=[430, 86])
+    header.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
+                               ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                               ("RIGHTPADDING", (0, 0), (-1, -1), 0)]))
+    story = [header, Spacer(1, 10), HRFlowable(width="100%", thickness=.6, color=LINE),
+             para("RESEARCH INTERESTS", section_style), para(model["interests"])]
+    for section in model["sections"]:
+        story.append(para(html.escape(section["title"].upper()), section_style))
+        for entry in section["items"]:
+            if section["kind"] == "papers":
+                group = [para(html.escape(entry["venue"]), small),
+                         para(html.escape(entry["title"]), title), para(entry["authors"])]
+                if entry["summary"]:
+                    group.append(para(entry["summary"], small))
+                if entry["links"]:
+                    group.append(para(links_html(entry["links"]), small))
+                story.extend([KeepTogether(group), Spacer(1, 8)])
+            else:
+                content = [para(html.escape(entry["title"]), title)]
+                content.extend(para(p) for p in entry["paragraphs"])
+                content.extend(para("- " + bullet, small) for bullet in entry["bullets"])
+                row = Table([[para(html.escape(entry["date"]), small), content]],
+                            colWidths=[100, 416], hAlign="LEFT", splitByRow=1, splitInRow=1)
+                row.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
+                                         ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                                         ("RIGHTPADDING", (0, 0), (0, -1), 12),
+                                         ("RIGHTPADDING", (1, 0), (1, -1), 0),
+                                         ("TOPPADDING", (0, 0), (-1, -1), 0),
+                                         ("BOTTOMPADDING", (0, 0), (-1, -1), 8)]))
+                # Keep a normal entry together; ReportLab can still split an
+                # unusually large entry that is taller than an entire page.
+                story.append(KeepTogether([row]))
+        if section["kind"] == "papers" and any("*" in p["authors"] for p in section["items"]):
+            story.append(para("* Equal contribution", small))
 
-    page, y = section(doc, page, y, "Awards and Other Experience")
-    page, y = item(
-        doc,
-        page,
-        y,
-        "Sep 2025 - Aug 2026",
-        "Research Scholarship",
-        "National Research Foundation of Korea (NRF).",
-    )
-    page, y = item(
-        doc,
-        page,
-        y,
-        "2024",
-        "Outstanding Bachelor's Thesis",
-        "Evaluating the Understanding of Blend Morphology in Large Language Models.",
-    )
-    page, y = item(
-        doc,
-        page,
-        y,
-        "Apr 2021 - Sep 2022",
-        "Military Service, Republic of Korea Army",
-        "Instructor for armored vehicle operation at the Republic of Korea Army Armor School.",
-    )
+    def footer(canvas, document):
+        canvas.saveState()
+        canvas.setFont("Helvetica", 8)
+        canvas.setFillColor(MUTED)
+        canvas.drawString(48, 26, f"Last updated: {updated}")
+        canvas.drawRightString(letter[0] - 48, 26, f'{model["name"]} | {document.page}')
+        canvas.restoreState()
+    doc.build(story, onFirstPage=footer, onLaterPages=footer)
 
-    page, y = ensure_page(doc, page, y, 22)
-    page.insert_text((MARGIN_X + CONTENT_W - 96, PAGE_H - 34), "Last updated: Sep 2026", fontsize=8.5, fontname="helv", color=MUTED)
 
-    doc.save(OUT, deflate=True, garbage=4)
-    doc.close()
+def generate(root=ROOT, output_dir=None, today=None):
+    root = Path(root).resolve()
+    output_dir = Path(output_dir or root).resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    model = read_sources(root)
+    digest = fingerprint(root, model)
+    updated = last_updated(output_dir / "cv.html", digest, today or datetime.now(KST).date().isoformat())
+    content = html_document(root, model, digest, updated)
+    # Build both fully before replacing either published output.
+    temporary = output_dir / "cv.generated.pdf"
+    try:
+        pdf_document(root, model, updated, temporary)
+        temporary.replace(output_dir / "cv.pdf")
+        (output_dir / "cv.html").write_text(content, encoding="utf-8", newline="\n")
+    finally:
+        temporary.unlink(missing_ok=True)
+    return model
 
 
 if __name__ == "__main__":
-    make_pdf()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=ROOT)
+    parser.add_argument("--output-dir", type=Path)
+    args = parser.parse_args()
+    model = generate(args.root, args.output_dir)
+    count = sum(len(s["items"]) for s in model["sections"] if s["kind"] == "papers")
+    print(f"Updated cv.html and cv.pdf from homepage sources ({count} papers).")
