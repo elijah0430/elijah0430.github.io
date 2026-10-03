@@ -9,3 +9,5 @@ Vendored browser distributions, served locally with the blog. No build step or r
 | KaTeX | 0.19.0 | https://registry.npmjs.org/katex/-/katex-0.19.0.tgz | MIT |
 
 Each subdirectory includes the upstream license. When updating, replace the corresponding browser files and KaTeX fonts, update this list, and run `node --test tests/blog-markdown.test.cjs`.
+
+The direct editor uses Tiptap 3.31.4 and ProseMirror, bundled into `assets/js/blog-editor.js`. Exact dependencies are pinned in `pnpm-lock.yaml`; complete notices are generated into `editor-LICENSES.txt` by `pnpm build:editor`. Run `pnpm test` after rebuilding.

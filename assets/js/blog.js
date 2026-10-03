@@ -17,7 +17,7 @@
     pendingPost: null,
     editorOpen: false,
     draftStored: true,
-    mode: window.matchMedia('(max-width: 900px)').matches ? 'write' : 'split',
+    mode: 'write',
   };
 
   const listView = app.querySelector('[data-blog-list-view]');
@@ -51,6 +51,47 @@
   let draftTimer;
   let previewTimer;
   let refreshRequest;
+  let richEditor;
+  let editorFailed = false;
+  let equationTarget;
+  const equationDialog = app.querySelector('[data-equation-dialog]');
+  const equationInput = app.querySelector('[data-equation-input]');
+  const linkDialog = app.querySelector('[data-link-dialog]');
+  const footnoteDialog = app.querySelector('[data-footnote-dialog]');
+  const footnoteInput = app.querySelector('[data-footnote-input]');
+  let footnoteTarget;
+
+  function openFootnote(body = '', pos = null) {
+    footnoteTarget = { pos, rich: state.mode === 'write' && Boolean(richEditor), sourceEnd: bodyInput.selectionEnd };
+    footnoteInput.value = body;
+    app.querySelector('[data-footnote-status]').textContent = '';
+    app.querySelector('[data-footnote-remove]').hidden = pos === null;
+    renderBody(app.querySelector('[data-footnote-preview]'), body);
+    footnoteDialog.showModal();
+    footnoteInput.focus();
+  }
+
+  function openEquation(latex, block, pos = null) {
+    equationTarget = { block, pos };
+    equationInput.value = latex;
+    app.querySelector('[data-equation-status]').textContent = '';
+    renderBody(app.querySelector('[data-equation-preview]'), `$$\n${latex}\n$$`);
+    equationDialog.showModal();
+    equationInput.focus();
+    equationInput.select();
+  }
+
+  function prepareRichEditor() {
+    if (!window.BlogEditor) return false;
+    if (!richEditor) richEditor = window.BlogEditor.create({
+      element: app.querySelector('[data-block-editor]'),
+      onChange(markdown) { bodyInput.value = markdown; editorFailed = false; changed(); },
+      onEquation: openEquation,
+      onFootnote: openFootnote,
+      onError(error) { console.error(error); editorFailed = true; editorStatus.textContent = 'The editor could not convert this change. Undo it before publishing.'; },
+    });
+    return true;
+  }
 
   function readSession() {
     try {
@@ -102,7 +143,9 @@
     const signedIn = hasActiveSession();
     loginButton.hidden = signedIn;
     logoutButton.hidden = !signedIn;
-    editButton.hidden = !signedIn || !state.activePost;
+    // Keep the entry point discoverable; openEditor still requires authentication.
+    editButton.hidden = !state.activePost;
+    editButton.title = signedIn ? 'Edit this post' : 'Sign in to edit this post';
   }
 
   function authHeaders(token, extra = {}) {
@@ -294,6 +337,7 @@
 
   function openAuth() {
     showView('auth');
+    app.querySelector('#blog-sign-in-title').textContent = state.pendingPost ? 'Sign in to edit' : 'Sign in to write';
     authStatus.textContent = '';
     authForm.elements.namedItem('username').focus();
   }
@@ -329,7 +373,7 @@
     editorForm.querySelector('button[type="submit"]').textContent = post ? 'Save changes' : 'Publish';
     showView('editor');
     window.history.replaceState(null, '', post ? `#edit/${encodeURIComponent(post.id)}` : '#write');
-    setEditorMode(state.mode);
+    setEditorMode(state.mode, true);
     updatePreview();
     editorForm.elements.namedItem('title').focus({ preventScroll: true });
     editorForm.elements.namedItem('title').setSelectionRange(0, 0);
@@ -386,11 +430,23 @@
     if (!result.available) editorStatus.textContent = 'Formatting is unavailable. Your text is still saved; reload to try again.';
   }
 
-  function setEditorMode(mode) {
+  function setEditorMode(mode, reset = false) {
+    if (mode === 'write') {
+      try {
+        if (prepareRichEditor()) richEditor.load(bodyInput.value, reset);
+        else mode = 'source';
+      } catch (error) {
+        console.error(error);
+        mode = 'source';
+        editorStatus.textContent = 'Visual editor unavailable. Your original Markdown is unchanged.';
+      }
+    }
     state.mode = mode;
     workspace.dataset.mode = mode;
-    app.querySelector('[data-editor-source]').hidden = mode === 'preview';
-    app.querySelector('[data-editor-preview-panel]').hidden = mode === 'write';
+    app.querySelector('[data-editor-visual]').hidden = mode !== 'write';
+    app.querySelector('[data-editor-source]').hidden = mode !== 'source';
+    app.querySelector('[data-editor-preview-panel]').hidden = mode !== 'preview';
+    app.querySelectorAll('[data-exit-toggle], [data-unwrap-toggle], [data-format="undo"], [data-format="redo"]').forEach((button) => { button.disabled = mode !== 'write'; });
     app.querySelectorAll('[data-editor-mode]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.editorMode === mode)));
     updatePreview();
   }
@@ -405,7 +461,7 @@
   }
 
   function insertText(before, after = '', fallback = '', block = false) {
-    if (state.mode === 'preview') setEditorMode('split');
+    if (state.mode !== 'source') setEditorMode('source');
     const start = bodyInput.selectionStart;
     const end = bodyInput.selectionEnd;
     const selected = bodyInput.value.slice(start, end) || fallback;
@@ -426,7 +482,25 @@
     quote: ['> ', '', 'Quote', true],
     code: ['```\n', '\n```', 'code', true],
   };
-  app.querySelectorAll('[data-format]').forEach((button) => button.addEventListener('click', () => insertText(...formats[button.dataset.format])));
+  // Keep the body selection when toolbar buttons are pressed with a pointer.
+  app.querySelector('.format-toolbar').addEventListener('mousedown', (event) => { if (event.target.closest('button')) event.preventDefault(); });
+  app.querySelectorAll('[data-format]').forEach((button) => button.addEventListener('click', () => {
+    const format = button.dataset.format;
+    if (state.mode === 'write' && richEditor) {
+      if (format === 'link') {
+        app.querySelector('[data-link-input]').value = richEditor.editor.getAttributes('link').href || '';
+        app.querySelector('[data-link-status]').textContent = '';
+        linkDialog.showModal();
+      } else richEditor.format(format);
+    } else if (formats[format]) insertText(...formats[format]);
+  }));
+  app.querySelector('[data-insert-toggle]').addEventListener('click', () => {
+    if (state.mode === 'write' && richEditor) richEditor.toggle();
+    else insertText(':::toggle Toggle title\n\n', '\n\n:::', 'Content', true);
+  });
+  app.querySelector('[data-exit-toggle]').addEventListener('click', () => richEditor?.exitToggle());
+  app.querySelector('[data-unwrap-toggle]').addEventListener('click', () => richEditor?.unwrap());
+  app.querySelector('[data-insert-footnote]').addEventListener('click', () => openFootnote());
   app.querySelectorAll('[data-editor-mode]').forEach((button) => button.addEventListener('click', () => setEditorMode(button.dataset.editorMode)));
   mathToggle.addEventListener('click', () => {
     mathTools.hidden = !mathTools.hidden;
@@ -451,12 +525,60 @@
     renderBody(sample, `$${template.thumbnail || template.latex}$`);
     button.append(sample, makeTextElement('span', 'template-label', template.name));
     button.addEventListener('click', () => {
-      insertText(template.inline ? '$' : '$$\n', template.inline ? '$' : '\n$$', template.latex, !template.inline);
+      if (state.mode === 'write' && richEditor) openEquation(template.latex, !template.inline);
+      else insertText(template.inline ? '$' : '$$\n', template.inline ? '$' : '\n$$', template.latex, !template.inline);
     });
     app.querySelector('[data-math-templates]').append(button);
   });
 
   editorForm.addEventListener('input', changed);
+  footnoteInput.addEventListener('input', () => renderBody(app.querySelector('[data-footnote-preview]'), footnoteInput.value));
+  app.querySelector('[data-footnote-cancel]').addEventListener('click', () => footnoteDialog.close());
+  app.querySelector('[data-footnote-form]').addEventListener('submit', event => {
+    event.preventDefault();
+    const body = footnoteInput.value.trim();
+    if (!body) return;
+    try {
+      if (footnoteTarget.rich) richEditor.footnote(body, footnoteTarget.pos);
+      else {
+        const ids = new Set([...bodyInput.value.matchAll(/\[\^([\w-]+)\]/g)].map(match => match[1]));
+        let index = 1;
+        while (ids.has(`note-${index}`)) index++;
+        const id = `note-${index}`;
+        const at = footnoteTarget.sourceEnd;
+        const ref = `[^${id}]`;
+        bodyInput.value = bodyInput.value.slice(0, at) + ref + bodyInput.value.slice(at)
+          + '\n\n' + window.BlogMarkdown.formatFootnote(id, body);
+        setEditorMode('source');
+        bodyInput.setSelectionRange(at + ref.length, at + ref.length);
+        changed();
+      }
+      footnoteDialog.close();
+      if (footnoteTarget.rich) richEditor.focus();
+      else bodyInput.focus();
+    } catch (error) { app.querySelector('[data-footnote-status]').textContent = error.message; }
+  });
+  app.querySelector('[data-footnote-remove]').addEventListener('click', () => {
+    try { richEditor.removeFootnote(footnoteTarget.pos); footnoteDialog.close(); richEditor.focus(); }
+    catch (error) { app.querySelector('[data-footnote-status]').textContent = error.message; }
+  });
+  equationInput.addEventListener('input', () => renderBody(app.querySelector('[data-equation-preview]'), `$$\n${equationInput.value}\n$$`));
+  app.querySelector('[data-equation-cancel]').addEventListener('click', () => equationDialog.close());
+  app.querySelector('[data-equation-form]').addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!equationInput.value.trim()) return;
+    try {
+      richEditor.equation(equationInput.value.trim(), equationTarget.block, equationTarget.pos);
+      equationDialog.close();
+      richEditor.focus();
+    } catch (error) { app.querySelector('[data-equation-status]').textContent = error.message; }
+  });
+  app.querySelector('[data-link-cancel]').addEventListener('click', () => linkDialog.close());
+  app.querySelector('[data-link-form]').addEventListener('submit', (event) => {
+    event.preventDefault();
+    try { richEditor.setLink(app.querySelector('[data-link-input]').value.trim()); linkDialog.close(); }
+    catch (error) { app.querySelector('[data-link-status]').textContent = error.message; }
+  });
   editorForm.addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && ['b', 'i', 's'].includes(event.key.toLowerCase())) {
       if (event.key.toLowerCase() !== 's' && event.target !== bodyInput) return;
@@ -525,14 +647,20 @@
     showView('list');
   }
 
-  loginButton.addEventListener('click', openAuth);
+  loginButton.addEventListener('click', () => { state.pendingPost = null; openAuth(); });
   writeButton.addEventListener('click', () => openEditor());
   logoutButton.addEventListener('click', () => {
     saveSession(null);
     window.location.hash = '';
     showView('list');
   });
-  app.querySelector('[data-blog-auth-close]').addEventListener('click', () => showView('list'));
+  app.querySelector('[data-blog-auth-close]').addEventListener('click', () => {
+    const post = state.pendingPost || state.activePost;
+    state.pendingPost = null;
+    window.location.hash = post ? `#post/${encodeURIComponent(post.slug)}` : '';
+    if (post) openPost(post.slug);
+    else showView('list');
+  });
   app.querySelector('[data-blog-back]').addEventListener('click', () => {
     window.location.hash = '';
   });
@@ -575,14 +703,21 @@
       return;
     }
 
+    if (editorFailed || bodyInput.value.length > 100000) {
+      editorStatus.textContent = editorFailed ? 'Undo the unsupported change before publishing.' : 'This post exceeds the 100,000-character limit. Your local draft is preserved.';
+      return;
+    }
     if (!editorForm.elements.namedItem('title').value.trim() || !bodyInput.value.trim()) {
       setEditorMode('write');
       editorStatus.textContent = 'Add a title and some text before publishing.';
-      (!editorForm.elements.namedItem('title').value.trim() ? editorForm.elements.namedItem('title') : bodyInput).focus();
+      if (!editorForm.elements.namedItem('title').value.trim()) editorForm.elements.namedItem('title').focus();
+      else if (richEditor && state.mode === 'write') richEditor.focus();
+      else bodyInput.focus();
       return;
     }
 
     const formData = new FormData(editorForm);
+    richEditor?.setEditable(false);
     editorForm.querySelectorAll('button').forEach((button) => { button.disabled = true; });
     editorForm.querySelectorAll('input, textarea').forEach((field) => { field.readOnly = true; });
     editorStatus.textContent = 'Saving…';
@@ -604,6 +739,7 @@
         ? 'A post with this title already exists.'
         : 'The post could not be saved.';
     } finally {
+      richEditor?.setEditable(true);
       editorForm.querySelectorAll('button').forEach((button) => { button.disabled = false; });
       editorForm.querySelectorAll('input, textarea').forEach((field) => { field.readOnly = false; });
     }

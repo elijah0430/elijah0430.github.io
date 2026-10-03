@@ -16,14 +16,15 @@
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/styles.css?v=20261002" />
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css" />
-  <link rel="stylesheet" href="assets/css/blog.css?v=20261003" />
+  <link rel="stylesheet" href="assets/css/blog.css?v=20261003-footnotes" />
   <script>document.documentElement.classList.add('js');</script>
   <script defer src="assets/js/main.js"></script>
   <script defer src="assets/vendor/marked/marked.umd.js"></script>
   <script defer src="assets/vendor/dompurify/purify.min.js"></script>
   <script defer src="assets/vendor/katex/katex.min.js"></script>
-  <script defer src="assets/js/blog-markdown.js?v=20261002-2"></script>
-  <script defer src="assets/js/blog.js?v=20261003"></script>
+  <script defer src="assets/js/blog-markdown.js?v=20261003-footnotes"></script>
+  <script defer src="assets/js/blog-editor.js?v=20261003-footnotes"></script>
+  <script defer src="assets/js/blog.js?v=20261003-footnotes"></script>
 </head>
 <body class="blog-site">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -98,13 +99,15 @@
     </section>
 
     <section class="blog-post-view" data-blog-post-view hidden>
-      <button class="back-button" type="button" data-blog-back>← All posts</button>
+      <div class="blog-post-topbar">
+        <button class="back-button" type="button" data-blog-back>← All posts</button>
+        <button class="text-button blog-edit-button" type="button" data-blog-edit hidden>Edit post</button>
+      </div>
       <article class="blog-post">
         <p class="blog-post-meta" data-blog-post-meta></p>
         <h1 data-blog-post-title></h1>
         <p class="blog-post-summary" data-blog-post-summary></p>
         <div class="blog-post-body prose" data-blog-post-body></div>
-        <button class="text-button blog-edit-button" type="button" data-blog-edit hidden>Edit post</button>
       </article>
 
       <section class="comments" aria-labelledby="comments-title">
@@ -166,11 +169,17 @@
               <button type="button" data-format="quote" title="Quote" aria-label="Insert quote">“</button>
               <button type="button" data-format="code" title="Code block" aria-label="Insert code block">&lt;/&gt;</button>
               <span class="toolbar-divider" aria-hidden="true"></span>
+              <button type="button" class="toggle-tool" data-insert-toggle title="Toggle block (or type /toggle then Space)">▸ Toggle</button>
+              <button type="button" data-exit-toggle title="Continue writing after this toggle" aria-label="Write after toggle">↳</button>
+              <button type="button" data-unwrap-toggle title="Remove toggle, keep its contents" aria-label="Unwrap toggle">⇤</button>
               <button type="button" class="math-trigger" data-math-toggle aria-expanded="false" aria-controls="math-tools"><span aria-hidden="true">∑</span> Equation</button>
+              <button type="button" class="footnote-tool" data-insert-footnote title="Add a footnote at the cursor"><sup>1</sup> Footnote</button>
+              <button type="button" data-format="undo" title="Undo (Ctrl+Z)" aria-label="Undo">↶</button>
+              <button type="button" data-format="redo" title="Redo (Ctrl+Shift+Z)" aria-label="Redo">↷</button>
             </div>
             <div class="view-switch" role="group" aria-label="Editor view">
-              <button type="button" data-editor-mode="write" aria-pressed="false">Write</button>
-              <button type="button" data-editor-mode="split" aria-pressed="true">Split</button>
+              <button type="button" data-editor-mode="write" aria-pressed="true">Write</button>
+              <button type="button" data-editor-mode="source" aria-pressed="false">Markdown</button>
               <button type="button" data-editor-mode="preview" aria-pressed="false">Preview</button>
             </div>
           </div>
@@ -178,12 +187,13 @@
             <div class="math-tools-heading"><span>Insert an equation</span><span class="math-note">Select a template, then edit the LaTeX.</span></div>
             <div class="math-templates" data-math-templates></div>
           </div>
-          <div class="editor-workspace" data-editor-workspace data-mode="split">
-            <div class="editor-source" data-editor-source>
+          <div class="editor-workspace" data-editor-workspace data-mode="write">
+            <div class="editor-visual" data-editor-visual><div data-block-editor></div></div>
+            <div class="editor-source" data-editor-source hidden>
               <div class="pane-heading"><label for="post-body">Body</label><span>Markdown + LaTeX</span></div>
               <textarea id="post-body" class="post-editor-body" name="body" required maxlength="100000" spellcheck="true" placeholder="Write in Markdown or LaTeX."></textarea>
             </div>
-            <section class="editor-preview" data-editor-preview-panel aria-label="Post preview" tabindex="0">
+            <section class="editor-preview" data-editor-preview-panel aria-label="Post preview" tabindex="0" hidden>
               <div class="pane-heading"><span>Preview</span><span class="live-indicator">Live</span></div>
               <div class="prose preview-content" data-editor-preview></div>
             </section>
@@ -195,6 +205,9 @@
             <summary>Formatting guide</summary>
             <div class="writing-help-content">
               <p><code>## Heading</code> · <code>**bold**</code> · <code>[text](url)</code></p>
+              <p>Type <code>/toggle</code> then Space for a collapsible block. Edit its title, press Enter, and write inside. Click the arrow to collapse it. Use ↳ to write after it, or ⇤ to unwrap it without deleting its contents.</p>
+              <p>Click an equation to edit its LaTeX. Ctrl/Cmd+Z undoes edits; Ctrl/Cmd+S saves the draft.</p>
+              <p>Use Footnote to add a note, or click a superscript number to edit it. Notes are numbered automatically. Markdown: <code>Text[^note]</code> and, on a separate line, <code>[^note]: Explanation</code>.</p>
               <p>Inline math: <code>$x^2$</code> &nbsp; Display math: <code>$$E = mc^2$$</code></p>
               <p>LaTeX delimiters <code>\( … \)</code> and <code>\[ … \]</code> work too. Use Equation for fractions, sums, matrices, and aligned equations.</p>
             </div>
@@ -204,6 +217,36 @@
         <p class="form-status editor-status" data-editor-status role="status"></p>
       </form>
     </section>
+
+    <dialog class="editor-dialog" data-equation-dialog aria-labelledby="equation-dialog-title">
+      <form method="dialog" data-equation-form>
+        <h2 id="equation-dialog-title">Equation</h2>
+        <label for="equation-latex">LaTeX</label>
+        <textarea id="equation-latex" rows="4" spellcheck="false" required data-equation-input></textarea>
+        <div class="prose equation-dialog-preview" data-equation-preview></div>
+        <p class="form-status" data-equation-status role="status"></p>
+        <div class="dialog-actions"><button class="quiet-button" type="button" data-equation-cancel>Cancel</button><button class="primary-button" type="submit">Apply</button></div>
+      </form>
+    </dialog>
+    <dialog class="editor-dialog" data-footnote-dialog aria-labelledby="footnote-dialog-title">
+      <form method="dialog" data-footnote-form>
+        <h2 id="footnote-dialog-title">Footnote</h2>
+        <label for="footnote-text">Note (Markdown and LaTeX supported)</label>
+        <textarea id="footnote-text" rows="5" required data-footnote-input placeholder="Add an explanation, source, or link…"></textarea>
+        <div class="prose footnote-dialog-preview" data-footnote-preview></div>
+        <p class="form-status" data-footnote-status role="status"></p>
+        <div class="dialog-actions"><button class="quiet-button footnote-remove" type="button" data-footnote-remove hidden>Remove reference</button><button class="quiet-button" type="button" data-footnote-cancel>Cancel</button><button class="primary-button" type="submit">Apply</button></div>
+      </form>
+    </dialog>
+    <dialog class="editor-dialog" data-link-dialog aria-labelledby="link-dialog-title">
+      <form method="dialog" data-link-form>
+        <h2 id="link-dialog-title">Link</h2>
+        <label for="link-url">URL (leave blank to remove)</label>
+        <input id="link-url" type="text" placeholder="https://" data-link-input />
+        <p class="form-status" data-link-status role="status"></p>
+        <div class="dialog-actions"><button class="quiet-button" type="button" data-link-cancel>Cancel</button><button class="primary-button" type="submit">Apply</button></div>
+      </form>
+    </dialog>
 
     <noscript>
       <p class="blog-status">JavaScript is required to load posts and comments.</p>

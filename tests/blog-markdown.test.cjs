@@ -75,6 +75,8 @@ async function editor({ saved = {}, hash = '', posts = [], storageFailure = fals
   const { window } = dom;
   window.scrollTo = () => {};
   window.matchMedia = () => ({ matches: false });
+  window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+  window.HTMLDialogElement.prototype.close = function () { this.open = false; };
   window.localStorage.setItem('jongwon-blog-session', JSON.stringify(session));
   Object.entries(saved).forEach(([key, value]) => window.localStorage.setItem(key, value));
   if (storageFailure) window.Storage.prototype.setItem = () => { throw new Error('quota'); };
@@ -82,10 +84,15 @@ async function editor({ saved = {}, hash = '', posts = [], storageFailure = fals
   window.fetch = async (url, options = {}) => {
     calls.push({ url, ...options });
     let data = url.includes('blog_comments') ? [] : posts;
-    if (url.includes('grant_type=refresh_token')) data = { ...session, expires_in: 3600 };
+    if (url.includes('grant_type=refresh_token') || url.includes('grant_type=password')) data = { ...session, expires_in: 3600 };
     if (options.method === 'POST' && url.includes('/blog_posts')) {
       data = [{ ...JSON.parse(options.body), id: 'test-post', published_at: new Date().toISOString(), updated_at: new Date().toISOString() }];
       posts.push(...data);
+    }
+    if (options.method === 'PATCH' && url.includes('/blog_posts')) {
+      const post = posts.find(item => item.id === new URL(url).searchParams.get('id').slice(3));
+      Object.assign(post, JSON.parse(options.body));
+      data = [post];
     }
     return { ok: true, status: 200, text: async () => JSON.stringify(data) };
   };
@@ -175,5 +182,77 @@ test('publishes only on submission, preserves source, and removes the published 
   assert.equal(app.window.localStorage.getItem('jongwon-blog-draft-v1:new'), null);
   assert.equal(app.window.document.querySelector('[data-blog-post-view]').hidden, false);
   assert.equal(app.window.document.querySelectorAll('[data-blog-post-body] .katex').length, 1);
+  app.dom.window.close();
+});
+
+test('Edit post is above the title and opens the existing post for a signed-in author', async () => {
+  const post = { id: 'existing', slug: 'existing', title: 'Existing', body: 'Original', published_at: '2026-01-01', updated_at: '2026-01-01' };
+  const app = await editor({ hash: '#post/existing', posts: [post] });
+  const button = app.window.document.querySelector('[data-blog-edit]');
+  assert.equal(button.hidden, false);
+  const title = app.window.document.querySelector('[data-blog-post-title]');
+  assert.ok(button.compareDocumentPosition(title) & app.window.Node.DOCUMENT_POSITION_FOLLOWING);
+  button.click();
+  await flush();
+  assert.equal(app.window.location.hash, '#edit/existing');
+  assert.equal(app.form.elements.id.value, 'existing');
+  assert.equal(app.form.elements.body.value, 'Original');
+  assert.equal(app.window.document.querySelector('[data-blog-auth]').hidden, true);
+  assert.equal(app.calls.filter(call => ['POST', 'PATCH'].includes(call.method)).length, 0);
+  app.dom.window.close();
+});
+
+test('signed-out Edit prompts sign-in, then edits the same post without creating another', async () => {
+  const post = { id: 'existing', slug: 'existing', title: 'Existing', body: 'Original', published_at: '2026-01-01', updated_at: '2026-01-01' };
+  const app = await editor({ hash: '#post/existing', posts: [post], saved: { 'jongwon-blog-session': 'null' } });
+  const button = app.window.document.querySelector('[data-blog-edit]');
+  assert.equal(button.hidden, false);
+  button.click();
+  await flush();
+  assert.equal(app.window.document.querySelector('[data-blog-auth]').hidden, false);
+  assert.equal(app.window.document.querySelector('[data-blog-editor]').hidden, true);
+  assert.equal(app.calls.filter(call => ['POST', 'PATCH'].includes(call.method)).length, 0);
+  const login = app.window.document.querySelector('[data-blog-login-form]');
+  login.elements.username.value = 'elijah0430';
+  login.elements.password.value = 'test-only';
+  login.dispatchEvent(new app.window.Event('submit', { bubbles: true, cancelable: true }));
+  await flush();
+  assert.equal(app.form.elements.id.value, post.id);
+  assert.equal(app.form.elements.body.value, post.body);
+  assert.equal(app.form.querySelector('button[type="submit"]').textContent, 'Save changes');
+  app.type('body', 'Revised');
+  app.form.dispatchEvent(new app.window.Event('submit', { bubbles: true, cancelable: true }));
+  await flush();
+  assert.equal(app.calls.filter(call => call.method === 'POST' && call.url.includes('/blog_posts')).length, 0);
+  assert.equal(app.calls.filter(call => call.method === 'PATCH' && call.url.includes('id=eq.existing')).length, 1);
+  assert.equal(app.window.document.querySelector('[data-blog-post-body]').textContent.trim(), 'Revised');
+  app.dom.window.close();
+});
+
+test('closing edit sign-in returns to the original post', async () => {
+  const post = { id: 'existing', slug: 'existing', title: 'Existing', body: 'Original', published_at: '2026-01-01', updated_at: '2026-01-01' };
+  const app = await editor({ hash: '#post/existing', posts: [post], saved: { 'jongwon-blog-session': 'null' } });
+  app.window.document.querySelector('[data-blog-edit]').click();
+  await flush();
+  app.window.document.querySelector('[data-blog-auth-close]').click();
+  await flush();
+  assert.equal(app.window.location.hash, '#post/existing');
+  assert.equal(app.window.document.querySelector('[data-blog-post-view]').hidden, false);
+  assert.equal(app.window.document.querySelector('[data-blog-edit]').hidden, false);
+  app.dom.window.close();
+});
+
+test('the Footnote button also inserts and autosaves Markdown in source mode', async () => {
+  const app = await editor({ hash: '#write' });
+  app.type('body', 'Keep this text.');
+  app.form.elements.body.setSelectionRange(4, 14);
+  app.window.document.querySelector('[data-insert-footnote]').click();
+  app.window.document.querySelector('[data-footnote-input]').value = 'A note\n\nWith $x_i$.';
+  app.window.document.querySelector('[data-footnote-form]').dispatchEvent(new app.window.Event('submit', { bubbles: true, cancelable: true }));
+  assert.match(app.form.elements.body.value, /Keep this text\[\^note-1\]\./);
+  assert.match(app.form.elements.body.value, /\[\^note-1\]: A note\n    \n    With \$x_i\$\./);
+  app.window.dispatchEvent(new app.window.Event('pagehide'));
+  assert.match(JSON.parse(app.window.localStorage.getItem('jongwon-blog-draft-v1:new')).body, /\[\^note-1\]/);
+  assert.equal(app.calls.filter(call => call.method === 'POST').length, 0);
   app.dom.window.close();
 });

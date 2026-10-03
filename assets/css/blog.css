@@ -65,7 +65,10 @@ html[data-theme='dark'] .blog-site {
 .blog-post > h1 { margin: 18px 0; font: 500 clamp(2.1rem, 4.5vw, 3rem)/1.16 var(--font-reading); letter-spacing: -.035em; }
 .blog-post-summary { font-size: 1.15rem; line-height: 1.65; margin: 0 0 36px; }
 .blog-post-summary:empty { display: none; }
-.blog-edit-button { margin-top: 24px; }
+.blog-post-topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 40px; }
+.blog-site .blog-post-topbar .back-button { margin: 0; }
+.blog-site .blog-edit-button { padding: 8px 14px; border: 1px solid var(--line); border-radius: 5px; color: var(--link); white-space: nowrap; }
+.blog-site .blog-edit-button:hover { background: var(--link-bg); border-color: var(--accent); }
 .prose { color: var(--text); font: 400 1.12rem/1.85 var(--font-reading); overflow-wrap: anywhere; }
 .prose > :first-child { margin-top: 0; }
 .prose p { color: inherit; margin: 0 0 1.3em; white-space: normal; }
@@ -169,6 +172,65 @@ html[data-theme='dark'] .blog-site {
 .blog-site .editor-bottom-bar .quiet-button { font-size: .8rem; white-space: nowrap; }
 .editor-status { padding-top: 10px; }
 
+/* Direct, in-document editing. Folding never removes content from the document. */
+.editor-workspace { display: block; }
+.editor-workspace[data-mode='write'] { height: auto; min-height: 460px; }
+.editor-workspace[data-mode='source'] { height: min(65vh, 640px); }
+.editor-workspace[data-mode='source'] .editor-source { height: 100%; }
+.editor-visual { max-width: 850px; margin-inline: auto; padding: 30px 40px 60px; }
+.block-editor { min-height: 350px; outline: none; overflow-wrap: anywhere; white-space: pre-wrap; }
+.block-editor:focus-visible { outline: none; }
+.block-editor p.is-empty::before, .block-editor summary.is-empty::before { content: attr(data-placeholder); float: left; height: 0; color: var(--faint); pointer-events: none; }
+.block-editor > :first-child { margin-top: 0; }
+.block-editor img { max-width: 100%; height: auto; }
+.block-editor .ProseMirror-selectednode { outline: 2px solid var(--accent); outline-offset: 3px; }
+.block-editor [data-type='details'] { display: flex; gap: 5px; margin: 12px 0; }
+.block-editor [data-type='details'] > button { flex: 0 0 28px; align-self: flex-start; min-height: 30px; padding: 0; margin-top: 1px; border: 0; background: transparent; color: var(--muted); font-size: 1.2rem; line-height: 1.5; border-radius: 4px; }
+.block-editor [data-type='details'] > button:hover { background: var(--link-bg); }
+.block-editor [data-type='details'].is-open > button { transform: rotate(90deg); }
+.block-editor [data-type='details'] > div { flex: 1; min-width: 0; }
+.block-editor summary { display: block; min-height: 32px; list-style: none; cursor: text; font-weight: 550; }
+.block-editor summary::-webkit-details-marker { display: none; }
+.block-editor [data-type='detailsContent'] { margin: 4px 0 4px 1px; padding: 2px 0 2px 16px; border-left: 1px solid var(--line); }
+.block-editor [data-type='detailsContent'] > :first-child { margin-top: 0; }
+.block-editor [data-type='details']:not(.is-open) > div > [data-type='detailsContent'] { display: none; }
+.blog-toggle { margin: 16px 0; }
+.blog-toggle > summary { cursor: pointer; font-weight: 550; color: var(--text); padding: 3px 0; }
+.blog-toggle > summary::marker { color: var(--muted); font-size: .8em; }
+.blog-toggle > div { margin: 8px 0 8px 6px; padding-left: 18px; border-left: 1px solid var(--line); }
+.blog-toggle > div > :first-child { margin-top: 0; }
+.editor-math { cursor: pointer; border-radius: 3px; }
+.editor-math:hover { background: var(--link-bg); }
+.editor-math.math-block { display: block; padding: 8px; overflow-x: auto; }
+.format-toolbar .toggle-tool { white-space: nowrap; font-size: .83rem; }
+.block-editor table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.block-editor td, .block-editor th { border: 1px solid var(--line); padding: 6px 10px; vertical-align: top; }
+.block-editor ul[data-type='taskList'] { padding-left: 0; list-style: none; }
+.block-editor li[data-type='taskItem'] { display: flex; gap: 9px; align-items: baseline; }
+.block-editor li[data-type='taskItem'] > div { flex: 1; }
+.editor-dialog { width: min(540px, calc(100% - 32px)); max-height: 85vh; overflow: auto; padding: 28px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); box-shadow: 0 18px 70px #0003; }
+.editor-dialog::backdrop { background: #0e18284d; }
+.editor-dialog h2 { margin: 0 0 22px; font-size: 1.2rem; }
+.editor-dialog label { display: block; font-size: .82rem; margin-bottom: 8px; }
+.editor-dialog textarea, .editor-dialog input { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 12px; }
+.editor-dialog textarea { font-family: Consolas, monospace; resize: vertical; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; }
+.equation-dialog-preview { padding: 10px 0; overflow-x: auto; }
+.format-toolbar .footnote-tool { white-space: nowrap; font-size: .83rem; }
+.editor-footnote-ref, .blog-footnote-ref { font-family: var(--font-main); font-size: .72em; vertical-align: super; line-height: 0; }
+.editor-footnote-ref { cursor: pointer; color: var(--link); padding: 3px; border-radius: 3px; }
+.editor-footnote-ref:hover { background: var(--link-bg); }
+.blog-footnote-ref a { text-decoration: none; padding: 3px; }
+.blog-footnotes { margin-top: 3em; padding-top: 1.4em; border-top: 1px solid var(--line); font-size: .88em; }
+.prose .blog-footnotes h2 { margin: 0 0 1em; font-family: var(--font-main); font-size: .9em; font-weight: 600; }
+.blog-footnotes li { padding-left: .35em; margin-bottom: 1em; scroll-margin-top: 100px; }
+.blog-footnotes li > p:last-of-type { display: inline; }
+.footnote-backlink { display: inline-block; margin-left: .55em; font-family: var(--font-main); text-decoration: none; }
+.editor-unused-footnote { margin: 12px 0; padding: 10px 14px; border-left: 2px solid var(--line); color: var(--muted); font-size: .85em; cursor: pointer; }
+.footnote-dialog-preview { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); font-size: .95rem; max-height: 220px; overflow-y: auto; }
+.footnote-dialog-preview:empty { display: none; }
+.dialog-actions .footnote-remove { margin-right: auto; font-size: .8rem; }
+
 @media (max-width: 900px) {
   .editor-controls { flex-wrap: wrap; padding-inline: 16px; }
   .editor-topbar { align-items: flex-start; }
@@ -199,6 +261,8 @@ html[data-theme='dark'] .blog-site {
   .toolbar-divider { margin-inline: 3px; }
   .view-switch { margin-left: auto; }
   .editor-source, .editor-preview { padding: 22px 20px; }
+  .editor-visual { padding: 24px 20px 45px; }
+  .block-editor [data-type='detailsContent'] { padding-left: 10px; }
   .editor-footnote { padding-inline: 20px; font-size: .69rem; }
   .editor-footnote > span:last-child { max-width: 210px; text-align: right; }
   .math-tools { padding: 16px; }
