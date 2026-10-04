@@ -18,6 +18,7 @@
     editorOpen: false,
     draftStored: true,
     mode: 'write',
+    richEditing: false,
   };
 
   const listView = app.querySelector('[data-blog-list-view]');
@@ -59,7 +60,7 @@
   let footnoteTarget;
 
   function openFootnote(body = '', pos = null) {
-    footnoteTarget = { pos, rich: state.mode === 'write' && Boolean(richEditor), sourceEnd: bodyInput.selectionEnd };
+    footnoteTarget = { pos, rich: state.richEditing, sourceEnd: bodyInput.selectionEnd };
     footnoteInput.value = body;
     app.querySelector('[data-footnote-status]').textContent = '';
     app.querySelector('[data-footnote-remove]').hidden = pos === null;
@@ -412,27 +413,37 @@
       preview.append(placeholder);
       return;
     }
+    const folds = [...preview.querySelectorAll('details')].map(detail => ({ title: detail.querySelector('summary')?.textContent, open: detail.open }));
+    const scrollTop = preview.parentElement.scrollTop;
     const result = renderBody(preview, bodyInput.value);
+    preview.querySelectorAll('details').forEach((detail, index) => {
+      if (folds[index]?.title === detail.querySelector('summary')?.textContent) detail.open = folds[index].open;
+    });
+    preview.parentElement.scrollTop = scrollTop;
     if (!result.available) editorStatus.textContent = 'Formatting is unavailable. Your text is still saved; reload to try again.';
   }
 
   function setEditorMode(mode, reset = false) {
-    if (mode === 'write') {
+    let richEditing = false;
+    if (mode === 'write' || mode === 'split') {
       try {
-        if (prepareRichEditor()) richEditor.load(bodyInput.value, reset);
-        else mode = 'source';
+        if (prepareRichEditor()) {
+          richEditor.load(bodyInput.value, reset);
+          richEditing = true;
+        } else if (mode === 'write') mode = 'source';
       } catch (error) {
         console.error(error);
-        mode = 'source';
+        if (mode === 'write') mode = 'source';
         editorStatus.textContent = 'Visual editor unavailable. Your original Markdown is unchanged.';
       }
     }
     state.mode = mode;
+    state.richEditing = richEditing;
     workspace.dataset.mode = mode;
-    app.querySelector('[data-editor-visual]').hidden = mode !== 'write';
-    app.querySelector('[data-editor-source]').hidden = mode !== 'source';
-    app.querySelector('[data-editor-preview-panel]').hidden = mode !== 'preview';
-    app.querySelectorAll('[data-exit-toggle], [data-unwrap-toggle], [data-format="undo"], [data-format="redo"]').forEach((button) => { button.disabled = mode !== 'write'; });
+    app.querySelector('[data-editor-visual]').hidden = !richEditing;
+    app.querySelector('[data-editor-source]').hidden = richEditing || mode === 'preview';
+    app.querySelector('[data-editor-preview-panel]').hidden = mode !== 'preview' && mode !== 'split';
+    app.querySelectorAll('[data-exit-toggle], [data-unwrap-toggle], [data-format="undo"], [data-format="redo"]').forEach((button) => { button.disabled = !richEditing; });
     app.querySelectorAll('[data-editor-mode]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.editorMode === mode)));
     updatePreview();
   }
@@ -447,7 +458,7 @@
   }
 
   function insertText(before, after = '', fallback = '', block = false) {
-    if (state.mode !== 'source') setEditorMode('source');
+    if (state.mode !== 'source' && !(state.mode === 'split' && !state.richEditing)) setEditorMode('source');
     const start = bodyInput.selectionStart;
     const end = bodyInput.selectionEnd;
     const selected = bodyInput.value.slice(start, end) || fallback;
@@ -472,7 +483,7 @@
   app.querySelector('.format-toolbar').addEventListener('mousedown', (event) => { if (event.target.closest('button')) event.preventDefault(); });
   app.querySelectorAll('[data-format]').forEach((button) => button.addEventListener('click', () => {
     const format = button.dataset.format;
-    if (state.mode === 'write' && richEditor) {
+    if (state.richEditing) {
       if (format === 'link') {
         app.querySelector('[data-link-input]').value = richEditor.editor.getAttributes('link').href || '';
         app.querySelector('[data-link-status]').textContent = '';
@@ -481,7 +492,7 @@
     } else if (formats[format]) insertText(...formats[format]);
   }));
   app.querySelector('[data-insert-toggle]').addEventListener('click', () => {
-    if (state.mode === 'write' && richEditor) richEditor.toggle();
+    if (state.richEditing) richEditor.toggle();
     else insertText(':::toggle Toggle title\n\n', '\n\n:::', 'Content', true);
   });
   app.querySelector('[data-exit-toggle]').addEventListener('click', () => richEditor?.exitToggle());
@@ -511,7 +522,7 @@
     renderBody(sample, `$${template.thumbnail || template.latex}$`);
     button.append(sample, makeTextElement('span', 'template-label', template.name));
     button.addEventListener('click', () => {
-      if (state.mode === 'write' && richEditor) richEditor.equation(template.latex, !template.inline);
+      if (state.richEditing) richEditor.equation(template.latex, !template.inline);
       else insertText(template.inline ? '$' : '$$\n', template.inline ? '$' : '\n$$', template.latex, !template.inline);
       mathTools.hidden = true;
       mathToggle.setAttribute('aria-expanded', 'false');
@@ -537,7 +548,7 @@
         const ref = `[^${id}]`;
         bodyInput.value = bodyInput.value.slice(0, at) + ref + bodyInput.value.slice(at)
           + '\n\n' + window.BlogMarkdown.formatFootnote(id, body);
-        setEditorMode('source');
+        setEditorMode(state.mode === 'split' ? 'split' : 'source');
         bodyInput.setSelectionRange(at + ref.length, at + ref.length);
         changed();
       }

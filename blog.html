@@ -16,7 +16,7 @@
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/styles.css?v=20261002" />
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css" />
-  <link rel="stylesheet" href="assets/css/blog.css?v=20261003-inline-math" />
+  <link rel="stylesheet" href="assets/css/blog.css?v=20261004-split" />
   <script>document.documentElement.classList.add('js');</script>
   <script defer src="assets/js/main.js"></script>
   <script defer src="assets/vendor/marked/marked.umd.js"></script>
@@ -24,7 +24,7 @@
   <script defer src="assets/vendor/katex/katex.min.js"></script>
   <script defer src="assets/js/blog-markdown.js?v=20261003-inline-math"></script>
   <script defer src="assets/js/blog-editor.js?v=20261003-inline-math"></script>
-  <script defer src="assets/js/blog.js?v=20261003-inline-math"></script>
+  <script defer src="assets/js/blog.js?v=20261004-split"></script>
 </head>
 <body class="blog-site">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -179,6 +179,7 @@
             </div>
             <div class="view-switch" role="group" aria-label="Editor view">
               <button type="button" data-editor-mode="write" aria-pressed="true">Write</button>
+              <button type="button" data-editor-mode="split" aria-pressed="false" title="Edit and preview side by side">Split</button>
               <button type="button" data-editor-mode="source" aria-pressed="false">Markdown</button>
               <button type="button" data-editor-mode="preview" aria-pressed="false">Preview</button>
             </div>
@@ -188,7 +189,10 @@
             <div class="math-templates" data-math-templates></div>
           </div>
           <div class="editor-workspace" data-editor-workspace data-mode="write">
-            <div class="editor-visual" data-editor-visual><div data-block-editor></div></div>
+            <div class="editor-visual" data-editor-visual>
+              <div class="pane-heading visual-pane-heading"><span>Write</span><span>Editable LaTeX</span></div>
+              <div data-block-editor></div>
+            </div>
             <div class="editor-source" data-editor-source hidden>
               <div class="pane-heading"><label for="post-body">Body</label><span>Markdown + LaTeX</span></div>
               <textarea id="post-body" class="post-editor-body" name="body" required maxlength="100000" spellcheck="true" placeholder="Write in Markdown or LaTeX."></textarea>
@@ -205,6 +209,7 @@
             <summary>Formatting guide</summary>
             <div class="writing-help-content">
               <p><code>## Heading</code> · <code>**bold**</code> · <code>[text](url)</code></p>
+              <p>Split keeps the editor and live preview visible together. On narrow screens, the preview appears below the editor.</p>
               <p>Type <code>/toggle</code> then Space for a collapsible block. Edit its title, press Enter, and write inside. Click the arrow to collapse it. Use ↳ to write after it, or ⇤ to unwrap it without deleting its contents.</p>
               <p>Edit and copy LaTeX directly in the body, without a separate dialog. Preview shows the rendered equations. Ctrl/Cmd+Enter continues after an equation. Copying body text keeps its Markdown and LaTeX.</p>
               <p>Ctrl/Cmd+Z undoes edits; Ctrl/Cmd+S saves the draft.</p>

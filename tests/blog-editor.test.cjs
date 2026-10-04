@@ -387,7 +387,7 @@ test('editing a reused footnote updates every occurrence with one definition', (
   app.close();
 });
 
-test('full app autosaves rich toggles, restores them, and publishes only explicitly', async () => {
+for (const mode of ['write', 'split']) test(`full app in ${mode} mode autosaves rich edits, restores them, and publishes only explicitly`, async () => {
   const dom = new JSDOM(read('blog.html'), { url: 'https://local.test/blog.html#write', runScripts: 'outside-only', pretendToBeVisual: true });
   const { window } = dom;
   window.scrollTo = () => {};
@@ -413,10 +413,24 @@ test('full app autosaves rich toggles, restores them, and publishes only explici
   window.eval(read('assets/js/blog.js'));
   await flush();
   assert.equal(window.document.querySelector('[data-editor-workspace]').dataset.mode, 'write');
+  window.document.querySelector(`[data-editor-mode="${mode}"]`).click();
+  assert.equal(window.document.querySelector('[data-editor-workspace]').dataset.mode, mode);
+  assert.equal(window.document.querySelector('[data-editor-visual]').hidden, false);
+  assert.equal(window.document.querySelector('[data-editor-source]').hidden, true);
+  assert.equal(window.document.querySelector('[data-editor-preview-panel]').hidden, mode !== 'split');
+  assert.equal(window.document.querySelector(`[data-editor-mode="${mode}"]`).getAttribute('aria-pressed'), 'true');
+  assert.equal(window.document.querySelector('[data-format="undo"]').disabled, false);
   assert.equal(window.document.querySelectorAll('[data-type="details"]').length, 2);
   // Opening an existing draft must not normalize/overwrite its original source.
   assert.equal(window.document.querySelector('#post-body').value, toggleSource);
+  const livePreview = window.document.querySelector('[data-editor-preview]');
+  livePreview.querySelector('details').open = true;
   api.editor.commands.insertContent('한글 입력 ');
+  const activeEditor = api.editor;
+  window.document.querySelector('[data-editor-mode="write"]').click();
+  window.document.querySelector(`[data-editor-mode="${mode}"]`).click();
+  assert.equal(api.editor, activeEditor);
+  assert.equal(api.editor.can().undo(), true);
   window.document.querySelector('[data-math-toggle]').click();
   window.document.querySelector('[aria-label="Insert inline equation"]').click();
   assert.equal(window.document.querySelector('[data-equation-dialog]'), null);
@@ -433,9 +447,18 @@ test('full app autosaves rich toggles, restores them, and publishes only explici
   assert.match(draft.body, /Hidden/);
   assert.match(draft.body, /\$\\alpha_i\$/);
   assert.match(draft.body, /\[\^note-1\]: 설명과 \$x_i\$\./);
+  assert.equal(livePreview.querySelector('details').open, true);
+  assert.equal(livePreview.querySelectorAll('.katex').length, 4);
+  assert.match(livePreview.textContent, /한글 입력/);
+  assert.equal(window.document.querySelector('[data-editor-workspace]').dataset.mode, mode);
   assert.equal(calls.filter(call => call.method === 'POST').length, 0);
   window.document.querySelector('[data-editor-mode="source"]').click();
-  window.document.querySelector('[data-editor-mode="write"]').click();
+  const sourceInput = window.document.querySelector('#post-body');
+  sourceInput.value += '\n\nAdded in Markdown with $z_k$.';
+  sourceInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+  window.document.querySelector(`[data-editor-mode="${mode}"]`).click();
+  assert.match(api.editor.getMarkdown(), /Added in Markdown with \$z_k\$/);
+  assert.equal(livePreview.querySelectorAll('.katex').length, 5);
   assert.equal(window.document.querySelectorAll('[data-type="details"]').length, 2);
   assert.equal(window.document.querySelectorAll('.editor-footnote-ref').length, 1);
   window.document.querySelector('[data-blog-editor-form]').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));

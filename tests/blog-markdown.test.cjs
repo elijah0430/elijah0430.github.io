@@ -126,6 +126,33 @@ test('automatically saves all fields privately after typing, and reload restores
   next.dom.window.close();
 });
 
+test('Split falls back to Markdown plus live preview if the rich editor is unavailable', async () => {
+  const app = await editor({ hash: '#write' });
+  const doc = app.window.document;
+  app.type('body', 'Keep $x_i$.');
+  doc.querySelector('[data-editor-mode="split"]').click();
+  assert.equal(doc.querySelector('[data-editor-workspace]').dataset.mode, 'split');
+  assert.equal(doc.querySelector('[data-editor-source]').hidden, false);
+  assert.equal(doc.querySelector('[data-editor-visual]').hidden, true);
+  assert.equal(doc.querySelector('[data-editor-preview-panel]').hidden, false);
+  assert.equal(doc.querySelector('[data-format="undo"]').disabled, true);
+  app.form.elements.body.setSelectionRange(0, 4);
+  doc.querySelector('[data-format="bold"]').click();
+  assert.match(app.form.elements.body.value, /\*\*Keep\*\*/);
+  assert.equal(doc.querySelector('[data-editor-workspace]').dataset.mode, 'split');
+  app.form.elements.body.setSelectionRange(app.form.elements.body.value.length, app.form.elements.body.value.length);
+  doc.querySelector('[data-insert-footnote]').click();
+  doc.querySelector('[data-footnote-input]').value = 'A footnote.';
+  doc.querySelector('[data-footnote-form]').dispatchEvent(new app.window.Event('submit', { bubbles: true, cancelable: true }));
+  assert.equal(doc.querySelector('[data-editor-workspace]').dataset.mode, 'split');
+  await new Promise(resolve => setTimeout(resolve, 750));
+  assert.equal(doc.querySelectorAll('[data-editor-preview] .katex').length, 1);
+  assert.equal(doc.querySelectorAll('[data-editor-preview] .blog-footnotes li').length, 1);
+  assert.equal(JSON.parse(app.window.localStorage.getItem('jongwon-blog-draft-v1:new')).body, app.form.elements.body.value);
+  assert.equal(app.calls.filter(call => call.method === 'POST').length, 0);
+  app.window.close();
+});
+
 test('flushes unsaved typing on pagehide and isolates edit drafts from new posts', async () => {
   const post = { id: 'existing', slug: 'existing', title: 'Existing', body: 'Original', published_at: '2026-01-01', updated_at: '2026-01-01' };
   const app = await editor({ hash: '#edit/existing', posts: [post] });
