@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400..800&display=swap");
 
 :root {
   color-scheme: light;
@@ -11,7 +11,8 @@
   --link: #1e6fa5;
   --link-bg: #e6f1f8;
   --accent: #4a90c2;
-  --font-main: "Source Sans 3", "Segoe UI Variable Text", "Segoe UI", sans-serif;
+  --font-main: "Source Serif 4", Georgia, serif;
+  --font-code: Consolas, "Courier New", monospace;
   --header-height: 68px;
   --page-width: 1040px;
 }
@@ -47,6 +48,14 @@ body {
   font-size: 16px;
   line-height: 1.68;
   text-rendering: optimizeLegibility;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+code, pre, kbd, samp {
+  font-family: var(--font-code);
 }
 
 a {
