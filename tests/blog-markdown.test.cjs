@@ -5,7 +5,7 @@ const path = require('node:path');
 const { JSDOM } = require('jsdom');
 const root = path.join(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
-const scripts = ['assets/vendor/marked/marked.umd.js', 'assets/vendor/dompurify/purify.min.js', 'assets/vendor/katex/katex.min.js', 'assets/js/blog-markdown.js'].map(read);
+const scripts = ['assets/vendor/marked/marked.umd.js', 'assets/vendor/dompurify/purify.min.js', 'assets/vendor/katex/katex.min.js', 'assets/js/blog-markdown.js', 'assets/js/blog-layout.js'].map(read);
 
 function renderer() {
   const dom = new JSDOM('<!doctype html><div id="output"></div>', { runScripts: 'outside-only' });
@@ -70,11 +70,13 @@ test('shows invalid math as editable text and preserves surrounding writing', ()
 const session = { access_token: 'local-test-only', refresh_token: 'local-test-refresh', expires_at: Date.now() / 1000 + 3600 };
 const flush = async () => { for (let i = 0; i < 6; i++) await new Promise(setImmediate); };
 
-async function editor({ saved = {}, hash = '', posts = [], storageFailure = false } = {}) {
+async function editor({ saved = {}, hash = '', posts = [], storageFailure = false, rich = false } = {}) {
   const dom = new JSDOM(read('blog.html'), { url: `https://blog.test/blog.html${hash}`, runScripts: 'outside-only', pretendToBeVisual: true });
   const { window } = dom;
   window.scrollTo = () => {};
   window.matchMedia = () => ({ matches: false });
+  window.Range.prototype.getClientRects = () => [];
+  window.Range.prototype.getBoundingClientRect = () => ({ top: 0, bottom: 0, left: 0, right: 0 });
   window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
   window.HTMLDialogElement.prototype.close = function () { this.open = false; };
   window.localStorage.setItem('jongwon-blog-session', JSON.stringify(session));
@@ -97,6 +99,7 @@ async function editor({ saved = {}, hash = '', posts = [], storageFailure = fals
     return { ok: true, status: 200, text: async () => JSON.stringify(data) };
   };
   scripts.forEach((script) => window.eval(script));
+  if (rich) window.eval(read('assets/js/blog-editor.js'));
   window.eval(read('assets/js/blog.js'));
   await flush();
   const form = window.document.querySelector('[data-blog-editor-form]');
@@ -126,8 +129,8 @@ test('automatically saves all fields privately after typing, and reload restores
   next.dom.window.close();
 });
 
-test('Split falls back to Markdown plus live preview if the rich editor is unavailable', async () => {
-  const app = await editor({ hash: '#write' });
+for (const rich of [false, true]) test(`Split uses pure Markdown, live preview and autosave with rich editor ${rich ? 'available' : 'unavailable'}`, async () => {
+  const app = await editor({ hash: '#write', rich });
   const doc = app.window.document;
   app.type('body', 'Keep $x_i$.');
   doc.querySelector('[data-editor-mode="split"]').click();
@@ -150,6 +153,22 @@ test('Split falls back to Markdown plus live preview if the rich editor is unava
   assert.equal(doc.querySelectorAll('[data-editor-preview] .blog-footnotes li').length, 1);
   assert.equal(JSON.parse(app.window.localStorage.getItem('jongwon-blog-draft-v1:new')).body, app.form.elements.body.value);
   assert.equal(app.calls.filter(call => call.method === 'POST').length, 0);
+  const source = app.form.elements.body.value;
+  const draft = app.window.localStorage.getItem('jongwon-blog-draft-v1:new');
+  const height = doc.querySelector('[data-editor-height]');
+  height.value = '800';
+  height.dispatchEvent(new app.window.Event('input', { bubbles: true }));
+  doc.querySelector('[data-editor-divider]').dispatchEvent(new app.window.KeyboardEvent('keydown', { key: 'ArrowRight' }));
+  doc.querySelector('[data-editor-mode="write"]').click();
+  assert.equal(doc.querySelector('[data-editor-visual]').hidden, !rich);
+  doc.querySelector('[data-editor-mode="split"]').click();
+  assert.equal(app.form.elements.body.value, source);
+  assert.equal(doc.querySelector('[data-editor-source]').hidden, false);
+  assert.equal(doc.querySelector('[data-editor-visual]').hidden, true);
+  assert.equal(doc.querySelector('[data-editor-workspace]').style.height, '800px');
+  assert.equal(doc.querySelector('[data-editor-workspace]').style.getPropertyValue('--editor-left'), '52fr');
+  await new Promise(resolve => setTimeout(resolve, 750));
+  assert.equal(app.window.localStorage.getItem('jongwon-blog-draft-v1:new'), draft, 'resizing and unchanged mode switches must not rewrite drafts');
   app.window.close();
 });
 

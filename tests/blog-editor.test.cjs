@@ -5,7 +5,7 @@ const path = require('node:path');
 const { JSDOM } = require('jsdom');
 const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
-const scripts = ['assets/vendor/marked/marked.umd.js', 'assets/vendor/dompurify/purify.min.js', 'assets/vendor/katex/katex.min.js', 'assets/js/blog-markdown.js', 'assets/js/blog-editor.js'].map(read);
+const scripts = ['assets/vendor/marked/marked.umd.js', 'assets/vendor/dompurify/purify.min.js', 'assets/vendor/katex/katex.min.js', 'assets/js/blog-markdown.js', 'assets/js/blog-editor.js', 'assets/js/blog-layout.js'].map(read);
 const flush = async () => { for (let i = 0; i < 6; i++) await new Promise(setImmediate); };
 
 function setup() {
@@ -387,7 +387,8 @@ test('editing a reused footnote updates every occurrence with one definition', (
   app.close();
 });
 
-for (const mode of ['write', 'split']) test(`full app in ${mode} mode autosaves rich edits, restores them, and publishes only explicitly`, async () => {
+test('full app in Write mode autosaves rich edits, restores them, and publishes only explicitly', async () => {
+  const mode = 'write';
   const dom = new JSDOM(read('blog.html'), { url: 'https://local.test/blog.html#write', runScripts: 'outside-only', pretendToBeVisual: true });
   const { window } = dom;
   window.scrollTo = () => {};

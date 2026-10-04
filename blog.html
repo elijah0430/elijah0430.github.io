@@ -16,7 +16,7 @@
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/styles.css?v=20261002" />
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css" />
-  <link rel="stylesheet" href="assets/css/blog.css?v=20261004-split" />
+  <link rel="stylesheet" href="assets/css/blog.css?v=20261004-resize" />
   <script>document.documentElement.classList.add('js');</script>
   <script defer src="assets/js/main.js"></script>
   <script defer src="assets/vendor/marked/marked.umd.js"></script>
@@ -24,7 +24,8 @@
   <script defer src="assets/vendor/katex/katex.min.js"></script>
   <script defer src="assets/js/blog-markdown.js?v=20261003-inline-math"></script>
   <script defer src="assets/js/blog-editor.js?v=20261003-inline-math"></script>
-  <script defer src="assets/js/blog.js?v=20261004-split"></script>
+  <script defer src="assets/js/blog-layout.js?v=20261004-resize"></script>
+  <script defer src="assets/js/blog.js?v=20261004-resize"></script>
 </head>
 <body class="blog-site">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -179,7 +180,7 @@
             </div>
             <div class="view-switch" role="group" aria-label="Editor view">
               <button type="button" data-editor-mode="write" aria-pressed="true">Write</button>
-              <button type="button" data-editor-mode="split" aria-pressed="false" title="Edit and preview side by side">Split</button>
+              <button type="button" data-editor-mode="split" aria-pressed="false" title="Markdown source and live preview">Split</button>
               <button type="button" data-editor-mode="source" aria-pressed="false">Markdown</button>
               <button type="button" data-editor-mode="preview" aria-pressed="false">Preview</button>
             </div>
@@ -188,20 +189,22 @@
             <div class="math-tools-heading"><span>Insert an equation</span><span class="math-note">Edit LaTeX directly in the body. See the result in Preview.</span></div>
             <div class="math-templates" data-math-templates></div>
           </div>
-          <div class="editor-workspace" data-editor-workspace data-mode="write">
+          <div id="editor-workspace" class="editor-workspace" data-editor-workspace data-mode="write">
             <div class="editor-visual" data-editor-visual>
               <div class="pane-heading visual-pane-heading"><span>Write</span><span>Editable LaTeX</span></div>
               <div data-block-editor></div>
             </div>
             <div class="editor-source" data-editor-source hidden>
-              <div class="pane-heading"><label for="post-body">Body</label><span>Markdown + LaTeX</span></div>
+              <div class="pane-heading"><label for="post-body">Markdown source</label><span>Markdown + LaTeX</span></div>
               <textarea id="post-body" class="post-editor-body" name="body" required maxlength="100000" spellcheck="true" placeholder="Write in Markdown or LaTeX."></textarea>
             </div>
+            <div class="editor-divider" data-editor-divider role="separator" tabindex="0" aria-label="Resize editor and preview widths" aria-orientation="vertical" aria-controls="editor-workspace" aria-valuemin="25" aria-valuemax="75" aria-valuenow="50" title="Drag to adjust widths. Arrow keys to resize; double-click to reset." hidden></div>
             <section class="editor-preview" data-editor-preview-panel aria-label="Post preview" tabindex="0" hidden>
               <div class="pane-heading"><span>Preview</span><span class="live-indicator">Live</span></div>
               <div class="prose preview-content" data-editor-preview></div>
             </section>
           </div>
+          <div class="editor-height-handle" data-editor-height-handle role="separator" tabindex="0" aria-label="Resize editor height" aria-orientation="horizontal" aria-controls="editor-workspace" aria-valuemin="320" aria-valuemax="1600" aria-valuenow="480" title="Drag up or down to resize. Arrow keys also work; double-click for automatic height."><span aria-hidden="true"></span></div>
           <div class="editor-footnote"><span data-word-count>0 words</span><span>Drafts are saved in this browser.</span></div>
         </div>
         <div class="editor-bottom-bar">
@@ -209,7 +212,8 @@
             <summary>Formatting guide</summary>
             <div class="writing-help-content">
               <p><code>## Heading</code> · <code>**bold**</code> · <code>[text](url)</code></p>
-              <p>Split keeps the editor and live preview visible together. On narrow screens, the preview appears below the editor.</p>
+              <p>Split shows pure Markdown on the left and the live preview on the right. Write is the rich editor. On narrow screens, the preview appears below the source.</p>
+              <p>Drag the bottom handle to change the height, or the Split divider to adjust widths. Editor size has width and height sliders and a reset button. Your layout is remembered in this browser.</p>
               <p>Type <code>/toggle</code> then Space for a collapsible block. Edit its title, press Enter, and write inside. Click the arrow to collapse it. Use ↳ to write after it, or ⇤ to unwrap it without deleting its contents.</p>
               <p>Edit and copy LaTeX directly in the body, without a separate dialog. Preview shows the rendered equations. Ctrl/Cmd+Enter continues after an equation. Copying body text keeps its Markdown and LaTeX.</p>
               <p>Ctrl/Cmd+Z undoes edits; Ctrl/Cmd+S saves the draft.</p>
@@ -218,7 +222,19 @@
               <p>LaTeX delimiters <code>\( … \)</code> and <code>\[ … \]</code> work too. Use Equation for fractions, sums, matrices, and aligned equations.</p>
             </div>
           </details>
-          <button class="quiet-button" type="button" data-draft-download>Download draft ↓</button>
+          <div class="editor-bottom-actions">
+            <details class="editor-size-controls" data-editor-size>
+              <summary>Editor size</summary>
+              <div class="editor-size-options">
+                <label for="editor-width">Width <output data-editor-width-value>1120 px</output></label>
+                <input id="editor-width" data-editor-width type="range" min="720" max="2400" step="1" value="1120" />
+                <label for="editor-height">Height <output data-editor-height-value>Auto</output></label>
+                <input id="editor-height" data-editor-height type="range" min="320" max="1600" step="1" value="480" />
+                <button class="quiet-button" type="button" data-editor-size-reset>Reset size</button>
+              </div>
+            </details>
+            <button class="quiet-button" type="button" data-draft-download>Download draft ↓</button>
+          </div>
         </div>
         <p class="form-status editor-status" data-editor-status role="status"></p>
       </form>

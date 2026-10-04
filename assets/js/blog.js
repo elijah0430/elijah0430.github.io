@@ -49,6 +49,7 @@
   const wordCount = app.querySelector('[data-word-count]');
   const mathTools = app.querySelector('[data-math-tools]');
   const mathToggle = app.querySelector('[data-math-toggle]');
+  const editorLayout = window.BlogLayout?.create({ app, workspace, onWidthChange: resizeHeadings });
   let draftTimer;
   let previewTimer;
   let refreshRequest;
@@ -400,12 +401,16 @@
 
   function readingTime(body) { return Math.max(1, Math.ceil(countWords(body) / 220)); }
 
-  function updatePreview() {
+  function resizeHeadings() {
     ['title', 'summary'].forEach((name) => {
       const field = editorForm.elements.namedItem(name);
       field.style.height = 'auto';
       field.style.height = `${field.scrollHeight}px`;
     });
+  }
+
+  function updatePreview() {
+    resizeHeadings();
     wordCount.textContent = `${countWords(bodyInput.value)} words · ${readingTime(bodyInput.value)} min read`;
     if (!bodyInput.value.trim()) {
       preview.replaceChildren();
@@ -425,7 +430,7 @@
 
   function setEditorMode(mode, reset = false) {
     let richEditing = false;
-    if (mode === 'write' || mode === 'split') {
+    if (mode === 'write') {
       try {
         if (prepareRichEditor()) {
           richEditor.load(bodyInput.value, reset);
@@ -445,6 +450,7 @@
     app.querySelector('[data-editor-preview-panel]').hidden = mode !== 'preview' && mode !== 'split';
     app.querySelectorAll('[data-exit-toggle], [data-unwrap-toggle], [data-format="undo"], [data-format="redo"]').forEach((button) => { button.disabled = !richEditing; });
     app.querySelectorAll('[data-editor-mode]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.editorMode === mode)));
+    editorLayout?.update();
     updatePreview();
   }
 
@@ -530,7 +536,7 @@
     app.querySelector('[data-math-templates]').append(button);
   });
 
-  editorForm.addEventListener('input', changed);
+  editorForm.addEventListener('input', event => { if (['title', 'summary', 'body'].includes(event.target.name)) changed(); });
   footnoteInput.addEventListener('input', () => renderBody(app.querySelector('[data-footnote-preview]'), footnoteInput.value));
   app.querySelector('[data-footnote-cancel]').addEventListener('click', () => footnoteDialog.close());
   app.querySelector('[data-footnote-form]').addEventListener('submit', event => {
