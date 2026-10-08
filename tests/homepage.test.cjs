@@ -185,9 +185,9 @@ test('new portrait and simplified introduction keep only the top navigation CV l
     assert.equal(intro.querySelector('.kicker, .affiliation, .advisor'), null);
     const description = intro.querySelector('.intro-description');
     assert.equal(description.textContent.replace(/\s+/g, ' ').trim(),
-      'I am a Ph.D. student in Data Science at Seoul National University, advised by Prof. Yohan Jo in the Human-Oriented Language Intelligence (HOLI) Lab.');
+      'I am a Ph.D. student in Artificial Intelligence at Seoul National University, advised by Prof. Yohan Jo in the Human-Oriented Language Intelligence (HOLI) Lab.');
     assert.deepEqual([...description.querySelectorAll('a')].map(a => [a.textContent, a.href]), [
-      ['Data Science', 'https://gsds.snu.ac.kr/'],
+      ['Artificial Intelligence', 'https://snuai.snu.ac.kr/'],
       ['Seoul National University', 'https://www.snu.ac.kr/'],
       ['Prof. Yohan Jo', 'https://yohanjo.github.io/'],
     ]);
