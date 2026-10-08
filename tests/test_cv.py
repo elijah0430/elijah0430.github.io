@@ -223,6 +223,27 @@ class CVTests(unittest.TestCase):
         cv.generate(self.root)
         self.assertIn("New appointment", self.text())
 
+    def test_collapsed_workshop_service_is_kept_in_both_cv_formats(self):
+        self.edit("index.html", '<time>2026</time><h3>Reviewer</h3><ul>',
+                  '<time>2026</time><details class="service-workshops">'
+                  '<summary><h3>Workshop Reviewer</h3></summary><ul>')
+        self.edit("index.html", '</li></ul></article></section>',
+                  '</li></ul></details></article></section>')
+        self.edit("index.html", '<h2>Services</h2>',
+                  '<h2>Services</h2><article class="entry"><time>2027</time>'
+                  '<h3>Conference Reviewer</h3><p>ICLR 2027</p></article>')
+        cv.generate(self.root)
+        rendered = BeautifulSoup((self.root / "cv.html").read_text(encoding="utf-8"), "html.parser")
+        service = rendered.select_one("#services")
+        self.assertIsNone(service.select_one("details"))
+        for text in (service.get_text(" ", strip=True), self.text()):
+            self.assertIn("Conference Reviewer", text)
+            self.assertIn("ICLR 2027", text)
+            self.assertIn("Workshop Reviewer", text)
+            self.assertIn("Workshop A", text)
+            self.assertIn("Workshop B", text)
+            self.assertEqual(text.count("also emergency reviewer"), 2)
+
     def test_long_titles_wrap_and_documents_paginate(self):
         self.edit("index.html", "Teaching Assistant</h3>",
                   "A long teaching role with detailed responsibilities " * 8 + "</h3>")

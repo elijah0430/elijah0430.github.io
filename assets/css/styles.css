@@ -390,6 +390,40 @@ strong {
   white-space: nowrap;
 }
 
+.service-workshops {
+  min-width: 0;
+}
+
+.service-workshops > summary {
+  width: fit-content;
+  cursor: pointer;
+}
+
+.service-workshops > summary::marker {
+  color: var(--faint);
+  font-size: 0.8em;
+}
+
+.service-workshops > summary h3 {
+  display: inline;
+  margin: 0;
+}
+
+.service-workshops > summary:hover h3 {
+  color: var(--link);
+}
+
+.service-workshops > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.service-workshops ul {
+  margin: 12px 0 0;
+  padding-left: 20px;
+}
+
 .note-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
