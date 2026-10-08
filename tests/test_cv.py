@@ -63,9 +63,6 @@ class CVTests(unittest.TestCase):
             target = self.root / source
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / source, target)
-        self.root.joinpath("assets/img").mkdir(parents=True)
-        actual_photo = cv.read_sources(ROOT)["photo"]
-        shutil.copyfile(ROOT / actual_photo, self.root / "assets/img/profile.jpg")
         self.root.joinpath("index.html").write_text(HOME, encoding="utf-8")
         self.root.joinpath("research.html").write_text(RESEARCH, encoding="utf-8")
 
@@ -107,6 +104,12 @@ class CVTests(unittest.TestCase):
         generated = BeautifulSoup((output / "cv.html").read_text(encoding="utf-8"), "html.parser")
         source = BeautifulSoup((ROOT / "research.html").read_text(encoding="utf-8"), "html.parser")
         self.assertEqual(len(generated.select(".paper")), len(source.select("article.paper")))
+        pdf_links = {a.get_object().get("/A", {}).get("/URI", "")
+                     for page in PdfReader(output / "cv.pdf").pages for a in page.get("/Annots", [])}
+        html_links = {a["href"] for a in generated.select("a[href]")}
+        self.assertEqual(pdf_links, html_links)
+        for contact in model["contacts"]:
+            self.assertIn(contact["url"], pdf_links)
         for section in model["sections"]:
             for item in section["items"]:
                 self.assertIn(item["title"], pdf)
@@ -114,8 +117,12 @@ class CVTests(unittest.TestCase):
                     authors = BeautifulSoup(item["authors"], "html.parser").get_text()
                     self.assertIn(authors, pdf)
                     self.assertIn(item["venue"], pdf)
+                    for link in item["links"]:
+                        self.assertIn(link["url"], pdf_links)
                 else:
                     self.assertIn(item["date"], pdf)
+                    for paragraph in item["paragraphs"]:
+                        self.assertIn(BeautifulSoup(paragraph, "html.parser").get_text(), pdf)
                     for bullet in item["bullets"]:
                         self.assertIn(BeautifulSoup(bullet, "html.parser").get_text(), pdf)
 
@@ -157,6 +164,48 @@ class CVTests(unittest.TestCase):
         cv.generate(self.root, today="2026-10-05")
         self.assertIn("Last updated: 2026-10-05", self.text())
 
+    def test_academic_layout_keeps_bibliography_without_photo_or_summaries(self):
+        cv.generate(self.root)
+        rendered = BeautifulSoup((self.root / "cv.html").read_text(encoding="utf-8"), "html.parser")
+        self.assertIsNone(rendered.select_one("img"))
+        self.assertIsNone(rendered.select_one(".summary"))
+        self.assertNotIn("An accepted paper.", self.text())
+        paper = rendered.select_one(".paper")
+        self.assertEqual([node.get("class") for node in paper.find_all("p", recursive=False)],
+                         [["authors"], ["publication-meta"]])
+        self.assertEqual(paper.select_one(".links a").text, "[PDF]")
+        self.assertIn("* Equal contribution", rendered.select_one("#publications .section-heading").text)
+        self.assertEqual(rendered.select_one(".item-heading .date").text, "2025 - Present")
+        for page in PdfReader(self.root / "cv.pdf").pages:
+            self.assertEqual(len(page.images), 0)
+
+    def test_website_only_photo_and_summary_changes_do_not_churn_cv(self):
+        cv.generate(self.root, today="2026-10-03")
+        before = [(self.root / f).read_bytes() for f in ("cv.html", "cv.pdf")]
+        # Neither an image file nor its URL is read when producing a text-only CV.
+        self.edit("index.html", 'src="assets/img/profile.jpg?v=2"', 'src="https://example.com/new.jpg"')
+        self.edit("research.html", "An accepted paper.", "A revised homepage-only explanation.")
+        cv.generate(self.root, today="2026-10-05")
+        self.assertEqual(before, [(self.root / f).read_bytes() for f in ("cv.html", "cv.pdf")])
+
+    def test_section_heading_stays_with_first_entry_when_paginating(self):
+        path = self.root / "research.html"
+        original = BeautifulSoup(RESEARCH, "html.parser")
+        template = str(original.select_one("article.paper"))
+        # Vary the boundary so this is not tied to a single accidental page fit.
+        for count in (8, 11, 14, 17):
+            soup = BeautifulSoup(RESEARCH, "html.parser")
+            for number in range(count):
+                soup.select_one("#publications .section-body").append(
+                    BeautifulSoup(template.replace("Accepted paper", f"Additional paper {number}"), "html.parser"))
+            path.write_text(str(soup), encoding="utf-8")
+            model = cv.generate(self.root)
+            for page in PdfReader(self.root / "cv.pdf").pages:
+                text = " ".join(page.extract_text().split())
+                for section in model["sections"]:
+                    if section["title"].upper() in text:
+                        self.assertIn(section["items"][0]["title"], text)
+
     def test_invalid_source_does_not_replace_existing_outputs(self):
         cv.generate(self.root)
         before = [(self.root / f).read_bytes() for f in ("cv.html", "cv.pdf")]
@@ -192,14 +241,11 @@ class CVTests(unittest.TestCase):
         self.assertIn("Republic of Korea Army", self.text())
         self.assertEqual(self.text().count("detailed responsibilities"), 8)
 
-    def test_rejects_unsafe_links_and_outside_images(self):
+    def test_rejects_unsafe_links(self):
         self.edit("index.html", 'href="https://yohanjo.github.io/"', 'href="javascript:alert(1)"')
         # This advisor link is not part of the CV; the education link is.
         self.edit("index.html", 'href="https://yohanjo.github.io/"', 'href="javascript:alert(1)"')
         with self.assertRaisesRegex(ValueError, "Unsupported link"):
-            cv.generate(self.root)
-        self.edit("index.html", 'src="assets/img/profile.jpg?v=2"', 'src="../outside.jpg"')
-        with self.assertRaisesRegex(ValueError, "portrait"):
             cv.generate(self.root)
 
 

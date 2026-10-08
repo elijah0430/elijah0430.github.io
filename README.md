@@ -4,6 +4,8 @@ Jongwon Lim 개인 연구자 홈페이지용 정적 GitHub Pages 템플릿입니
 
 ## CV 자동 갱신
 
+[CV 관리 문서](docs/cv-maintenance.md)에 원본 구조, 문서 형식, 재생성·검증·배포 절차와 오류 확인 방법을 정리했습니다.
+
 - CV의 원본은 홈페이지입니다. `index.html`의 자기소개·학력·수상·강의·봉사·경력과 `research.html`의 Publications/Preprints를 수정하세요.
 - `main`에 반영하면 **Sync CV from homepage**가 `cv.html`, `cv.pdf`를 재생성해 커밋하고 GitHub Pages 재배포를 요청합니다. 로컬에서 수정만 한 내용은 아직 공개 CV에 반영되지 않습니다.
 - 기존 **Settings → Pages → Deploy from a branch → main / (root)** 설정을 유지합니다. 추가 비밀번호나 개인 액세스 토큰은 필요하지 않습니다. 저장소 정책에서 Actions의 `contents: write`, `pages: write` 및 main 직접 커밋이 허용되어야 합니다.
@@ -11,6 +13,7 @@ Jongwon Lim 개인 연구자 홈페이지용 정적 GitHub Pages 템플릿입니
 - CV에 넣지 않는 항목: Recent News, Contact 폼, 블로그 글, 게임. 본문 내용이 같으면 갱신 날짜와 PDF도 바뀌지 않습니다.
 - 새 경력 항목은 기존 `article.entry` 형식, 새 논문은 기존 `article.paper` 형식을 복사하세요. 저자 `*`, 게재 학회, 링크, emergency reviewer 문구도 그대로 반영됩니다. 새 경력 섹션도 자동 포함되며, 제외하려면 섹션에 `data-cv-exclude`를 붙입니다. 필수 섹션/필드가 없어지면 누락된 CV를 덮어쓰지 않고 검증이 실패합니다.
 - `cv.html`, `cv.pdf`는 생성 결과이므로 직접 수정하지 마세요. 레이아웃은 `scripts/cv.css`(HTML)와 `scripts/generate_cv_pdf.py`(PDF)에서 관리합니다.
+- CV는 사진 없이 세리프 글꼴, 오른쪽 날짜 정렬, 논문 서지정보 중심의 인쇄용 형식으로 생성됩니다. 홈페이지의 논문 소개문은 CV에 싣지 않지만 제목·전체 저자·공동 기여 표시·학회·링크는 유지합니다. 섹션 제목은 첫 항목과 함께 배치하며, 분량이 늘면 자동으로 다음 페이지로 이어집니다.
 
 로컬에서 바로 재생성 및 검증:
 
