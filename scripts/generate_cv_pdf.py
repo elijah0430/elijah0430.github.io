@@ -1,4 +1,4 @@
-"""Generate both CV formats from the visible homepage; never maintain a second CV."""
+"""Generate both CV formats from homepage content and its CV header metadata."""
 
 import argparse
 import hashlib
@@ -71,14 +71,13 @@ def read_sources(root):
         raise ValueError("Missing canonical homepage URL")
     base = canonical["href"]
     intro = required(home, "#home")
+    subtitle = normalized(intro.get("data-cv-subtitle", ""))
+    if not subtitle:
+        subtitle = f'{plain(required(intro, ".kicker"))}, {plain(required(intro, ".affiliation"))}'
     email = home.select_one('a[href^="mailto:"]')
     if email is None:
         raise ValueError("Missing contact email")
     contacts = [{"label": plain(email), "url": safe_url(email["href"], base)}]
-    contacts.append({"label": urlsplit(base).netloc, "url": base})
-    for link in intro.select(".link-row a[href]"):
-        if Path(urlsplit(link["href"]).path).name not in {"cv.pdf", "cv.html"}:
-            contacts.append({"label": plain(link), "url": safe_url(link["href"], base)})
 
     sections = []
     for section in home.select("main > section.section"):
@@ -105,8 +104,11 @@ def read_sources(root):
         section = required(research, f"#{section_id}")
         items = []
         for article in section.select("article.paper"):
+            venue_node = required(article, ".venue")
+            venue_lines = [plain(line) for line in venue_node.select(".venue-line")] or [plain(venue_node)]
             items.append({
-                "venue": plain(required(article, ".venue")),
+                "venue": " ".join(venue_lines),
+                "venue_lines": venue_lines,
                 "title": plain(required(article, "h3")),
                 "authors": inline(required(article, ".authors"), base),
                 "links": [{"label": plain(a), "url": safe_url(a["href"], base)}
@@ -123,7 +125,7 @@ def read_sources(root):
     sections[insert_at:insert_at] = papers
     return {
         "name": plain(required(intro, "h1")),
-        "subtitle": f'{plain(required(intro, ".kicker"))}, {plain(required(intro, ".affiliation"))}',
+        "subtitle": subtitle,
         "interests": inline(required(intro, ".bio"), base),
         "contacts": contacts, "sections": sections,
     }
@@ -174,8 +176,7 @@ def html_document(root, model, digest, updated):
         f'<style>{(root / "scripts/cv.css").read_text(encoding="utf-8")}</style>',
         "</head><body><main><header>",
         f'<h1>{esc(model["name"])}</h1><p class="subtitle">{esc(model["subtitle"])}</p>',
-        f'<p class="contact">{links_html(model["contacts"][:2])}</p>',
-        f'<p class="contact">{links_html(model["contacts"][2:])}</p></header>',
+        f'<p class="contact">{links_html(model["contacts"])}</p></header>',
         f'<section><h2>Research Interests</h2><p>{model["interests"]}</p></section>',
     ]
     for section in model["sections"]:
@@ -187,11 +188,12 @@ def html_document(root, model, digest, updated):
         parts.append('</div>')
         for entry in section["items"]:
             if section["kind"] == "papers":
+                venues = "<br />".join(esc(line) for line in entry["venue_lines"])
                 parts.extend([
                     '<article class="paper">',
                     f'<h3>{esc(entry["title"])}</h3>',
                     f'<p class="authors">{entry["authors"]}</p>',
-                    f'<p class="publication-meta"><span class="venue">{esc(entry["venue"])}</span>',
+                    f'<p class="publication-meta"><span class="venue">{venues}</span>',
                 ])
                 if entry["links"]:
                     parts.append(f' <span class="links">{links_html(entry["links"], bracketed=True)}</span>')
@@ -207,7 +209,7 @@ def html_document(root, model, digest, updated):
                     parts.append("<ul>" + "".join(f"<li>{b}</li>" for b in entry["bullets"]) + "</ul>")
             parts.append("</article>")
         parts.append("</section>")
-    parts.append(f'<p class="updated">Last updated: {updated}</p></main></body></html>')
+    parts.append('</main></body></html>')
     return "\n".join(parts) + "\n"
 
 
@@ -253,15 +255,14 @@ def pdf_document(root, model, updated, output):
 
     story = [para(html.escape(model["name"]), name),
              para(html.escape(model["subtitle"]), subtitle),
-             para(links_html(model["contacts"][:2]), contact)]
-    if model["contacts"][2:]:
-        story.append(para(links_html(model["contacts"][2:]), contact))
+             para(links_html(model["contacts"]), contact)]
     story.append(KeepTogether([heading("Research Interests"), para(model["interests"])]))
     for section in model["sections"]:
         section_heading = heading(section["title"], contribution_note(section))
         for index, entry in enumerate(section["items"]):
             if section["kind"] == "papers":
-                venue = f'<i>{html.escape(entry["venue"])}</i>'
+                venues = "<br/>".join(html.escape(line) for line in entry["venue_lines"])
+                venue = f'<i>{venues}</i>'
                 if entry["links"]:
                     venue += f' <font size="9" color="{BLUE.hexval()}">{links_html(entry["links"], bracketed=True)}</font>'
                 group = [para(html.escape(entry["title"]), title),
@@ -294,7 +295,6 @@ def pdf_document(root, model, updated, output):
         canvas.setStrokeColor(LINE)
         canvas.setLineWidth(.35)
         canvas.line(48, 38, letter[0] - 48, 38)
-        canvas.drawString(48, 26, f"Last updated: {updated}")
         canvas.drawRightString(letter[0] - 48, 26, f'{model["name"]} | {document.page}')
         canvas.restoreState()
     doc.build(story, onFirstPage=footer, onLaterPages=footer)

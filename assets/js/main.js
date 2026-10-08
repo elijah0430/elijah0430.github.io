@@ -280,7 +280,7 @@
       player.ducking = false;
       player.onGround = true;
       if (scoreForm) scoreForm.hidden = true;
-      if (messageEl) messageEl.textContent = 'Jump blocks. Hold down mid-air to drop fast.';
+      if (messageEl) messageEl.textContent = 'Jump blocks. Duck under overhead obstacles. Hold down mid-air to drop fast.';
       if (startButton) startButton.textContent = 'Restart';
       updateRunnerStatus();
     }
@@ -358,6 +358,19 @@
         && a.y + a.height > b.y;
     }
 
+    function playerGeometry() {
+      const pixel = 3;
+      const bodyX = Math.round(player.x + (player.ducking ? 7 : 8));
+      const bodyY = Math.round(player.y + (player.ducking ? 11 : 16));
+      const bodyWidth = player.ducking ? 45 : 39;
+      const bodyHeight = player.ducking ? 24 : 30;
+      return {
+        pixel, bodyX, bodyY, bodyWidth, bodyHeight,
+        headX: bodyX + bodyWidth - pixel * 7,
+        headY: bodyY - (player.ducking ? pixel * 2 : pixel * 4),
+      };
+    }
+
     function updateRunner(delta) {
       state.distance += state.speed * delta;
       state.speed = 255 + state.distance * 0.025;
@@ -403,8 +416,12 @@
         width: player.ducking ? 34 : 29,
         height: player.ducking ? 17 : 29,
       };
+      // The head extends above the forgiving body hitbox. Match its drawn
+      // position in both poses, without counting the beak or empty corners.
+      const { headX, headY } = playerGeometry();
+      const headBox = { x: headX + 2, y: headY + 2, width: 11, height: 15 };
 
-      if (state.obstacles.some((obstacle) => rectsOverlap(playerBox, obstacle))) {
+      if (state.obstacles.some((obstacle) => rectsOverlap(playerBox, obstacle) || rectsOverlap(headBox, obstacle))) {
         endRunner();
         return;
       }
@@ -487,9 +504,7 @@
         }
       });
 
-      const pixel = 3;
-      const bodyX = Math.round(player.x + (player.ducking ? 7 : 8));
-      const bodyY = Math.round(player.y + (player.ducking ? 11 : 16));
+      const { pixel, bodyX, bodyY, bodyWidth, bodyHeight, headX, headY } = playerGeometry();
       const stride = player.onGround ? Math.round(Math.sin(state.animTime * state.speed * 0.035) * 2) : 1;
       const pixelRect = (x, y, rectWidth, rectHeight, color) => {
         ctx.fillStyle = color;
@@ -497,8 +512,6 @@
       };
 
       // A deliberately blocky kiwi: round feathers, tiny legs, and its unmistakably long beak.
-      const bodyWidth = player.ducking ? 45 : 39;
-      const bodyHeight = player.ducking ? 24 : 30;
       pixelRect(bodyX + pixel * 2, bodyY, bodyWidth - pixel * 4, pixel * 2, colors.kiwiDark);
       pixelRect(bodyX + pixel, bodyY + pixel * 2, bodyWidth - pixel * 2, bodyHeight - pixel * 4, colors.kiwiDark);
       pixelRect(bodyX + pixel * 2, bodyY + bodyHeight - pixel * 2, bodyWidth - pixel * 4, pixel * 2, colors.kiwiDark);
@@ -506,8 +519,6 @@
       pixelRect(bodyX + pixel * 4, bodyY + pixel * 4, bodyWidth - pixel * 10, bodyHeight - pixel * 9, colors.kiwiLight);
       pixelRect(bodyX + pixel * 6, bodyY + pixel * 6, bodyWidth - pixel * 15, pixel * 3, colors.kiwi);
 
-      const headX = bodyX + bodyWidth - pixel * 7;
-      const headY = bodyY - (player.ducking ? pixel * 2 : pixel * 4);
       pixelRect(headX, headY + pixel, pixel * 5, pixel * 5, colors.kiwiDark);
       pixelRect(headX + pixel, headY, pixel * 3, pixel * 6, colors.kiwi);
       pixelRect(headX + pixel * 3, headY + pixel, pixel, pixel, colors.kiwiLight);

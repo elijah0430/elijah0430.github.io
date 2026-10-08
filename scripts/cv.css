@@ -9,7 +9,7 @@ h1 { font-size: 26pt; line-height: 1.15; margin: 0 0 5px; }
 a { color: #285f88; text-decoration: none; }
 a:hover { text-decoration: underline; }
 p { margin: 0 0 2px; }
-.contact, .date, .meta, .updated { font-size: 9.2pt; color: #555; }
+.contact, .date, .meta { font-size: 9.2pt; color: #555; }
 section { margin-top: 16px; }
 h2 { font-size: 11.5pt; line-height: 1.2; text-transform: uppercase; margin: 0 0 8px; border-bottom: .5pt solid #a8a8a8; padding-bottom: 4px; break-after: avoid; }
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: .5pt solid #a8a8a8; margin-bottom: 8px; padding-bottom: 4px; break-after: avoid; }
@@ -25,7 +25,6 @@ h3 { font-size: 10.5pt; line-height: 1.28; margin: 0 0 2px; }
 .links a { white-space: nowrap; }
 ul { list-style: "-  "; margin: 3px 0 0; padding-left: 10px; }
 li { margin-bottom: 2px; }
-.updated { text-align: right; margin-top: 24px; border-top: .5pt solid #a8a8a8; padding-top: 8px; }
 @page { size: Letter; margin: .53in .67in .58in; }
 @media print { main { padding: 0; max-width: none; } a { color: inherit; } }
 @media screen and (max-width: 600px) {

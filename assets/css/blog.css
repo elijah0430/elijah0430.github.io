@@ -1,8 +1,8 @@
 /* Kept separate and versioned so a cached site stylesheet cannot break the editor. */
 .blog-site {
-  --bg: #f8fafc;
+  --bg: #ffffff;
   --surface: #fff;
-  --text: #243244;
+  --text: #202124;
   --muted: #637183;
   --faint: #778598;
   --line: #e0e6ed;
@@ -24,7 +24,7 @@ html[data-theme='dark'] .blog-site {
   --accent: #7ca6c8;
 }
 .blog-site [hidden] { display: none !important; }
-.blog-site button, .blog-site input, .blog-site textarea { font: inherit; }
+.blog-site button:not(.theme-toggle), .blog-site input, .blog-site textarea { font: inherit; }
 .blog-site button { cursor: pointer; }
 .blog-site button:disabled { cursor: progress; opacity: .55; }
 .blog-site :focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
@@ -32,13 +32,13 @@ html[data-theme='dark'] .blog-site {
 .blog-site .nav-links a[aria-current='page'] { color: var(--link); }
 .blog-site .site-footer { max-width: 1080px; font-size: .83rem; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-.blog-page { width: min(calc(100% - 48px), 760px); max-width: none; padding: 72px 0 96px; min-height: calc(100vh - 168px); }
+.blog-page { width: min(calc(100% - 48px), 646px); max-width: none; padding: 72px 0 96px; min-height: calc(100vh - 168px); }
 .blog-page[data-view='editor'] { width: min(calc(100% - 48px), var(--editor-page-width, 1120px)); padding-top: 30px; }
 .blog-page[data-view='editor'] > .blog-header, .blog-page[data-view='post'] > .blog-header { display: none; }
 .blog-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 40px; border-bottom: 1px solid var(--line); }
 .blog-header h1 { font-family: var(--font-reading); font-size: 3.4rem; font-weight: 500; letter-spacing: -.05em; line-height: 1.1; margin: 0; }
 .blog-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; flex-shrink: 0; padding: 0 0 4px; }
-.blog-site .primary-button { display: inline-flex; gap: 9px; align-items: center; justify-content: center; min-height: 40px; border-radius: 6px; padding: 8px 18px; border: 1px solid #34668f; background: #34668f; color: #fff; font-size: .88rem; font-weight: 600; line-height: 1.4; white-space: nowrap; transition: background 120ms; }
+.blog-site .primary-button { display: inline-flex; gap: 9px; align-items: center; justify-content: center; min-height: 40px; border-radius: 2px; padding: 8px 18px; border: 1px solid #34668f; background: #34668f; color: #fff; font-size: .88rem; font-weight: 600; line-height: 1.4; white-space: nowrap; transition: background 120ms; }
 .blog-site .primary-button:hover { background: #285272; border-color: #285272; }
 .blog-site .write-button span { font-size: 1.2rem; font-weight: 400; }
 .blog-site .text-button, .blog-site .quiet-button, .blog-site .back-button { border: 0; background: transparent; padding: 4px 0; color: var(--muted); font: inherit; font-size: .88rem; font-weight: 500; }
@@ -60,12 +60,12 @@ html[data-theme='dark'] .blog-site {
 .blog-post-view { padding: 0; }
 .blog-site .back-button { margin: 0 0 40px; }
 .blog-post { padding-bottom: 48px; }
-.blog-post > h1 { margin: 18px 0; font: 500 clamp(2.1rem, 4.5vw, 3rem)/1.16 var(--font-reading); letter-spacing: -.035em; }
+.blog-post > h1 { margin: 18px 0; font: 500 clamp(2.1rem, 3.825vw, 3rem)/1.16 var(--font-reading); letter-spacing: -.035em; }
 .blog-post-summary { font-size: 1.15rem; line-height: 1.65; margin: 0 0 36px; }
 .blog-post-summary:empty { display: none; }
 .blog-post-topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 40px; }
 .blog-site .blog-post-topbar .back-button { margin: 0; }
-.blog-site .blog-edit-button { padding: 8px 14px; border: 1px solid var(--line); border-radius: 5px; color: var(--link); white-space: nowrap; }
+.blog-site .blog-edit-button { padding: 8px 14px; border: 1px solid var(--line); border-radius: 2px; color: var(--link); white-space: nowrap; }
 .blog-site .blog-edit-button:hover { background: var(--link-bg); border-color: var(--accent); }
 .prose { color: var(--text); font: 400 1.12rem/1.85 var(--font-reading); overflow-wrap: anywhere; }
 .prose > :first-child { margin-top: 0; }
@@ -102,7 +102,7 @@ html[data-theme='dark'] .blog-site {
 .blog-panel-heading .venue { font-size: .66rem; margin-bottom: 8px; }
 .blog-form { display: grid; gap: 18px; }
 .blog-form label { display: grid; gap: 7px; font-size: .86rem; font-weight: 500; color: var(--muted); }
-.blog-form input, .blog-form textarea { display: block; width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--text); font: inherit; resize: vertical; }
+.blog-form input, .blog-form textarea { display: block; width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 2px; background: var(--surface); color: var(--text); font: inherit; resize: vertical; }
 .blog-form input:focus, .blog-form textarea:focus { border-color: var(--accent); outline: 2px solid var(--link-bg); outline-offset: 1px; }
 .blog-form-actions { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
 .form-status { color: var(--muted); font-size: .86rem; margin: 0; }
@@ -126,20 +126,20 @@ html[data-theme='dark'] .blog-site {
 .editor-title-input:focus-visible, .editor-summary-input:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
 .editor-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 22px; border-block: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 65%, var(--surface)); }
 .format-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 3px; }
-.format-toolbar button { min-width: 34px; min-height: 34px; padding: 4px 8px; border: 0; background: transparent; color: var(--muted); border-radius: 4px; font-size: .94rem; line-height: 1; }
+.format-toolbar button { min-width: 34px; min-height: 34px; padding: 4px 8px; border: 0; background: transparent; color: var(--muted); border-radius: 2px; font-size: .94rem; line-height: 1; }
 .format-toolbar button:hover, .format-toolbar button[aria-expanded='true'] { background: var(--link-bg); color: var(--link); }
 .format-toolbar .subscript { font-size: .6em; }
 .toolbar-divider { width: 1px; height: 16px; background: var(--line); margin: 0 5px; }
 .format-toolbar .math-trigger { display: flex; align-items: center; gap: 7px; font-size: .84rem; }
 .math-trigger > span { font-family: Georgia, serif; font-size: 1.25rem; }
-.view-switch { display: flex; flex-shrink: 0; padding: 3px; border: 1px solid var(--line); border-radius: 6px; }
-.view-switch button { border: 0; border-radius: 3px; padding: 5px 11px; background: transparent; color: var(--muted); font-size: .78rem; line-height: 1.4; }
+.view-switch { display: flex; flex-shrink: 0; padding: 3px; border: 1px solid var(--line); border-radius: 2px; }
+.view-switch button { border: 0; border-radius: 2px; padding: 5px 11px; background: transparent; color: var(--muted); font-size: .78rem; line-height: 1.4; }
 .view-switch button[aria-pressed='true'] { background: var(--surface); color: var(--link); outline: 1px solid var(--line); }
 .math-tools { padding: 18px 28px; background: var(--bg); border-bottom: 1px solid var(--line); }
 .math-tools-heading { display: flex; justify-content: space-between; gap: 12px; color: var(--text); font-size: .85rem; margin-bottom: 12px; }
 .math-note { color: var(--muted); font-size: .78rem; }
 .math-templates { display: flex; flex-wrap: wrap; gap: 8px; }
-.math-templates button { display: grid; align-content: center; justify-items: center; gap: 4px; min-height: 72px; min-width: 85px; border: 1px solid var(--line); border-radius: 5px; padding: 10px 13px; background: var(--surface); color: var(--text); }
+.math-templates button { display: grid; align-content: center; justify-items: center; gap: 4px; min-height: 72px; min-width: 85px; border: 1px solid var(--line); border-radius: 2px; padding: 10px 13px; background: var(--surface); color: var(--text); }
 .math-templates button:hover { border-color: var(--accent); background: var(--link-bg); }
 .math-templates .template-label { font-size: .67rem; color: var(--muted); }
 .math-templates .katex { font-size: 1.05em; }
@@ -274,7 +274,8 @@ html[data-theme='dark'] .blog-site {
   .blog-empty { padding-block: 50px; }
   .blog-auth { padding: 24px; }
   .editor-topbar { gap: 10px; margin-bottom: 16px; }
-  .editor-breadcrumb { gap: 8px; padding-top: 8px; }
+  .editor-breadcrumb { flex-shrink: 0; gap: 8px; padding-top: 8px; white-space: nowrap; }
+  .editor-publish-actions { min-width: 0; }
   .editor-breadcrumb h2, .editor-breadcrumb > span { display: none; }
   .draft-status { order: 2; width: 100%; text-align: right; font-size: .68rem; }
   .editor-metadata { padding: 26px 20px 18px; }

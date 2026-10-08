@@ -100,8 +100,11 @@ class CVTests(unittest.TestCase):
     def test_live_homepage_parity_without_hardcoded_counts(self):
         output = self.root / "live-output"
         model = cv.generate(ROOT, output_dir=output)
+        self.assertNotIn("selected-publications", [section["id"] for section in model["sections"]])
         pdf = " ".join(" ".join(p.extract_text().split()) for p in PdfReader(output / "cv.pdf").pages)
         generated = BeautifulSoup((output / "cv.html").read_text(encoding="utf-8"), "html.parser")
+        self.assertEqual(generated.select_one("#experience h2").get_text(strip=True), "Experiences")
+        self.assertIn("EXPERIENCES", pdf)
         source = BeautifulSoup((ROOT / "research.html").read_text(encoding="utf-8"), "html.parser")
         self.assertEqual(len(generated.select(".paper")), len(source.select("article.paper")))
         pdf_links = {a.get_object().get("/A", {}).get("/URI", "")
@@ -110,6 +113,24 @@ class CVTests(unittest.TestCase):
         self.assertEqual(pdf_links, html_links)
         for contact in model["contacts"]:
             self.assertIn(contact["url"], pdf_links)
+        self.assertEqual(len(model["contacts"]), 1)
+        self.assertEqual(len(generated.select("header .contact")), 1)
+        self.assertEqual([a["href"] for a in generated.select("header a")],
+                         ["mailto:elijah0430@snu.ac.kr"])
+        self.assertNotIn("https://www.semanticscholar.org/author/Jongwon-Lim/2382941030", pdf_links)
+        self.assertNotIn("elijah0430.github.io", generated.header.get_text())
+        venues = [paper.select_one(".venue").get_text(" ", strip=True) for paper in generated.select(".paper")]
+        self.assertIn("NeurIPS 2026 Poster", venues)
+        self.assertIn("ICML 2026 Regular", venues)
+        self.assertNotIn("Pre-to-Post Workshop @ NeurIPS 2026", venues)
+        self.assertNotIn("Mech Interp Workshop @ NeurIPS 2025", venues)
+        self.assertIn("Mech Interp Workshop @ ICML 2026", venues)
+        self.assertIn("FEVER Workshop @ EMNLP 2024", venues)
+        self.assertEqual([v.get_text(strip=True) for v in generated.select("#preprints .venue")], [
+            "Preprint (under review)", "Preprint (under review)",
+            "Mech Interp Workshop @ ICML 2026", "FEVER Workshop @ EMNLP 2024",
+        ])
+        self.assertFalse(any("Workshop" in v.get_text() for v in generated.select("#publications .venue")))
         for section in model["sections"]:
             for item in section["items"]:
                 self.assertIn(item["title"], pdf)
@@ -125,6 +146,62 @@ class CVTests(unittest.TestCase):
                         self.assertIn(BeautifulSoup(paragraph, "html.parser").get_text(), pdf)
                     for bullet in item["bullets"]:
                         self.assertIn(BeautifulSoup(bullet, "html.parser").get_text(), pdf)
+
+    def test_header_keeps_affiliation_and_email_without_profile_links(self):
+        self.edit("index.html", '<div class="link-row"><a href="cv.pdf">CV</a></div>',
+                  '<div class="link-row"><a href="cv.pdf">CV</a>'
+                  '<a href="https://example.com/scholar">Google Scholar</a>'
+                  '<a href="https://example.com/semantic">Semantic Scholar</a>'
+                  '<a href="https://example.com/linkedin">LinkedIn</a>'
+                  '<a href="https://example.com/lab">Lab Page</a></div>')
+        model = cv.generate(self.root, today="2026-10-03")
+        self.assertEqual(model["contacts"], [{"label": "test@example.com", "url": "mailto:test@example.com"}])
+        rendered = BeautifulSoup((self.root / "cv.html").read_text(encoding="utf-8"), "html.parser")
+        self.assertEqual(rendered.header.select_one(".subtitle").text, "Ph.D. Student, Test University")
+        self.assertEqual([p.get_text() for p in rendered.header.select(".contact")], ["test@example.com"])
+        pdf = PdfReader(self.root / "cv.pdf")
+        header_text = pdf.pages[0].extract_text().split("RESEARCH INTERESTS")[0]
+        self.assertIn("Test Researcher", header_text)
+        self.assertIn("Test University", header_text)
+        self.assertIn("test@example.com", header_text)
+        for label in ("Google Scholar", "Semantic Scholar", "LinkedIn", "Lab Page"):
+            self.assertNotIn(label, header_text)
+        links = {a.get_object().get("/A", {}).get("/URI", "")
+                 for page in pdf.pages for a in page.get("/Annots", [])}
+        self.assertIn("mailto:test@example.com", links)
+        self.assertIn("https://example.com/paper", links)
+        for url in ("https://example.com/", "https://example.com/scholar", "https://example.com/semantic",
+                    "https://example.com/linkedin", "https://example.com/lab"):
+            self.assertNotIn(url, links)
+        before = [(self.root / f).read_bytes() for f in ("cv.html", "cv.pdf")]
+        self.edit("index.html", "https://example.com/scholar", "https://example.com/updated-profile")
+        cv.generate(self.root, today="2026-10-05")
+        self.assertEqual(before, [(self.root / f).read_bytes() for f in ("cv.html", "cv.pdf")])
+
+    def test_prose_introduction_preserves_cv_header_without_visible_labels(self):
+        before = cv.generate(self.root)
+        before_pdf = (self.root / "cv.pdf").read_bytes()
+        self.edit("index.html", '<section id="home">',
+                  '<section id="home" data-cv-subtitle="Ph.D. Student, Test University">')
+        self.edit("index.html", '<p class="kicker">Ph.D. Student</p>', '')
+        self.edit("index.html", '<p class="affiliation">Test University</p>',
+                  '<p class="intro-description">I am a Ph.D. student at Test University.</p>')
+        self.assertEqual(cv.generate(self.root), before)
+        self.assertEqual((self.root / "cv.pdf").read_bytes(), before_pdf)
+
+    def test_multiple_venues_remain_on_separate_lines_in_both_formats(self):
+        self.edit("research.html", '<p class="venue">NeurIPS 2026</p>',
+                  '<p class="venue"><span class="venue-line">NeurIPS 2026</span>'
+                  '<span class="venue-line venue-secondary">Pre-to-Post Workshop @ NeurIPS 2026</span></p>')
+        model = cv.generate(self.root)
+        paper = next(s for s in model["sections"] if s["id"] == "publications")["items"][0]
+        self.assertEqual(paper["venue_lines"], ["NeurIPS 2026", "Pre-to-Post Workshop @ NeurIPS 2026"])
+        rendered = BeautifulSoup((self.root / "cv.html").read_text(encoding="utf-8"), "html.parser")
+        venue = rendered.select_one("#publications .venue")
+        self.assertEqual(len(venue.select("br")), 1)
+        self.assertEqual(venue.get_text(" ", strip=True), paper["venue"])
+        pdf = "\n".join(page.extract_text() for page in PdfReader(self.root / "cv.pdf").pages)
+        self.assertIn("NeurIPS 2026\nPre-to-Post Workshop @ NeurIPS 2026", pdf)
 
     def test_add_move_and_remove_papers(self):
         page = self.root / "research.html"
@@ -162,7 +239,10 @@ class CVTests(unittest.TestCase):
         self.assertEqual(before, [(self.root / f).read_bytes() for f in ("cv.html", "cv.pdf")])
         self.edit("index.html", "Teaching Assistant</h3>", "Teaching Fellow</h3>")
         cv.generate(self.root, today="2026-10-05")
-        self.assertIn("Last updated: 2026-10-05", self.text())
+        rendered = BeautifulSoup((self.root / "cv.html").read_text(encoding="utf-8"), "html.parser")
+        self.assertEqual(rendered.select_one('meta[name="cv-updated"]')["content"], "2026-10-05")
+        self.assertNotIn("Last updated", rendered.get_text())
+        self.assertNotIn("Last updated", self.text())
 
     def test_academic_layout_keeps_bibliography_without_photo_or_summaries(self):
         cv.generate(self.root)
@@ -264,6 +344,20 @@ class CVTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Missing CV source field: time"):
             cv.generate(self.root)
         self.assertEqual(before, [(self.root / f).read_bytes() for f in ("cv.html", "cv.pdf")])
+
+    def test_collapsed_experience_is_expanded_in_both_cv_formats(self):
+        self.edit("index.html", '<section class="section" id="experience"><h2>Experience</h2>',
+                  '<section class="section" id="experience"><details class="section-disclosure">'
+                  '<summary><h2>Experience</h2></summary>')
+        self.edit("index.html", '<p>Republic of Korea Army</p></article></section>',
+                  '<p>Republic of Korea Army</p></article></details></section>')
+        cv.generate(self.root)
+        rendered = BeautifulSoup((self.root / "cv.html").read_text(encoding="utf-8"), "html.parser")
+        self.assertIsNone(rendered.select_one("#experience details"))
+        for content in (rendered.select_one("#experience").get_text(" ", strip=True), self.text()):
+            self.assertIn("Military Service", content)
+            self.assertIn("Republic of Korea Army", content)
+            self.assertIn("2022", content)
 
     def test_long_titles_wrap_and_documents_paginate(self):
         self.edit("index.html", "Teaching Assistant</h3>",
