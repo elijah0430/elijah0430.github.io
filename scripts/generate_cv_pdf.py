@@ -87,7 +87,7 @@ def read_sources(root):
         entries = []
         for article in section.select("article.entry"):
             entries.append({
-                "date": plain(required(article, "time")),
+                "date": plain(required(article, "time")) if article.select_one("time") is not None else "",
                 "title": plain(required(article, "h3")),
                 "paragraphs": [inline(p, base) for p in article.select("p")],
                 "bullets": [inline(li, base) for li in article.select("li")],
@@ -198,8 +198,10 @@ def html_document(root, model, digest, updated):
                 parts.append('</p>')
             else:
                 parts.extend(['<article class="item"><div class="item-heading">',
-                              f'<h3>{esc(entry["title"])}</h3>',
-                              f'<div class="date">{esc(entry["date"])}</div></div>'])
+                              f'<h3>{esc(entry["title"])}</h3>'])
+                if entry["date"]:
+                    parts.append(f'<div class="date">{esc(entry["date"])}</div>')
+                parts.append('</div>')
                 parts.extend(f"<p>{p}</p>" for p in entry["paragraphs"])
                 if entry["bullets"]:
                     parts.append("<ul>" + "".join(f"<li>{b}</li>" for b in entry["bullets"]) + "</ul>")
@@ -277,7 +279,7 @@ def pdf_document(root, model, updated, output):
                     ("TOPPADDING", (0, 0), (-1, -1), 0),
                     ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
                 ]))
-                group = [row]
+                group = [row] if entry["date"] else [para(html.escape(entry["title"]), title)]
                 group.extend(para(p) for p in entry["paragraphs"])
                 group.extend(para("- " + bullet, bullet_style) for bullet in entry["bullets"])
             # Keep a heading with its first entry; oversized entries may split.

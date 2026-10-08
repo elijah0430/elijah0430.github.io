@@ -244,6 +244,27 @@ class CVTests(unittest.TestCase):
             self.assertIn("Workshop B", text)
             self.assertEqual(text.count("also emergency reviewer"), 2)
 
+    def test_undated_entries_keep_content_without_an_empty_date_column(self):
+        self.edit("index.html", '<time>2026</time><h3>Reviewer</h3>',
+                  '<h3>Reviewer</h3><p>ICLR 2027</p>')
+        model = cv.generate(self.root)
+        rendered = BeautifulSoup((self.root / "cv.html").read_text(encoding="utf-8"), "html.parser")
+        service = next(s for s in model["sections"] if s["id"] == "services")
+        self.assertEqual(service["items"][0]["date"], "")
+        self.assertIsNone(rendered.select_one("#services .date"))
+        self.assertIn("ICLR 2027", self.text())
+        self.assertIn("Workshop A", self.text())
+        self.assertEqual(self.text().count("also emergency reviewer"), 2)
+        self.assertEqual(rendered.select_one("#education .date").text, "2025 - Present")
+
+    def test_empty_dates_are_rejected_without_replacing_outputs(self):
+        cv.generate(self.root)
+        before = [(self.root / f).read_bytes() for f in ("cv.html", "cv.pdf")]
+        self.edit("index.html", "<time>2025 - Present</time>", "<time> </time>")
+        with self.assertRaisesRegex(ValueError, "Missing CV source field: time"):
+            cv.generate(self.root)
+        self.assertEqual(before, [(self.root / f).read_bytes() for f in ("cv.html", "cv.pdf")])
+
     def test_long_titles_wrap_and_documents_paginate(self):
         self.edit("index.html", "Teaching Assistant</h3>",
                   "A long teaching role with detailed responsibilities " * 8 + "</h3>")

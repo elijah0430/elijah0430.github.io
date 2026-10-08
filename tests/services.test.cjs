@@ -32,7 +32,7 @@ test('ICLR conference reviewing is visible outside the workshop disclosure', () 
     const entries = [...dom.window.document.querySelectorAll('#services article.entry')];
     const conference = entries.find(entry => entry.querySelector('h3').textContent === 'Conference Reviewer');
     assert.ok(conference);
-    assert.equal(conference.querySelector('time').textContent, '2027');
+    assert.equal(conference.querySelector('time'), null);
     assert.equal(conference.querySelector('p').textContent, 'ICLR 2027');
     assert.equal(conference.querySelector('details'), null);
     assert.equal(entries[0], conference);

@@ -17,7 +17,7 @@ CV 내용은 홈페이지에서 가져옵니다. 내용을 바꿀 때는 `index.
 ## 내용 반영 규칙
 
 - 이름·직함·소속·연구 관심사는 `#home`의 `h1`, `.kicker`, `.affiliation`, `.bio`에서 가져옵니다. 이메일, 대표 홈페이지 주소, `.link-row`의 외부 프로필 링크도 포함합니다. CV 자신을 가리키는 링크는 제외합니다.
-- 학력·수상·강의·봉사·경력은 `main > section.section` 안의 `article.entry`를 읽습니다. 섹션에는 `h2`, 각 항목에는 `time`과 `h3`가 필요합니다. 설명 문단과 목록도 포함합니다.
+- 학력·수상·강의·봉사·경력은 `main > section.section` 안의 `article.entry`를 읽습니다. 섹션에는 `h2`, 각 항목에는 `h3`가 필요합니다. 날짜는 항목 안의 `time`에서 가져오며, reviewer처럼 본문에 연도가 이미 있는 경우 생략할 수 있습니다. `time`을 쓰면 내용은 비워두지 않습니다. 설명 문단과 목록도 포함합니다.
 - 논문은 `#publications`와 `#preprints`의 `article.paper`를 읽습니다. 각 논문에는 `.venue`, `h3`, `.authors`가 필요합니다. 링크는 `.paper-links a[href]`에서 가져옵니다.
 - 저자 순서, 본인 이름의 강조, 공동 기여 `*`, emergency reviewer 표시는 원문을 유지합니다. 저자에 `*`가 있으면 해당 논문 섹션 제목 옆에 `* Equal contribution`을 표시합니다.
 - 항목을 날짜로 자동 정렬하지 않습니다. 홈페이지의 순서를 따르며, Publications와 Preprints를 Awards 바로 뒤에 넣습니다. 현재 순서는 Research Interests → Education → Awards → Publications → Preprints → Teaching → Services → Experience입니다.
