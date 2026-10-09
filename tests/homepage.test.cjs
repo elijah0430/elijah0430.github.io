@@ -180,7 +180,21 @@ test('new portrait and simplified introduction keep only the top navigation CV l
   const dom = new JSDOM(read('index.html'));
   try {
     const doc = dom.window.document;
-    assert.equal(doc.querySelector('.portrait-frame .portrait').getAttribute('src'), 'assets/img/profile-202610.png');
+    const portrait = doc.querySelector('.portrait-frame .portrait');
+    assert.equal(portrait.getAttribute('src'), 'assets/img/profile-20261009.png');
+    const portraitData = fs.readFileSync(path.join(__dirname, '..', portrait.getAttribute('src')));
+    assert.equal(portraitData.readUInt32BE(16), Number(portrait.getAttribute('width')));
+    assert.equal(portraitData.readUInt32BE(20), Number(portrait.getAttribute('height')));
+    for (const page of ['index.html', 'research.html', 'blog.html', 'game.html']) {
+      const preview = new JSDOM(read(page));
+      try {
+        for (const meta of preview.window.document.querySelectorAll('meta[property="og:image"], meta[name="twitter:image"]')) {
+          assert.ok(meta.content.endsWith('/' + portrait.getAttribute('src')) || meta.content === portrait.getAttribute('src'));
+        }
+      } finally {
+        preview.window.close();
+      }
+    }
     const intro = doc.querySelector('#home');
     assert.equal(intro.querySelector('.kicker, .affiliation, .advisor'), null);
     const description = intro.querySelector('.intro-description');
