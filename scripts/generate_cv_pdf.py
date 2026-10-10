@@ -1,4 +1,4 @@
-"""Generate both CV formats from homepage content and its CV header metadata."""
+"""Generate both CV formats from homepage content and CV-only skills."""
 
 import argparse
 import hashlib
@@ -47,7 +47,7 @@ def safe_url(value, base):
     return url
 
 
-def inline(node, base):
+def inline(node, base, paper_references=None):
     """Keep text, emphasis and links, not site-specific wrappers or active HTML."""
     def visit(child):
         if isinstance(child, NavigableString):
@@ -58,12 +58,15 @@ def inline(node, base):
         if child.name in {"strong", "b", "em", "i"}:
             return f"<{child.name}>{content}</{child.name}>"
         if child.name == "a" and child.get("href"):
-            # Homepage citation numbers refer to Selected Publications, not the
-            # differently ordered CV bibliography. Keep standalone paper links.
             href = child["href"]
             if child.has_attr("data-paper-ref"):
-                href = child.get("data-cv-href", href)
-                content = html.escape(child.get("data-cv-label", child.get_text()))
+                # Resolve against the actual CV selection, so printed citations
+                # remain in sync without relying on manually entered numbers.
+                href = safe_url(child.get("data-cv-href", href), base)
+                matches = (paper_references or {}).get(href, [])
+                if len(matches) != 1:
+                    raise ValueError(f"CV paper reference must match exactly one paper: {href}")
+                content = f'[{matches[0]["number"]}]'
             return f'<a href="{html.escape(safe_url(href, base), quote=True)}">{content}</a>'
         return content
     return normalized("".join(visit(child) for child in node.children))
@@ -72,6 +75,17 @@ def inline(node, base):
 def read_sources(root):
     home = BeautifulSoup((root / "index.html").read_text(encoding="utf-8"), "html.parser")
     research = BeautifulSoup((root / "research.html").read_text(encoding="utf-8"), "html.parser")
+    cv_only = json.loads((root / "scripts/cv-only.json").read_text(encoding="utf-8"))
+    skills = cv_only.get("skills") if isinstance(cv_only, dict) else None
+    if not isinstance(skills, list) or not skills:
+        raise ValueError("CV-only skills must be a non-empty list")
+    for skill in skills:
+        if not isinstance(skill, dict) or any(
+            not isinstance(skill.get(key), str) or not normalized(skill[key])
+            for key in ("label", "text")
+        ):
+            raise ValueError("Each CV-only skill requires non-empty label and text")
+    skills = [{key: normalized(skill[key]) for key in ("label", "text")} for skill in skills]
     canonical = home.select_one('link[rel="canonical"]')
     if canonical is None or not canonical.get("href"):
         raise ValueError("Missing canonical homepage URL")
@@ -113,6 +127,7 @@ def read_sources(root):
             venue_node = required(article, ".venue")
             venue_lines = [plain(line) for line in venue_node.select(".venue-line")] or [plain(venue_node)]
             items.append({
+                "source_id": article.get("id"),
                 "venue": " ".join(venue_lines),
                 "venue_lines": venue_lines,
                 "title": plain(required(article, "h3")),
@@ -127,17 +142,36 @@ def read_sources(root):
                        "kind": "papers", "items": items})
     if len([p for s in papers for p in s["items"]]) != len(research.select("article.paper")):
         raise ValueError("Found papers outside Publications/Preprints; refusing to omit them")
+    selected = required(home, "#selected-publications")
+    selected_ids = [article.get("id") for article in selected.select(".paper-list > li > article.paper")]
+    if not selected_ids or any(not paper_id for paper_id in selected_ids) or len(set(selected_ids)) != len(selected_ids):
+        raise ValueError("Selected Publications must contain unique paper IDs")
+    catalog = [paper for section in papers for paper in section["items"]]
+    selected_items = []
+    for number, paper_id in enumerate(selected_ids, start=1):
+        matches = [paper for paper in catalog if paper["source_id"] == paper_id]
+        if len(matches) != 1:
+            raise ValueError(f"Selected paper must match exactly one research entry: {paper_id}")
+        selected_items.append({**matches[0], "number": number})
+    papers = [{"id": "selected-publications", "title": plain(required(selected, "h2")),
+               "kind": "papers", "items": selected_items}]
+    paper_references = {}
+    for section in papers:
+        for paper in section["items"]:
+            for url in {link["url"] for link in paper["links"]}:
+                paper_references.setdefault(url, []).append(paper)
     insert_at = next(i for i, s in enumerate(sections) if s["id"] == "awards") + 1
     sections[insert_at:insert_at] = papers
     return {
         "name": plain(required(intro, "h1")),
         "subtitle": subtitle,
-        "interests": inline(required(intro, ".bio"), base),
+        "interests": inline(required(intro, ".bio"), base, paper_references),
         "directions": [{
             "title": inline(required(item, ":scope > strong"), base),
-            "questions": [inline(question, base) for question in item.select(":scope > ul > li")],
+            "questions": [inline(question, base, paper_references)
+                          for question in item.select(":scope > ul > li")],
         } for item in intro.select(".research-directions > li")],
-        "contacts": contacts, "sections": sections,
+        "contacts": contacts, "sections": sections, "skills": skills,
     }
 
 
@@ -182,7 +216,7 @@ def html_document(root, model, digest, updated):
         f'<title>{esc(model["name"])} - CV</title>',
         f'<meta name="cv-source-sha256" content="{digest}">',
         f'<meta name="cv-updated" content="{updated}">',
-        "<!-- Generated from index.html and research.html. Do not edit this file directly. -->",
+        "<!-- Generated from index.html, research.html and scripts/cv-only.json. Do not edit directly. -->",
         f'<style>{(root / "scripts/cv.css").read_text(encoding="utf-8")}</style>',
         "</head><body><main><header>",
         f'<h1>{esc(model["name"])}</h1><p class="subtitle">{esc(model["subtitle"])}</p>',
@@ -208,7 +242,7 @@ def html_document(root, model, digest, updated):
                 venues = "<br />".join(esc(line) for line in entry["venue_lines"])
                 parts.extend([
                     '<article class="paper">',
-                    f'<h3>{esc(entry["title"])}</h3>',
+                    f'<h3><span class="paper-number">[{entry["number"]}]</span> {esc(entry["title"])}</h3>',
                     f'<p class="authors">{entry["authors"]}</p>',
                     f'<p class="publication-meta"><span class="venue">{venues}</span>',
                 ])
@@ -226,6 +260,10 @@ def html_document(root, model, digest, updated):
                     parts.append("<ul>" + "".join(f"<li>{b}</li>" for b in entry["bullets"]) + "</ul>")
             parts.append("</article>")
         parts.append("</section>")
+    parts.append('<section id="skills"><h2>Skills &amp; Competencies</h2><ul>')
+    parts.extend(f'<li><strong>{esc(skill["label"])}:</strong> {esc(skill["text"])}</li>'
+                 for skill in model["skills"])
+    parts.append('</ul></section>')
     parts.append('</main></body></html>')
     return "\n".join(parts) + "\n"
 
@@ -238,6 +276,10 @@ def pdf_document(root, model, updated, output):
     small = ParagraphStyle("CVSmall", parent=body, fontSize=9.2, leading=12, textColor=MUTED)
     date = ParagraphStyle("CVDate", parent=small, alignment=2)
     bibliography = ParagraphStyle("CVBibliography", parent=body, fontSize=10, leading=12.8)
+    paper_title = ParagraphStyle("CVPaperTitle", parent=title, leftIndent=22,
+                                bulletIndent=0, bulletFontName="Times-Roman", bulletFontSize=10.5)
+    paper_authors = ParagraphStyle("CVPaperAuthors", parent=body, leftIndent=22)
+    paper_venue = ParagraphStyle("CVPaperVenue", parent=bibliography, leftIndent=22)
     section_style = ParagraphStyle("CVSection", parent=title, fontSize=11.5, leading=14)
     name = ParagraphStyle("CVName", parent=title, alignment=1, fontSize=26, leading=30,
                           spaceAfter=5)
@@ -290,8 +332,9 @@ def pdf_document(root, model, updated, output):
                 venue = f'<i>{venues}</i>'
                 if entry["links"]:
                     venue += f' <font size="9" color="{BLUE.hexval()}">{links_html(entry["links"], bracketed=True)}</font>'
-                group = [para(html.escape(entry["title"]), title),
-                         para(entry["authors"]), para(venue, bibliography)]
+                group = [Paragraph(html.escape(entry["title"]), paper_title,
+                                   bulletText=f'[{entry["number"]}]'),
+                         para(entry["authors"], paper_authors), para(venue, paper_venue)]
             else:
                 row = Table([[para(html.escape(entry["title"]), title),
                               para(html.escape(entry["date"]), date)]],
@@ -312,6 +355,11 @@ def pdf_document(root, model, updated, output):
             if index == 0:
                 group.insert(0, section_heading)
             story.extend([KeepTogether(group), Spacer(1, 4)])
+    story.append(KeepTogether([
+        heading("Skills & Competencies"),
+        *(para(f'- <b>{html.escape(skill["label"])}:</b> {html.escape(skill["text"])}', bullet_style)
+          for skill in model["skills"]),
+    ]))
 
     def footer(canvas, document):
         canvas.saveState()

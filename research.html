@@ -145,32 +145,6 @@
           </li>
 
           <li>
-            <article class="paper" id="arcane">
-              <div class="paper-main">
-                <h3>ArcANE: Do Role-Playing Language Agents Stay in Character at the Right Time?</h3>
-                <p class="authors">Woojung Song, Nalim Kim, Sangjun Song, Chaewon Heo, <strong><span class="author-name">Jongwon Lim</span></strong>, Yohan Jo</p>
-                <p class="venue">EMNLP 2026 Main</p>
-                <div class="paper-links">
-                  <a href="https://arxiv.org/abs/2606.05553" target="_blank" rel="noopener noreferrer">arXiv</a>
-                </div>
-              </div>
-              <details class="paper-details">
-                <summary>Overview</summary>
-                <div class="paper-overview" data-figure-layout="side-by-side">
-                  <figure class="paper-figure">
-                    <a class="figure-zoom" href="assets/img/arcane-figure.png" target="_blank" rel="noopener noreferrer" aria-label="Open full-size figure: The same scenario elicits different responses from Harry Potter at different stages of his character arc" title="Open full-size figure">
-                      <img src="assets/img/arcane-figure.png" alt="The same scenario elicits different responses from Harry Potter at different stages of his character arc" width="736" height="732" loading="lazy" />
-                    </a>
-                  </figure>
-                  <p class="summary">
-                    A role-playing agent should reflect how a character's values, motivations, and relationships change throughout a story. Yet existing benchmarks largely treat characters as fixed personas or test only what they know at a given point. ArcANE tests whether an agent's responses fit the character's development by presenting the same situation at different narrative stages, including situations outside the original story. Across six models, providing a record of the character's development up to the queried stage improves this fidelity over the evaluated narrative-context baselines.
-                  </p>
-                </div>
-              </details>
-            </article>
-          </li>
-
-          <li>
             <article class="paper" id="dual-mechanisms">
               <div class="paper-main">
                 <h3>Dual Mechanisms of Value Expression: Intrinsic vs. Prompted Values in Large Language Models</h3>
@@ -194,6 +168,32 @@
                   </figure>
                   <p class="summary">
                     Prompting an LLM to express a value can produce different behavior from the model expressing that value without instructions. We examine whether the two rely on the same internal mechanisms. We identify shared neurons that causally contribute to both forms of value expression, alongside components with distinct roles. Components specific to intrinsic expression promote response diversity, whereas those specific to prompted expression strengthen instruction compliance, even on tasks unrelated to values.
+                  </p>
+                </div>
+              </details>
+            </article>
+          </li>
+
+          <li>
+            <article class="paper" id="arcane">
+              <div class="paper-main">
+                <h3>ArcANE: Do Role-Playing Language Agents Stay in Character at the Right Time?</h3>
+                <p class="authors">Woojung Song, Nalim Kim, Sangjun Song, Chaewon Heo, <strong><span class="author-name">Jongwon Lim</span></strong>, Yohan Jo</p>
+                <p class="venue">EMNLP 2026 Main</p>
+                <div class="paper-links">
+                  <a href="https://arxiv.org/abs/2606.05553" target="_blank" rel="noopener noreferrer">arXiv</a>
+                </div>
+              </div>
+              <details class="paper-details">
+                <summary>Overview</summary>
+                <div class="paper-overview" data-figure-layout="side-by-side">
+                  <figure class="paper-figure">
+                    <a class="figure-zoom" href="assets/img/arcane-figure.png" target="_blank" rel="noopener noreferrer" aria-label="Open full-size figure: The same scenario elicits different responses from Harry Potter at different stages of his character arc" title="Open full-size figure">
+                      <img src="assets/img/arcane-figure.png" alt="The same scenario elicits different responses from Harry Potter at different stages of his character arc" width="736" height="732" loading="lazy" />
+                    </a>
+                  </figure>
+                  <p class="summary">
+                    A role-playing agent should reflect how a character's values, motivations, and relationships change throughout a story. Yet existing benchmarks largely treat characters as fixed personas or test only what they know at a given point. ArcANE tests whether an agent's responses fit the character's development by presenting the same situation at different narrative stages, including situations outside the original story. Across six models, providing a record of the character's development up to the queried stage improves this fidelity over the evaluated narrative-context baselines.
                   </p>
                 </div>
               </details>
@@ -237,32 +237,6 @@
       <div class="section-body">
         <ol class="paper-list">
           <li>
-            <article class="paper" id="negation">
-              <div class="paper-main">
-                <h3>How Do LLMs Change Predictions Under Negation?</h3>
-                <p class="authors">Jongwook Yoon<sup>*</sup>, <strong><span class="author-name">Jongwon Lim</span><sup>*</sup></strong>, Sungjib Lim, Woojin Cho, Yohan Jo</p>
-                <p class="venue">Preprint (under review)</p>
-                <div class="paper-links">
-                  <a href="https://arxiv.org/abs/2610.09571" target="_blank" rel="noopener noreferrer">arXiv</a>
-                </div>
-              </div>
-              <details class="paper-details">
-                <summary>Overview</summary>
-                <div class="paper-overview" data-figure-layout="stacked">
-                  <figure class="paper-figure">
-                    <a class="figure-zoom" href="assets/img/negation-figure.png" target="_blank" rel="noopener noreferrer" aria-label="Open full-size figure: Negation suppresses the original answer while promoting category information and an alternative candidate" title="Open full-size figure">
-                      <img src="assets/img/negation-figure.png" alt="Negation suppresses the original answer while promoting category information and an alternative candidate" width="1416" height="502" loading="lazy" />
-                    </a>
-                  </figure>
-                  <p class="summary">
-                    Negating a question should exclude the original answer, yet LLMs often repeat it, especially when they were confident in that answer. In the models we analyze, negation suppresses original-answer retrieval and promotes favored candidates within the answer category. However, these preferences do not reliably exclude the original answer, and the correction can be too weak to overturn it. We therefore propose ALiT, which requires larger corrections for more confident original predictions. ALiT reduces repetition while preserving the answer category and avoiding the sharp diversity loss observed with supervised fine-tuning.
-                  </p>
-                </div>
-              </details>
-            </article>
-          </li>
-
-          <li>
             <article class="paper" id="vla-rl">
               <div class="paper-main">
                 <h3>The Low-Rank Structure of VLA Reinforcement Learning</h3>
@@ -282,6 +256,32 @@
                   </figure>
                   <p class="summary">
                     RL improves vision-language-action (VLA) models, but which parameter changes drive these gains remains unclear. Across the flow-based VLAs we study, low-rank RL updates concentrate in timestep modules. These modules depend only on denoising time, not observations or instructions, yet module-replacement experiments show that their updates capture a large share of RL gains. We link the low-rank structure to training on discrete denoising timesteps. Targeting these modules with LoRA outperforms standard configurations, which typically omit them. Steering along their learned shift directions further improves RL-trained policies without additional RL training.
+                  </p>
+                </div>
+              </details>
+            </article>
+          </li>
+
+          <li>
+            <article class="paper" id="negation">
+              <div class="paper-main">
+                <h3>How Do LLMs Change Predictions Under Negation?</h3>
+                <p class="authors">Jongwook Yoon<sup>*</sup>, <strong><span class="author-name">Jongwon Lim</span><sup>*</sup></strong>, Sungjib Lim, Woojin Cho, Yohan Jo</p>
+                <p class="venue">Preprint (under review)</p>
+                <div class="paper-links">
+                  <a href="https://arxiv.org/abs/2610.09571" target="_blank" rel="noopener noreferrer">arXiv</a>
+                </div>
+              </div>
+              <details class="paper-details">
+                <summary>Overview</summary>
+                <div class="paper-overview" data-figure-layout="stacked">
+                  <figure class="paper-figure">
+                    <a class="figure-zoom" href="assets/img/negation-figure.png" target="_blank" rel="noopener noreferrer" aria-label="Open full-size figure: Negation suppresses the original answer while promoting category information and an alternative candidate" title="Open full-size figure">
+                      <img src="assets/img/negation-figure.png" alt="Negation suppresses the original answer while promoting category information and an alternative candidate" width="1416" height="502" loading="lazy" />
+                    </a>
+                  </figure>
+                  <p class="summary">
+                    Negating a question should exclude the original answer, yet LLMs often repeat it, especially when they were confident in that answer. In the models we analyze, negation suppresses original-answer retrieval and promotes favored candidates within the answer category. However, these preferences do not reliably exclude the original answer, and the correction can be too weak to overturn it. We therefore propose ALiT, which requires larger corrections for more confident original predictions. ALiT reduces repetition while preserving the answer category and avoiding the sharp diversity loss observed with supervised fine-tuning.
                   </p>
                 </div>
               </details>

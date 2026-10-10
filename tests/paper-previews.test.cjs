@@ -30,7 +30,7 @@ test('citation previews read the actual paper title, venue and figure without ch
   assert.equal(preview.hidden, false);
   assert.equal(preview.getAttribute('role'), 'tooltip');
   assert.equal(link.getAttribute('aria-describedby'), preview.id);
-  assert.equal(preview.querySelector('strong').textContent, `[3] ${paper.querySelector('h3').textContent}`);
+  assert.equal(preview.querySelector('strong').textContent, `[4] ${paper.querySelector('h3').textContent}`);
   assert.equal(preview.querySelector('p').textContent, paper.querySelector('.venue').textContent);
   assert.equal(preview.querySelector('img').src, paper.querySelector('.paper-figure img').src);
   assert.equal(paper.outerHTML, original);

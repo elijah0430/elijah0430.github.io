@@ -16,7 +16,7 @@ test('selected publications replace news and exactly match the requested four re
     assert.equal(selected.querySelector('h2').textContent, 'Selected Publications');
     assert.ok(selected.hasAttribute('data-cv-exclude'));
     const papers = [...selected.querySelectorAll('.paper')];
-    assert.deepEqual(papers.map(p => p.id), ['poise', 'dual-mechanisms', 'negation', 'vla-rl']);
+    assert.deepEqual(papers.map(p => p.id), ['poise', 'dual-mechanisms', 'vla-rl', 'negation']);
     for (const paper of papers) {
       const original = research.window.document.getElementById(paper.id);
       assert.equal(paper.outerHTML.replace(/\s+/g, ' '), original.outerHTML.replace(/\s+/g, ' '));
@@ -85,8 +85,8 @@ test('workshop-only papers belong to Preprints and retain their actual venues', 
   try {
     const doc = dom.window.document;
     const ids = section => [...doc.querySelectorAll(`#${section} .paper`)].map(paper => paper.id);
-    assert.deepEqual(ids('publications'), ['poise', 'arcane', 'dual-mechanisms', 'user-profiles']);
-    assert.deepEqual(ids('preprints'), ['negation', 'vla-rl', 'factual-negation', 'dahl']);
+    assert.deepEqual(ids('publications'), ['poise', 'dual-mechanisms', 'arcane', 'user-profiles']);
+    assert.deepEqual(ids('preprints'), ['vla-rl', 'negation', 'factual-negation', 'dahl']);
     assert.equal(doc.querySelectorAll('.paper').length, new Set([...ids('publications'), ...ids('preprints')]).size);
     assert.equal(doc.querySelector('#factual-negation .venue').textContent, 'Mech Interp Workshop @ ICML 2026');
     assert.equal(doc.querySelector('#dahl .venue').textContent, 'FEVER Workshop @ EMNLP 2024');
@@ -229,17 +229,17 @@ test('approved research interests retain wording, emphasis, numbered directions 
       'Understanding model training',
     ]);
     assert.deepEqual([...list.querySelectorAll(':scope > li > ul > li')].map(n => n.textContent), [
-      'How does machine intelligence fundamentally differ from human intelligence? [3]',
+      'How does machine intelligence fundamentally differ from human intelligence? [4]',
       'What are the capabilities and limitations of foundation models in practice? [2]',
-      'How does training reshape a model’s internal computation? [4]',
-      'How can we integrate insights from interpretability into training algorithms/pipelines? [1], [3]',
+      'How does training reshape a model’s internal computation? [3]',
+      'How can we integrate insights from interpretability into training algorithms/pipelines? [1], [4]',
     ]);
     assert.deepEqual([...list.querySelectorAll('a')].map(a => [a.textContent, a.getAttribute('href')]), [
-      ['[3]', '#negation'],
+      ['[4]', '#negation'],
       ['[2]', '#dual-mechanisms'],
-      ['[4]', '#vla-rl'],
+      ['[3]', '#vla-rl'],
       ['[1]', '#poise'],
-      ['[3]', '#negation'],
+      ['[4]', '#negation'],
     ]);
     const selected = [...doc.querySelectorAll('#selected-publications .paper-list > li > .paper')];
     for (const link of list.querySelectorAll('a')) {
@@ -380,7 +380,12 @@ test('Experiences is collapsed by default and retains entries and the lab link w
     details.querySelector('summary').click();
     assert.equal(details.open, false);
     assert.equal(details.querySelector('.section-body').innerHTML, entries);
-    assert.equal(details.querySelectorAll('.entry').length, 4);
+    assert.deepEqual([...details.querySelectorAll('.entry h3')].map(title => title.textContent), [
+      'Kaggle Silver Medalist, LLM - Detect AI-generated Text',
+      'Research Intern, CL_NLP Lab, Seoul National University',
+      'Military Service, Republic of Korea Army',
+    ]);
+    assert.doesNotMatch(dom.window.document.body.textContent, /Head Researcher|Benchmark dataset for evaluating morphological capabilities/);
   } finally { dom.window.close(); }
 });
 
@@ -425,7 +430,8 @@ test('Teaching includes the confirmed Fall 2026 AI at Work course before Spring 
     const entries = [...dom.window.document.querySelectorAll('#teaching .entry')];
     assert.deepEqual(entries.map(entry => entry.querySelector('time').textContent), ['Fall 2026', 'Spring 2026']);
     assert.equal(entries[0].querySelector('h3').textContent, 'Teaching Assistant');
-    assert.equal(entries[0].querySelector('a').textContent, 'AI at Work (Data Science Seminar)');
+    assert.equal(entries[0].querySelector('a').textContent, 'AI at Work');
+    assert.doesNotMatch(dom.window.document.body.textContent, /Data Science Seminar|Skills & Competencies|TOEIC/);
   } finally { dom.window.close(); }
 });
 

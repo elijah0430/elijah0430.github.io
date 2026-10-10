@@ -1,6 +1,6 @@
 # CV 관리
 
-CV 내용은 홈페이지에서 가져옵니다. 내용을 바꿀 때는 `index.html`과 `research.html`을 수정하고, 생성 결과인 `cv.html`과 `cv.pdf`는 직접 편집하지 않습니다. 이 문서는 수정할 파일, 출력 형식, 검증과 배포 방법을 설명합니다.
+CV의 공통 내용은 홈페이지에서, CV 전용 역량 항목은 `scripts/cv-only.json`에서 가져옵니다. 내용을 바꿀 때는 해당 원본을 수정하고, 생성 결과인 `cv.html`과 `cv.pdf`는 직접 편집하지 않습니다. 이 문서는 수정할 파일, 출력 형식, 검증과 배포 방법을 설명합니다.
 
 ## 수정할 파일
 
@@ -8,6 +8,8 @@ CV 내용은 홈페이지에서 가져옵니다. 내용을 바꿀 때는 `index.
 | --- | --- |
 | 이름·소속·연구 관심사·연락처·학력·수상·강의·봉사·경력 | `index.html` |
 | 논문 제목·저자·학회·공동 기여 표시·링크 | `research.html` |
+| CV에 포함할 논문과 순서 | `index.html`의 Selected Publications |
+| CV 전용 Skills & Competencies | `scripts/cv-only.json` |
 | 홈페이지 내용 추출, HTML 구조, PDF 조판 | `scripts/generate_cv_pdf.py` |
 | HTML CV의 글꼴·여백·인쇄·모바일 표시 | `scripts/cv.css` |
 | Python 의존성 | `scripts/requirements-cv.txt` |
@@ -17,20 +19,21 @@ CV 내용은 홈페이지에서 가져옵니다. 내용을 바꿀 때는 `index.
 ## 내용 반영 규칙
 
 - 연구 관심사의 세부 방향은 `#home .research-directions`의 번호 목록에서 가져옵니다. 각 항목의 직접 자식 `strong`은 방향 이름이며, 하위 `ul > li`는 연구 질문입니다. 번호·질문·논문 링크를 HTML과 PDF에서 유지합니다.
-- 홈페이지의 `data-paper-ref` 링크는 Selected Publications의 번호와 해당 항목의 내부 주소를 사용합니다. CV에서는 목록 순서가 다르므로 `data-cv-label`과 `data-cv-href`의 논문 약칭·원문 링크를 사용합니다. 미리보기의 제목·발표처·그림은 홈페이지 논문 항목에서 읽습니다.
+- CV에는 홈페이지의 Selected Publications만 같은 순서로 포함합니다. 선택된 논문에 `[1]`, `[2]`, …로 번호를 매기고 연구 소개에서도 같은 번호를 사용합니다. `data-cv-href`를 선택된 논문의 링크와 대조하므로 수동 번호나 `data-cv-label`의 약칭에 의존하지 않습니다. 대응하는 논문이 없거나 여러 편이면 생성을 중단합니다. 전자 문서에서는 번호의 원문 링크를 유지하며, 인쇄본에서는 같은 번호로 논문 제목을 찾을 수 있습니다.
 - 이름과 연구 관심사는 `#home`의 `h1`, `.bio`에서 가져옵니다. 소개문은 `.intro-description`에 쓰고, CV의 짧은 직함·소속 표기는 `#home`의 `data-cv-subtitle` 속성에 둡니다. 이 속성이 없으면 기존 `.kicker`, `.affiliation` 형식을 읽습니다. 상단 연락처에는 이메일만 표시합니다. 홈페이지 주소와 `.link-row`의 외부 프로필 링크(Google Scholar, Semantic Scholar, LinkedIn, Lab Page 등)는 CV에서 제외하며 홈페이지에는 그대로 둡니다. 논문·경력 본문의 관련 링크는 유지합니다.
 - 학력·수상·강의·봉사·경력은 `main > section.section` 안의 `article.entry`를 읽습니다. 섹션에는 `h2`, 각 항목에는 `h3`가 필요합니다. 날짜는 항목 안의 `time`에서 가져오며, reviewer처럼 본문에 연도가 이미 있는 경우 생략할 수 있습니다. `time`을 쓰면 내용은 비워두지 않습니다. 설명 문단과 목록도 포함합니다.
-- 논문은 `#publications`와 `#preprints`의 `article.paper`를 읽습니다. 각 논문에는 `.venue`, `h3`, `.authors`가 필요합니다. 링크는 `.paper-links a[href]`에서 가져옵니다.
-- 컨퍼런스에 실린 논문은 Publications에 두고 컨퍼런스만 표기하며, 이전 워크숍 표기는 생략합니다. 워크숍에만 실린 논문은 Preprints에 두되 워크숍 발표처는 유지합니다. Preprints에 포함된다는 이유만으로 `under review`를 붙이지 않습니다. Workshop reviewer 경력은 Services에 유지하며, CV도 홈페이지의 분류와 표기를 따릅니다.
+- 논문 메타데이터는 `research.html`의 `#publications`와 `#preprints`에서 읽고, 홈페이지 `#selected-publications .paper-list`의 논문 ID로 선택·정렬합니다. 각 논문에는 `.venue`, `h3`, `.authors`가 필요합니다. 링크는 `.paper-links a[href]`에서 가져옵니다. 선택된 ID가 없거나 중복되거나 Research에서 유일하게 찾을 수 없으면 생성을 중단합니다.
+- Research 페이지의 Publications/Preprints 분류와 각 논문의 발표처 표기는 유지합니다. CV는 두 분류를 별도 섹션으로 출력하지 않고, 선택된 논문만 Selected Publications에 넣습니다. 선택된 preprint의 `under review` 표기도 원문대로 유지하며, 선택 여부 때문에 발표 상태를 바꾸지 않습니다. Workshop reviewer 경력은 Services에 유지합니다.
 - 저자 순서, 본인 이름의 강조, 공동 기여 `*`, emergency reviewer 표시는 원문을 유지합니다. 저자에 `*`가 있으면 해당 논문 섹션 제목 옆에 `* Equal contribution`을 표시합니다.
 - 홈페이지에서 접어둔 Experience와 workshop reviewer 목록도 CV에는 모두 펼쳐서 포함합니다. 접기 요소 안의 제목과 `article.entry` 구조를 유지하면 자동 반영됩니다.
-- 항목을 날짜로 자동 정렬하지 않습니다. 홈페이지의 순서를 따르며, Publications와 Preprints를 Awards 바로 뒤에 넣습니다. 현재 순서는 Research Interests → Education → Awards → Publications → Preprints → Teaching → Services → Experience입니다.
+- 항목을 날짜로 자동 정렬하지 않습니다. 홈페이지의 순서를 따르며, Selected Publications를 Awards 바로 뒤에 넣습니다. 현재 순서는 Research Interests → Education → Awards → Selected Publications → Teaching → Services → Experiences → Skills & Competencies입니다.
+- Skills & Competencies는 `scripts/cv-only.json`의 `skills` 배열에서 읽어 CV 끝에만 표시합니다. 각 항목의 `label`은 분야 이름, `text`는 역량 설명이며 비어 있지 않은 일반 텍스트여야 합니다. HTML과 PDF에 같은 내용과 순서를 반영하고 홈페이지에는 추가하지 않습니다. 변경하면 CV 내용 식별값도 갱신됩니다.
 - 새 경력 섹션도 위 형식을 따르면 자동 포함됩니다. 추가한 섹션을 제외하려면 `data-cv-exclude`를 붙입니다. 필수 섹션인 `education`, `awards`, `teaching`, `services`, `experience`는 제거하거나 제외할 수 없습니다.
-- `publications`와 `preprints` 컨테이너 및 제목은 유지합니다. 논문이 없는 섹션은 CV에서 생략합니다. 두 컨테이너 밖에 놓인 `article.paper`는 누락시키지 않고 오류로 처리합니다.
+- Research의 `publications`와 `preprints` 컨테이너 및 제목은 유지합니다. 두 컨테이너 밖에 놓인 `article.paper`는 오류로 처리합니다. CV에 선택하지 않은 논문도 Research 페이지에는 그대로 남습니다.
 
 Recent News, Contact 폼, 블로그 글, 게임, 프로필 사진, 논문 소개문 `.summary`는 CV에 넣지 않습니다. 연락처는 Contact 폼과 별개로 상단에 표시합니다. 사진과 논문 소개문만 바꾸면 CV 내용과 갱신 날짜는 바뀌지 않습니다.
 
-홈페이지의 Selected Publications는 `research.html`에 있는 네 논문을 같은 내용으로 보여주는 목록이며, `data-cv-exclude`로 CV에서 제외합니다. CV에는 Research의 전체 목록만 한 번씩 들어갑니다. 선정된 논문을 수정할 때는 두 페이지의 해당 항목을 함께 갱신하며, `tests/homepage.test.cjs`가 내용 일치를 검사합니다.
+홈페이지의 Selected Publications는 `research.html`에 있는 논문 일부를 같은 내용으로 보여주는 목록입니다. `data-cv-exclude`는 일반 경력 파서에서 제외하는 용도이며, 전용 논문 파서가 선택된 논문을 CV에 한 번씩 포함합니다. 선정된 논문을 수정할 때는 두 페이지의 해당 항목을 함께 갱신하며, `tests/homepage.test.cjs`가 내용 일치를 검사합니다. CV에는 선택하지 않은 논문과 별도의 Preprints 섹션을 넣지 않습니다.
 
 ## 문서 형식
 

@@ -1,0 +1,16 @@
+{
+  "skills": [
+    {
+      "label": "Mathematics",
+      "text": "Linear algebra, optimization, calculus"
+    },
+    {
+      "label": "Programming",
+      "text": "Python, C/C++"
+    },
+    {
+      "label": "Languages",
+      "text": "Korean (native), English (fluent, TOEIC 990)"
+    }
+  ]
+}
