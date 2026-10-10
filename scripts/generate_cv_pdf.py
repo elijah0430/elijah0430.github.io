@@ -55,8 +55,14 @@ def inline(node, base, paper_references=None):
         if child.name in {"script", "style"}:
             return ""
         content = "".join(visit(part) for part in child.children)
+        if child.has_attr("data-cv-text"):
+            if not normalized(child["data-cv-text"]):
+                raise ValueError("CV text override must not be empty")
+            content = html.escape(child["data-cv-text"])
         if child.name in {"strong", "b", "em", "i"}:
             return f"<{child.name}>{content}</{child.name}>"
+        if child.name == "span" and "author-name" in child.get("class", []):
+            return f"<u>{content}</u>"
         if child.name == "a" and child.get("href"):
             href = child["href"]
             if child.has_attr("data-paper-ref"):
@@ -98,6 +104,12 @@ def read_sources(root):
     if email is None:
         raise ValueError("Missing contact email")
     contacts = [{"label": plain(email), "url": safe_url(email["href"], base)}]
+    homepage_url = safe_url(base, base)
+    contacts.append({"label": "Homepage", "url": homepage_url})
+    scholar = next((a for a in intro.select(".link-row a[href]")
+                    if plain(a) == "Google Scholar"), None)
+    if scholar is not None:
+        contacts.append({"label": "Google Scholar", "url": safe_url(scholar["href"], base)})
 
     sections = []
     for section in home.select("main > section.section"):
@@ -153,15 +165,15 @@ def read_sources(root):
         if len(matches) != 1:
             raise ValueError(f"Selected paper must match exactly one research entry: {paper_id}")
         selected_items.append({**matches[0], "number": number})
-    papers = [{"id": "selected-publications", "title": plain(required(selected, "h2")),
+    papers = [{"id": "selected-publications", "title": "Selected Papers",
                "kind": "papers", "items": selected_items}]
     paper_references = {}
     for section in papers:
         for paper in section["items"]:
             for url in {link["url"] for link in paper["links"]}:
                 paper_references.setdefault(url, []).append(paper)
-    insert_at = next(i for i, s in enumerate(sections) if s["id"] == "awards") + 1
-    sections[insert_at:insert_at] = papers
+    # Research interests render first; the selected papers follow immediately.
+    sections[0:0] = papers
     return {
         "name": plain(required(intro, "h1")),
         "subtitle": subtitle,
@@ -220,7 +232,8 @@ def html_document(root, model, digest, updated):
         f'<style>{(root / "scripts/cv.css").read_text(encoding="utf-8")}</style>',
         "</head><body><main><header>",
         f'<h1>{esc(model["name"])}</h1><p class="subtitle">{esc(model["subtitle"])}</p>',
-        f'<p class="contact">{links_html(model["contacts"])}</p></header>',
+        f'<p class="contact contact-email">{links_html(model["contacts"][:1])}</p>',
+        f'<p class="contact contact-profiles">{links_html(model["contacts"][1:])}</p></header>',
         f'<section id="research-interests"><h2>Research Interests</h2><p>{model["interests"]}</p>',
     ]
     if model["directions"]:
@@ -314,7 +327,8 @@ def pdf_document(root, model, updated, output):
 
     story = [para(html.escape(model["name"]), name),
              para(html.escape(model["subtitle"]), subtitle),
-             para(links_html(model["contacts"]), contact)]
+             para(links_html(model["contacts"][:1]), contact),
+             para(links_html(model["contacts"][1:]), contact)]
     story.append(KeepTogether([heading("Research Interests"), para(model["interests"])]))
     direction_style = ParagraphStyle("CVDirection", parent=title, leftIndent=12,
                                     firstLineIndent=-12, spaceBefore=6)

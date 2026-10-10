@@ -220,19 +220,19 @@ test('approved research interests retain wording, emphasis, numbered directions 
     const doc = dom.window.document;
     const research = doc.querySelector('#home > .research-interests');
     assert.equal(research.querySelector('.bio').textContent.replace(/\s+/g, ' ').trim(),
-      'My research focuses on using interpretability to improve how we actually use and develop foundation models. I am exploring two complementary directions:');
+      'My research focuses on using interpretability to better understand and improve foundation models. I am exploring two complementary directions:');
     assert.equal(research.querySelector('.bio strong').textContent,
-      'using interpretability to improve how we actually use and develop foundation models');
+      'using interpretability to better understand and improve foundation models');
     const list = research.querySelector('ol.research-directions');
     assert.deepEqual([...list.querySelectorAll(':scope > li > strong')].map(n => n.textContent), [
-      'Understanding model capabilities and limitations',
+      'Understanding model behavior',
       'Understanding model training',
     ]);
     assert.deepEqual([...list.querySelectorAll(':scope > li > ul > li')].map(n => n.textContent), [
       'How does machine intelligence fundamentally differ from human intelligence? [4]',
-      'What are the capabilities and limitations of foundation models in practice? [2]',
-      'How does training reshape a model’s internal computation? [3]',
-      'How can we integrate insights from interpretability into training algorithms/pipelines? [1], [4]',
+      'What are the capabilities and limitations of models in practice? [2]',
+      "How does training reshape a model's internal computations? [3]",
+      'How can we use insights from interpretability to improve training algorithms and pipelines? [1], [4]',
     ]);
     assert.deepEqual([...list.querySelectorAll('a')].map(a => [a.textContent, a.getAttribute('href')]), [
       ['[4]', '#negation'],
@@ -381,9 +381,13 @@ test('Experiences is collapsed by default and retains entries and the lab link w
     assert.equal(details.open, false);
     assert.equal(details.querySelector('.section-body').innerHTML, entries);
     assert.deepEqual([...details.querySelectorAll('.entry h3')].map(title => title.textContent), [
-      'Kaggle Silver Medalist, LLM - Detect AI-generated Text',
+      'Kaggle Silver Medalist',
       'Research Intern, CL_NLP Lab, Seoul National University',
       'Military Service, Republic of Korea Army',
+    ]);
+    assert.deepEqual([...details.querySelector('.entry').querySelectorAll('p')].map(p => p.textContent), [
+      'LLM - Detect AI-generated Text',
+      'Built ensemble systems for AI-generated text detection.',
     ]);
     assert.doesNotMatch(dom.window.document.body.textContent, /Head Researcher|Benchmark dataset for evaluating morphological capabilities/);
   } finally { dom.window.close(); }
