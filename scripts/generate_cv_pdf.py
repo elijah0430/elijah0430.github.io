@@ -58,7 +58,13 @@ def inline(node, base):
         if child.name in {"strong", "b", "em", "i"}:
             return f"<{child.name}>{content}</{child.name}>"
         if child.name == "a" and child.get("href"):
-            return f'<a href="{html.escape(safe_url(child["href"], base), quote=True)}">{content}</a>'
+            # Homepage citation numbers refer to Selected Publications, not the
+            # differently ordered CV bibliography. Keep standalone paper links.
+            href = child["href"]
+            if child.has_attr("data-paper-ref"):
+                href = child.get("data-cv-href", href)
+                content = html.escape(child.get("data-cv-label", child.get_text()))
+            return f'<a href="{html.escape(safe_url(href, base), quote=True)}">{content}</a>'
         return content
     return normalized("".join(visit(child) for child in node.children))
 
@@ -127,6 +133,10 @@ def read_sources(root):
         "name": plain(required(intro, "h1")),
         "subtitle": subtitle,
         "interests": inline(required(intro, ".bio"), base),
+        "directions": [{
+            "title": inline(required(item, ":scope > strong"), base),
+            "questions": [inline(question, base) for question in item.select(":scope > ul > li")],
+        } for item in intro.select(".research-directions > li")],
         "contacts": contacts, "sections": sections,
     }
 
@@ -177,8 +187,15 @@ def html_document(root, model, digest, updated):
         "</head><body><main><header>",
         f'<h1>{esc(model["name"])}</h1><p class="subtitle">{esc(model["subtitle"])}</p>',
         f'<p class="contact">{links_html(model["contacts"])}</p></header>',
-        f'<section><h2>Research Interests</h2><p>{model["interests"]}</p></section>',
+        f'<section id="research-interests"><h2>Research Interests</h2><p>{model["interests"]}</p>',
     ]
+    if model["directions"]:
+        parts.append('<ol class="research-directions">')
+        for direction in model["directions"]:
+            questions = "".join(f"<li>{question}</li>" for question in direction["questions"])
+            parts.append(f'<li><strong>{direction["title"]}</strong><ul>{questions}</ul></li>')
+        parts.append('</ol>')
+    parts.append('</section>')
     for section in model["sections"]:
         note = contribution_note(section)
         parts.append(f'<section id="{esc(section["id"] or "")}">')
@@ -257,6 +274,14 @@ def pdf_document(root, model, updated, output):
              para(html.escape(model["subtitle"]), subtitle),
              para(links_html(model["contacts"]), contact)]
     story.append(KeepTogether([heading("Research Interests"), para(model["interests"])]))
+    direction_style = ParagraphStyle("CVDirection", parent=title, leftIndent=12,
+                                    firstLineIndent=-12, spaceBefore=6)
+    question_style = ParagraphStyle("CVQuestion", parent=body, leftIndent=22,
+                                   firstLineIndent=-8)
+    for index, direction in enumerate(model["directions"], start=1):
+        group = [para(f'{index}. {direction["title"]}', direction_style)]
+        group.extend(para("- " + question, question_style) for question in direction["questions"])
+        story.append(KeepTogether(group))
     for section in model["sections"]:
         section_heading = heading(section["title"], contribution_note(section))
         for index, entry in enumerate(section["items"]):
@@ -286,7 +311,7 @@ def pdf_document(root, model, updated, output):
             # Keep a heading with its first entry; oversized entries may split.
             if index == 0:
                 group.insert(0, section_heading)
-            story.extend([KeepTogether(group), Spacer(1, 6)])
+            story.extend([KeepTogether(group), Spacer(1, 4)])
 
     def footer(canvas, document):
         canvas.saveState()

@@ -19,7 +19,7 @@
   <meta name="twitter:image" content="https://elijah0430.github.io/assets/img/profile-20261009.png" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="assets/css/styles.css?v=20261009-footer" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20261011-citation-focus" />
   <script>document.documentElement.classList.add('js');</script>
   <script>
     window.EMAILJS_CONFIG = {
@@ -30,6 +30,7 @@
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script defer src="assets/js/main.js"></script>
+  <script defer src="assets/js/paper-previews.js?v=20261011"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -91,10 +92,6 @@
         <p class="intro-description">
           I am a Ph.D. student in <a href="https://snuai.snu.ac.kr/" target="_blank" rel="noopener noreferrer">Artificial Intelligence</a> at <a href="https://www.snu.ac.kr/" target="_blank" rel="noopener noreferrer">Seoul National University</a>, advised by <a href="https://yohanjo.github.io/" target="_blank" rel="noopener noreferrer">Prof. Yohan Jo</a> in the Human-Oriented Language Intelligence (HOLI) Lab.
         </p>
-        <p class="bio">
-          I am interested in developing methods for understanding the internal mechanisms of language models,
-          and using those insights to improve practical NLP and LLM applications.
-        </p>
         <p class="intro-contact" id="contact">
           Feel free to reach out at <a href="mailto:elijah0430@snu.ac.kr">elijah0430@snu.ac.kr</a>.
         </p>
@@ -104,6 +101,27 @@
           <a href="https://www.linkedin.com/in/jongwon-lim-a57549251/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           <a href="https://yohanjo.github.io/lab.html" target="_blank" rel="noopener noreferrer">Lab Page</a>
         </div>
+      </div>
+      <div class="research-interests">
+        <p class="bio">
+          My research focuses on <strong>using interpretability to improve how we actually use and develop foundation models</strong>. I am exploring two complementary directions:
+        </p>
+        <ol class="research-directions">
+          <li>
+            <strong>Understanding model capabilities and limitations</strong>
+            <ul>
+              <li>How does machine intelligence fundamentally differ from human intelligence? <a class="paper-citation" href="#negation" data-paper-ref data-cv-label="[Negation]" data-cv-href="https://arxiv.org/abs/2610.09571" aria-label="Selected publication 3: Negation">[3]</a></li>
+              <li>What are the capabilities and limitations of foundation models in practice? <a class="paper-citation" href="#dual-mechanisms" data-paper-ref data-cv-label="[Dual mechanisms]" data-cv-href="https://arxiv.org/abs/2509.24319" aria-label="Selected publication 2: Dual mechanisms">[2]</a></li>
+            </ul>
+          </li>
+          <li>
+            <strong>Understanding model training</strong>
+            <ul>
+              <li>How does training reshape a model’s internal computation? <a class="paper-citation" href="#vla-rl" data-paper-ref data-cv-label="[VLA RL]" data-cv-href="https://arxiv.org/abs/2609.34599" aria-label="Selected publication 4: VLA RL">[4]</a></li>
+              <li>How can we integrate insights from interpretability into training algorithms/pipelines? <span class="paper-citations"><a class="paper-citation" href="#poise" data-paper-ref data-cv-label="[POISE]" data-cv-href="https://arxiv.org/abs/2605.07579" aria-label="Selected publication 1: POISE">[1]</a>, <a class="paper-citation" href="#negation" data-paper-ref data-cv-label="[Negation]" data-cv-href="https://arxiv.org/abs/2610.09571" aria-label="Selected publication 3: Negation">[3]</a></span></li>
+            </ul>
+          </li>
+        </ol>
       </div>
     </section>
 
@@ -434,7 +452,7 @@
   </main>
 
   <footer class="site-footer site-footer--plain page">
-    <p class="site-updated">Last updated: <time datetime="2026-10-09">2026-10-09</time></p>
+    <p class="site-updated">Last updated: <time datetime="2026-10-11">2026-10-11</time></p>
     <a href="#home">Back to top</a>
   </footer>
 </body>

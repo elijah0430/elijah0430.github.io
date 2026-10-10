@@ -16,6 +16,8 @@ CV 내용은 홈페이지에서 가져옵니다. 내용을 바꿀 때는 `index.
 
 ## 내용 반영 규칙
 
+- 연구 관심사의 세부 방향은 `#home .research-directions`의 번호 목록에서 가져옵니다. 각 항목의 직접 자식 `strong`은 방향 이름이며, 하위 `ul > li`는 연구 질문입니다. 번호·질문·논문 링크를 HTML과 PDF에서 유지합니다.
+- 홈페이지의 `data-paper-ref` 링크는 Selected Publications의 번호와 해당 항목의 내부 주소를 사용합니다. CV에서는 목록 순서가 다르므로 `data-cv-label`과 `data-cv-href`의 논문 약칭·원문 링크를 사용합니다. 미리보기의 제목·발표처·그림은 홈페이지 논문 항목에서 읽습니다.
 - 이름과 연구 관심사는 `#home`의 `h1`, `.bio`에서 가져옵니다. 소개문은 `.intro-description`에 쓰고, CV의 짧은 직함·소속 표기는 `#home`의 `data-cv-subtitle` 속성에 둡니다. 이 속성이 없으면 기존 `.kicker`, `.affiliation` 형식을 읽습니다. 상단 연락처에는 이메일만 표시합니다. 홈페이지 주소와 `.link-row`의 외부 프로필 링크(Google Scholar, Semantic Scholar, LinkedIn, Lab Page 등)는 CV에서 제외하며 홈페이지에는 그대로 둡니다. 논문·경력 본문의 관련 링크는 유지합니다.
 - 학력·수상·강의·봉사·경력은 `main > section.section` 안의 `article.entry`를 읽습니다. 섹션에는 `h2`, 각 항목에는 `h3`가 필요합니다. 날짜는 항목 안의 `time`에서 가져오며, reviewer처럼 본문에 연도가 이미 있는 경우 생략할 수 있습니다. `time`을 쓰면 내용은 비워두지 않습니다. 설명 문단과 목록도 포함합니다.
 - 논문은 `#publications`와 `#preprints`의 `article.paper`를 읽습니다. 각 논문에는 `.venue`, `h3`, `.authors`가 필요합니다. 링크는 `.paper-links a[href]`에서 가져옵니다.

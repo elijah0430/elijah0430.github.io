@@ -206,14 +206,55 @@ test('new portrait and simplified introduction keep only the top navigation CV l
       ['Prof. Yohan Jo', 'https://yohanjo.github.io/'],
     ]);
     assert.equal(intro.querySelector('h1').nextElementSibling, description);
-    assert.equal(description.nextElementSibling, intro.querySelector('.bio'));
-    assert.equal(intro.querySelector('.bio').textContent.replace(/\s+/g, ' ').trim(),
-      'I am interested in developing methods for understanding the internal mechanisms of language models, and using those insights to improve practical NLP and LLM applications.');
+    assert.equal(description.nextElementSibling, intro.querySelector('.intro-contact'));
     assert.equal(doc.querySelector('#home a[href="cv.pdf"]'), null);
     assert.ok(doc.querySelector('nav a[href="cv.pdf"]'));
   } finally {
     dom.window.close();
   }
+});
+
+test('approved research interests retain wording, emphasis, numbered directions and paper links', () => {
+  const dom = new JSDOM(read('index.html'));
+  try {
+    const doc = dom.window.document;
+    const research = doc.querySelector('#home > .research-interests');
+    assert.equal(research.querySelector('.bio').textContent.replace(/\s+/g, ' ').trim(),
+      'My research focuses on using interpretability to improve how we actually use and develop foundation models. I am exploring two complementary directions:');
+    assert.equal(research.querySelector('.bio strong').textContent,
+      'using interpretability to improve how we actually use and develop foundation models');
+    const list = research.querySelector('ol.research-directions');
+    assert.deepEqual([...list.querySelectorAll(':scope > li > strong')].map(n => n.textContent), [
+      'Understanding model capabilities and limitations',
+      'Understanding model training',
+    ]);
+    assert.deepEqual([...list.querySelectorAll(':scope > li > ul > li')].map(n => n.textContent), [
+      'How does machine intelligence fundamentally differ from human intelligence? [3]',
+      'What are the capabilities and limitations of foundation models in practice? [2]',
+      'How does training reshape a model’s internal computation? [4]',
+      'How can we integrate insights from interpretability into training algorithms/pipelines? [1], [3]',
+    ]);
+    assert.deepEqual([...list.querySelectorAll('a')].map(a => [a.textContent, a.getAttribute('href')]), [
+      ['[3]', '#negation'],
+      ['[2]', '#dual-mechanisms'],
+      ['[4]', '#vla-rl'],
+      ['[1]', '#poise'],
+      ['[3]', '#negation'],
+    ]);
+    const selected = [...doc.querySelectorAll('#selected-publications .paper-list > li > .paper')];
+    for (const link of list.querySelectorAll('a')) {
+      assert.equal(link.target, '');
+      assert.ok(link.hasAttribute('data-paper-ref'));
+      const paper = doc.querySelector(link.getAttribute('href'));
+      assert.equal(link.textContent, `[${selected.indexOf(paper) + 1}]`);
+      assert.equal(link.dataset.cvHref, paper.querySelector('.paper-links a').href);
+      assert.match(link.getAttribute('aria-label'), /Selected publication/);
+    }
+    const style = doc.createElement('style');
+    style.textContent = read('assets/css/styles.css');
+    doc.head.append(style);
+    assert.equal(dom.window.getComputedStyle(research).gridColumn, '1 / -1');
+  } finally { dom.window.close(); }
 });
 
 test('site uses plain sans-serif on white, while the printed CV and code retain their fonts', () => {
@@ -228,7 +269,7 @@ test('site uses plain sans-serif on white, while the printed CV and code retain 
   assert.match(blog, /\.editor-source:focus-within\s*\{\s*outline:/);
   for (const file of ['index.html', 'research.html', 'blog.html', 'game.html']) {
     assert.match(read(file), file === 'index.html'
-      ? /styles\.css\?v=20261009-footer/
+      ? /styles\.css\?v=20261011-citation-focus/
       : /styles\.css\?v=20261009-service-markers/);
     assert.doesNotMatch(read(file), /&copy;|data-year/);
   }
@@ -565,7 +606,7 @@ test('contact is a single inline invitation below the introduction and above pro
     const contact = dom.window.document.querySelector('#contact');
     assert.equal(contact.tagName, 'P');
     assert.equal(contact.closest('section').id, 'home');
-    assert.ok(contact.previousElementSibling.classList.contains('bio'));
+    assert.ok(contact.previousElementSibling.classList.contains('intro-description'));
     assert.ok(contact.nextElementSibling.classList.contains('link-row'));
     assert.equal(dom.window.document.querySelectorAll('a[href^="mailto:"]').length, 1);
     assert.equal(dom.window.document.querySelector('main > section#contact'), null);
@@ -585,7 +626,7 @@ test('the homepage footer shows the date without copyright text or a separator',
     dom.window.document.head.append(style);
     assert.equal(dom.window.getComputedStyle(footer).borderTopWidth, '0px');
     const date = footer.querySelector('.site-updated time');
-    assert.equal(date.textContent, '2026-10-09');
+    assert.equal(date.textContent, '2026-10-11');
     assert.equal(date.getAttribute('datetime'), date.textContent);
     assert.match(footer.textContent, /Last updated:/);
     assert.doesNotMatch(footer.textContent, /©/);

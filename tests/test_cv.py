@@ -189,6 +189,48 @@ class CVTests(unittest.TestCase):
         self.assertEqual(cv.generate(self.root), before)
         self.assertEqual((self.root / "cv.pdf").read_bytes(), before_pdf)
 
+    def test_research_directions_keep_hierarchy_questions_and_links(self):
+        self.edit("index.html", '<p class="bio">Research interests.</p>',
+                  '<div class="research-interests"><p class="bio">Research <strong>interests</strong>.</p>'
+                  '<ol class="research-directions">'
+                  '<li><strong>Understanding models</strong><ul>'
+                  '<li>How do models compute? (<a href="https://example.com/mechanisms">Study</a>)</li>'
+                  '<li>Where do they fail?</li></ul></li>'
+                  '<li><strong>Improving training</strong><ul>'
+                  '<li>How does training reshape a model’s computation?</li>'
+                  '<li>How can insights help? (<a href="https://example.com/training">Method</a>)</li>'
+                  '</ul></li></ol></div>')
+        model = cv.generate(self.root)
+        self.assertEqual(model["interests"], 'Research <strong>interests</strong>.')
+        self.assertEqual([d["title"] for d in model["directions"]],
+                         ["Understanding models", "Improving training"])
+        rendered = BeautifulSoup((self.root / "cv.html").read_text(encoding="utf-8"), "html.parser")
+        self.assertEqual(len(rendered.select(".research-directions > li")), 2)
+        self.assertEqual(len(rendered.select(".research-directions > li > ul > li")), 4)
+        pdf = self.text()
+        for index, direction in enumerate(model["directions"], start=1):
+            self.assertIn(f'{index}. {direction["title"]}', pdf)
+            for question in direction["questions"]:
+                self.assertIn(BeautifulSoup(question, "html.parser").get_text(), pdf)
+        links = {a.get_object().get("/A", {}).get("/URI", "")
+                 for page in PdfReader(self.root / "cv.pdf").pages for a in page.get("/Annots", [])}
+        self.assertIn("https://example.com/mechanisms", links)
+        self.assertIn("https://example.com/training", links)
+
+    def test_homepage_numbered_citations_keep_standalone_labels_and_urls_in_cv(self):
+        self.edit("index.html", '<p class="bio">Research interests.</p>',
+                  '<p class="bio">Research interests. '
+                  '<a href="#selected-paper" data-paper-ref data-cv-label="[Study]" '
+                  'data-cv-href="https://example.com/study">[3]</a></p>')
+        model = cv.generate(self.root)
+        self.assertIn('<a href="https://example.com/study">[Study]</a>', model["interests"])
+        self.assertNotIn("#selected-paper", model["interests"])
+        self.assertIn("[Study]", self.text())
+        self.edit("index.html", 'data-cv-href="https://example.com/study"',
+                  'data-cv-href="javascript:alert(1)"')
+        with self.assertRaisesRegex(ValueError, "Unsupported link"):
+            cv.generate(self.root)
+
     def test_multiple_venues_remain_on_separate_lines_in_both_formats(self):
         self.edit("research.html", '<p class="venue">NeurIPS 2026</p>',
                   '<p class="venue"><span class="venue-line">NeurIPS 2026</span>'

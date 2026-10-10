@@ -16,7 +16,7 @@ h2 { font-size: 11.5pt; line-height: 1.2; text-transform: uppercase; margin: 0 0
 .section-heading h2 { padding: 0; margin: 0; border: 0; }
 .meta { margin: 0; white-space: nowrap; }
 h3 { font-size: 10.5pt; line-height: 1.28; margin: 0 0 2px; }
-.item, .paper { margin-bottom: 9px; break-inside: avoid; }
+.item, .paper { margin-bottom: 6px; break-inside: avoid; }
 .item-heading { display: grid; grid-template-columns: 1fr 1.53in; gap: 10px; align-items: baseline; }
 .date { text-align: right; }
 .publication-meta { font-size: 10pt; }
@@ -25,6 +25,9 @@ h3 { font-size: 10.5pt; line-height: 1.28; margin: 0 0 2px; }
 .links a { white-space: nowrap; }
 ul { list-style: "-  "; margin: 3px 0 0; padding-left: 10px; }
 li { margin-bottom: 2px; }
+.research-directions { margin: 6px 0 0; padding-left: 16px; }
+.research-directions > li { margin-bottom: 6px; break-inside: avoid; }
+.research-directions ul { margin-top: 3px; }
 @page { size: Letter; margin: .53in .67in .58in; }
 @media print { main { padding: 0; max-width: none; } a { color: inherit; } }
 @media screen and (max-width: 600px) {
