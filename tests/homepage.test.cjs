@@ -229,14 +229,14 @@ test('approved research interests retain wording, emphasis, numbered directions 
       'Understanding model training',
     ]);
     assert.deepEqual([...list.querySelectorAll(':scope > li > ul > li')].map(n => n.textContent), [
-      'How does machine intelligence fundamentally differ from human intelligence? [4]',
       'How do internal mechanisms shape model capabilities and limitations in practice? [2]',
+      'How does machine intelligence fundamentally differ from human intelligence? [4]',
       "How does training reshape a model's internal computations? [3]",
       'How can we use insights from interpretability to improve training algorithms and pipelines? [1], [4]',
     ]);
     assert.deepEqual([...list.querySelectorAll('a')].map(a => [a.textContent, a.getAttribute('href')]), [
-      ['[4]', '#negation'],
       ['[2]', '#dual-mechanisms'],
+      ['[4]', '#negation'],
       ['[3]', '#vla-rl'],
       ['[1]', '#poise'],
       ['[4]', '#negation'],
