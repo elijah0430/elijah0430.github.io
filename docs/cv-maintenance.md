@@ -18,7 +18,7 @@ CV의 공통 내용은 홈페이지에서, CV 전용 역량 항목은 `scripts/c
 
 ## 내용 반영 규칙
 
-- 연구 관심사의 세부 방향은 `#home .research-directions`의 번호 목록에서 가져옵니다. 각 항목의 직접 자식 `strong`은 방향 이름이며, 하위 `ul > li`는 연구 질문입니다. 번호·질문·논문 링크를 HTML과 PDF에서 유지합니다.
+- 연구 관심사의 세부 방향은 `#home .research-directions`의 번호 목록에서 가져옵니다. 각 항목의 `.research-direction-title`은 방향 이름이며, 그 안의 `strong`으로 강조한 단어를 HTML과 PDF에서 유지합니다. 하위 `ul > li`는 연구 질문입니다. 번호·질문·논문 링크도 유지합니다.
 - CV에는 홈페이지의 Selected Publications만 같은 순서로 포함합니다. 선택된 논문에 `[1]`, `[2]`, …로 번호를 매기고 연구 소개에서도 같은 번호를 사용합니다. `data-cv-href`를 선택된 논문의 링크와 대조하므로 수동 번호나 `data-cv-label`의 약칭에 의존하지 않습니다. 대응하는 논문이 없거나 여러 편이면 생성을 중단합니다. 전자 문서에서는 번호의 원문 링크를 유지하며, 인쇄본에서는 같은 번호로 논문 제목을 찾을 수 있습니다.
 - 이름과 연구 관심사는 `#home`의 `h1`, `.bio`에서 가져옵니다. 소개문은 `.intro-description`에 쓰고, CV의 짧은 직함·소속 표기는 `#home`의 `data-cv-subtitle` 속성에 둡니다. 이 속성이 없으면 기존 `.kicker`, `.affiliation` 형식을 읽습니다. 상단 연락처는 이메일을 첫 줄에, Homepage와 Google Scholar를 그 아래 줄에 가운데 정렬로 표시합니다. 홈페이지는 canonical URL을 `Homepage`라는 링크 이름으로 표시하고, Google Scholar는 `#home .link-row`의 같은 이름 링크에서 영어 버전 URL(`hl=en`)을 유지합니다. Semantic Scholar, LinkedIn, Lab Page 등 다른 프로필 링크는 CV 상단에서 제외합니다. 논문·경력 본문의 관련 링크는 유지합니다.
 - 학력·수상·강의·봉사·경력은 `main > section.section` 안의 `article.entry`를 읽습니다. 섹션에는 `h2`, 각 항목에는 `h3`가 필요합니다. 날짜는 항목 안의 `time`에서 가져오며, reviewer처럼 본문에 연도가 이미 있는 경우 생략할 수 있습니다. `time`을 쓰면 내용은 비워두지 않습니다. 설명 문단과 목록도 포함합니다.

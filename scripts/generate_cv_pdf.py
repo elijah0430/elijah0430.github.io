@@ -179,7 +179,7 @@ def read_sources(root):
         "subtitle": subtitle,
         "interests": inline(required(intro, ".bio"), base, paper_references),
         "directions": [{
-            "title": inline(required(item, ":scope > strong"), base),
+            "title": inline(required(item, ":scope > .research-direction-title"), base),
             "questions": [inline(question, base, paper_references)
                           for question in item.select(":scope > ul > li")],
         } for item in intro.select(".research-directions > li")],
@@ -240,7 +240,7 @@ def html_document(root, model, digest, updated):
         parts.append('<ol class="research-directions">')
         for direction in model["directions"]:
             questions = "".join(f"<li>{question}</li>" for question in direction["questions"])
-            parts.append(f'<li><strong>{direction["title"]}</strong><ul>{questions}</ul></li>')
+            parts.append(f'<li><span class="research-direction-title">{direction["title"]}</span><ul>{questions}</ul></li>')
         parts.append('</ol>')
     parts.append('</section>')
     for section in model["sections"]:
@@ -330,7 +330,7 @@ def pdf_document(root, model, updated, output):
              para(links_html(model["contacts"][:1]), contact),
              para(links_html(model["contacts"][1:]), contact)]
     story.append(KeepTogether([heading("Research Interests"), para(model["interests"])]))
-    direction_style = ParagraphStyle("CVDirection", parent=title, leftIndent=12,
+    direction_style = ParagraphStyle("CVDirection", parent=body, leftIndent=12,
                                     firstLineIndent=-12, spaceBefore=6)
     question_style = ParagraphStyle("CVQuestion", parent=body, leftIndent=22,
                                    firstLineIndent=-8)

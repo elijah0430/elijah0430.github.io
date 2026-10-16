@@ -12,9 +12,9 @@
   <meta property="og:image" content="assets/img/profile-20261009.png" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="assets/css/styles.css?v=20261009-service-markers" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20261016-bird-selection" />
   <script>document.documentElement.classList.add('js');</script>
-  <script defer src="assets/js/main.js?v=20261009-kiwi-hitbox"></script>
+  <script defer src="assets/js/main.js?v=20261016-bird-selection"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -51,15 +51,54 @@
       </div>
       <div class="section-body">
         <div class="game-panel" data-runner-game>
+          <fieldset class="bird-picker" data-runner-picker aria-describedby="bird-picker-hint">
+            <legend>Choose your bird</legend>
+            <p id="bird-picker-hint">Different birds, different ways to jump. Choose before each run.</p>
+            <div class="bird-choices">
+              <label class="bird-choice">
+                <input type="radio" name="runner-bird" value="kiwi" data-runner-bird checked />
+                <span class="bird-card">
+                  <canvas width="96" height="76" data-bird-preview="kiwi" aria-hidden="true"></canvas>
+                  <strong>Kiwi</strong><span class="bird-trait">All-rounder</span>
+                  <span class="bird-description">One high jump with a steady fall.</span>
+                </span>
+              </label>
+              <label class="bird-choice">
+                <input type="radio" name="runner-bird" value="sparrow" data-runner-bird />
+                <span class="bird-card">
+                  <canvas width="96" height="76" data-bird-preview="sparrow" aria-hidden="true"></canvas>
+                  <strong>Sparrow</strong><span class="bird-trait">Double jump</span>
+                  <span class="bird-description">Lower jumps. Tap again for a mid-air boost.</span>
+                </span>
+              </label>
+              <label class="bird-choice">
+                <input type="radio" name="runner-bird" value="owl" data-runner-bird />
+                <span class="bird-card">
+                  <canvas width="96" height="76" data-bird-preview="owl" aria-hidden="true"></canvas>
+                  <strong>Owl</strong><span class="bird-trait">Slow fall</span>
+                  <span class="bird-description">More time in the air, but slower to land.</span>
+                </span>
+              </label>
+              <label class="bird-choice">
+                <input type="radio" name="runner-bird" value="penguin" data-runner-bird />
+                <span class="bird-card">
+                  <canvas width="96" height="76" data-bird-preview="penguin" aria-hidden="true"></canvas>
+                  <strong>Penguin</strong><span class="bird-trait">Quick hops</span>
+                  <span class="bird-description">Shorter jumps and a fast return to the ground.</span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
           <div class="game-status">
+            <span>Bird: <strong data-runner-bird-name>Kiwi</strong></span>
             <span>Score: <strong data-runner-score>0</strong></span>
             <span>Distance: <strong data-runner-distance>0</strong> m</span>
             <span>Best: <strong data-runner-best>0</strong></span>
             <span>Speed: <strong data-runner-speed>1.0</strong>x</span>
-            <button type="button" data-runner-start>Start</button>
+            <button type="button" data-runner-start>Start as Kiwi</button>
           </div>
           <div class="runner-stage">
-            <canvas class="runner-canvas" width="760" height="360" data-runner-canvas aria-label="Kiwi Runner game board"></canvas>
+            <canvas class="runner-canvas" width="760" height="360" data-runner-canvas tabindex="0" aria-label="Kiwi Runner game board" aria-describedby="runner-instructions"></canvas>
             <form class="score-form score-form-overlay" data-score-form hidden>
               <label>
                 Name for high score
@@ -72,7 +111,8 @@
             <button type="button" data-runner-jump>Jump</button>
             <button type="button" data-runner-duck>Duck / Drop</button>
           </div>
-          <p class="game-message" data-runner-message>Space or tap to jump. Press down mid-air to drop.</p>
+          <p id="runner-instructions" class="game-instructions">Space / ↑ / W or tap to jump. Hold ↓ / S to duck; press mid-air to drop.</p>
+          <p class="game-message" data-runner-message role="status">Kiwi: one high jump with a steady fall.</p>
           <div class="high-score-board">
             <h3>Top 10 Scores</h3>
             <ol data-high-scores></ol>

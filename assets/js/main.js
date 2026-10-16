@@ -165,6 +165,31 @@
     const duckButton = runnerGame.querySelector('[data-runner-duck]');
     const scoreForm = runnerGame.querySelector('[data-score-form]');
     const highScoresEl = runnerGame.querySelector('[data-high-scores]');
+    const birdPicker = runnerGame.querySelector('[data-runner-picker]');
+    const birdInputs = runnerGame.querySelectorAll('[data-runner-bird]');
+    const birdNameEl = runnerGame.querySelector('[data-runner-bird-name]');
+    const birds = {
+      kiwi: {
+        name: 'Kiwi', jump: 650, gravity: 1650, fallGravity: 1650, jumps: 1,
+        hint: 'One high jump with a steady fall.',
+        feather: '#725438', light: '#9b7851', dark: '#382d24', beak: '#c99d60', feet: '#d68739',
+      },
+      sparrow: {
+        name: 'Sparrow', jump: 540, airJump: 420, gravity: 1650, fallGravity: 1650, jumps: 2,
+        hint: 'Tap jump again in mid-air for a second, smaller jump.',
+        feather: '#ae6545', light: '#eed1a4', dark: '#53382d', beak: '#d39d45', feet: '#b77c40',
+      },
+      owl: {
+        name: 'Owl', jump: 600, gravity: 1650, fallGravity: 750, jumps: 1,
+        hint: 'Fall slowly to stay airborne longer. Press down for a fast landing.',
+        feather: '#81728d', light: '#dfd4bf', dark: '#443c54', beak: '#d6a148', feet: '#c08d49',
+      },
+      penguin: {
+        name: 'Penguin', jump: 700, gravity: 2400, fallGravity: 2400, jumps: 1,
+        hint: 'Short, quick hops. Jump closer to an obstacle and land sooner.',
+        feather: '#416077', light: '#edf2ed', dark: '#243b50', beak: '#e6a146', feet: '#df9540',
+      },
+    };
     const leaderboardConfig = {
       supabaseUrl: supabaseConfig.url,
       supabaseAnonKey: supabaseConfig.anonKey,
@@ -178,10 +203,14 @@
       vy: 0,
       ducking: false,
       onGround: true,
+      jumpsUsed: 0,
+      dropping: false,
     };
     const state = {
       running: false,
       ended: false,
+      birdId: 'kiwi',
+      duckHeld: false,
       score: 0,
       best: Number(window.localStorage.getItem('runner-best') || 0),
       bonus: 0,
@@ -227,11 +256,6 @@
         link: styles.getPropertyValue('--link').trim(),
         danger: '#9b4f45',
         star: '#c6953e',
-        kiwi: '#725438',
-        kiwiLight: '#9b7851',
-        kiwiDark: '#382d24',
-        kiwiBeak: '#c99d60',
-        kiwiFeet: '#d68739',
       };
     }
 
@@ -279,8 +303,12 @@
       player.vy = 0;
       player.ducking = false;
       player.onGround = true;
+      player.jumpsUsed = 0;
+      player.dropping = false;
+      state.duckHeld = false;
+      if (birdPicker) birdPicker.disabled = true;
       if (scoreForm) scoreForm.hidden = true;
-      if (messageEl) messageEl.textContent = 'Jump blocks. Duck under overhead obstacles. Hold down mid-air to drop fast.';
+      if (messageEl) messageEl.textContent = `${birds[state.birdId].name}: ${birds[state.birdId].hint}`;
       if (startButton) startButton.textContent = 'Restart';
       updateRunnerStatus();
     }
@@ -289,12 +317,15 @@
       if (!canvas || !ctx) return;
       window.cancelAnimationFrame(state.raf);
       resetRunner();
+      canvas.focus({ preventScroll: true });
       state.raf = window.requestAnimationFrame(tickRunner);
     }
 
     function endRunner() {
       state.running = false;
       state.ended = true;
+      state.duckHeld = false;
+      if (birdPicker) birdPicker.disabled = false;
       window.cancelAnimationFrame(state.raf);
       updateRunnerStatus();
       if (state.score > state.best) {
@@ -302,7 +333,7 @@
         window.localStorage.setItem('runner-best', String(state.best));
         updateRunnerStatus();
       }
-      if (messageEl) messageEl.textContent = `Final score: ${state.score}. Save your score.`;
+      if (messageEl) messageEl.textContent = `Final score: ${state.score}. Save your score, or choose a bird for your next run.`;
       if (scoreForm) scoreForm.hidden = false;
       if (startButton) startButton.textContent = 'Restart';
       drawRunner();
@@ -313,14 +344,18 @@
         startRunner();
         return;
       }
-      if (!player.onGround || player.ducking) return;
-      player.vy = -650;
+      const bird = birds[state.birdId];
+      if (player.ducking || player.dropping || player.jumpsUsed >= bird.jumps) return;
+      player.vy = -(player.onGround ? bird.jump : bird.airJump);
+      player.jumpsUsed += 1;
       player.onGround = false;
     }
 
     function setDuck(active) {
       if (!state.running) return;
+      state.duckHeld = active;
       if (active && !player.onGround) {
+        player.dropping = true;
         player.vy = Math.max(player.vy, 930);
         return;
       }
@@ -358,16 +393,16 @@
         && a.y + a.height > b.y;
     }
 
-    function playerGeometry() {
+    function playerGeometry(x = player.x, y = player.y, ducking = player.ducking) {
       const pixel = 3;
-      const bodyX = Math.round(player.x + (player.ducking ? 7 : 8));
-      const bodyY = Math.round(player.y + (player.ducking ? 11 : 16));
-      const bodyWidth = player.ducking ? 45 : 39;
-      const bodyHeight = player.ducking ? 24 : 30;
+      const bodyX = Math.round(x + (ducking ? 7 : 8));
+      const bodyY = Math.round(y + (ducking ? 11 : 16));
+      const bodyWidth = ducking ? 45 : 39;
+      const bodyHeight = ducking ? 24 : 30;
       return {
         pixel, bodyX, bodyY, bodyWidth, bodyHeight,
         headX: bodyX + bodyWidth - pixel * 7,
-        headY: bodyY - (player.ducking ? pixel * 2 : pixel * 4),
+        headY: bodyY - (ducking ? pixel * 2 : pixel * 4),
       };
     }
 
@@ -387,12 +422,22 @@
         state.coinTimer = 1.0 + Math.random() * 1.1;
       }
 
-      player.vy += 1650 * delta;
+      const bird = birds[state.birdId];
+      const gravity = player.vy >= 0 && !player.dropping ? bird.fallGravity : bird.gravity;
+      player.vy += gravity * delta;
       player.y += player.vy * delta;
+      // Keep a double jump visible even on the shorter mobile board.
+      if (player.y < 8) {
+        player.y = 8;
+        player.vy = Math.max(0, player.vy);
+      }
       if (player.y >= groundY() - player.height) {
         player.y = groundY() - player.height;
         player.vy = 0;
         player.onGround = true;
+        player.jumpsUsed = 0;
+        player.dropping = false;
+        setDuck(state.duckHeld);
       }
 
       state.clouds.forEach((cloud) => {
@@ -454,6 +499,66 @@
       ctx.globalAlpha = 1;
     }
 
+    // Previews and the runner share the same pixel art and collision geometry.
+    function drawBird(context, birdId, geometry, footY, stride = 0) {
+      const colors = birds[birdId];
+      const { pixel, bodyX, bodyY, bodyWidth, bodyHeight, headX, headY } = geometry;
+      const pixelRect = (x, y, width, height, color) => {
+        context.fillStyle = color;
+        context.fillRect(Math.round(x), Math.round(y), width, height);
+      };
+
+      if (birdId === 'sparrow') {
+        pixelRect(bodyX - pixel * 2, bodyY + pixel, pixel * 5, pixel * 2, colors.dark);
+        pixelRect(bodyX - pixel, bodyY + pixel * 3, pixel * 4, pixel * 2, colors.feather);
+      }
+      pixelRect(bodyX + pixel * 2, bodyY, bodyWidth - pixel * 4, pixel * 2, colors.dark);
+      pixelRect(bodyX + pixel, bodyY + pixel * 2, bodyWidth - pixel * 2, bodyHeight - pixel * 4, colors.dark);
+      pixelRect(bodyX + pixel * 2, bodyY + bodyHeight - pixel * 2, bodyWidth - pixel * 4, pixel * 2, colors.dark);
+      pixelRect(bodyX + pixel * 3, bodyY + pixel * 2, bodyWidth - pixel * 6, bodyHeight - pixel * 4, colors.feather);
+
+      if (birdId === 'penguin') {
+        pixelRect(bodyX + pixel * 6, bodyY + pixel, bodyWidth - pixel * 8, bodyHeight - pixel * 2, colors.light);
+        pixelRect(bodyX + pixel * 2, bodyY + pixel * 3, pixel * 3, pixel * 5, colors.feather);
+      } else if (birdId === 'owl') {
+        pixelRect(bodyX + pixel * 5, bodyY + pixel * 2, pixel * 5, bodyHeight - pixel * 3, colors.light);
+        pixelRect(bodyX + pixel * 6, bodyY + pixel * 4, pixel, pixel, colors.feather);
+        pixelRect(bodyX + pixel * 8, bodyY + pixel * 6, pixel, pixel, colors.feather);
+      } else {
+        pixelRect(bodyX + pixel * 4, bodyY + pixel * 4, bodyWidth - pixel * 7, pixel * 3, colors.light);
+        pixelRect(bodyX + pixel * 4, bodyY + pixel * 4, pixel * 4, pixel * 2, colors.feather);
+      }
+
+      pixelRect(headX, headY + pixel, pixel * 5, pixel * 5, colors.dark);
+      pixelRect(headX + pixel, headY, pixel * 3, pixel * 6, colors.feather);
+      if (birdId === 'owl') {
+        pixelRect(headX, headY, pixel, pixel * 2, colors.dark);
+        pixelRect(headX + pixel * 4, headY, pixel, pixel * 2, colors.dark);
+        pixelRect(headX, headY + pixel * 2, pixel * 5, pixel * 3, colors.light);
+        pixelRect(headX + pixel, headY + pixel * 3, pixel, pixel, colors.dark);
+        pixelRect(headX + pixel * 3, headY + pixel * 3, pixel, pixel, colors.dark);
+        pixelRect(headX + pixel * 2, headY + pixel * 4, pixel, pixel * 2, colors.beak);
+      } else {
+        if (birdId === 'sparrow') {
+          pixelRect(headX, headY, pixel * 4, pixel * 2, colors.dark);
+          pixelRect(headX + pixel, headY + pixel * 3, pixel * 3, pixel * 2, colors.light);
+        }
+        if (birdId === 'penguin') pixelRect(headX + pixel * 2, headY + pixel * 2, pixel * 2, pixel * 4, colors.light);
+        const beakLength = birdId === 'kiwi' ? 7 : 3;
+        pixelRect(headX + pixel * 4, headY + pixel * 3, pixel * beakLength, pixel, colors.beak);
+        pixelRect(headX + pixel * 4, headY + pixel * 4, pixel * (beakLength - 1), pixel, colors.dark);
+        pixelRect(headX + pixel * 2, headY + pixel * 2, pixel, pixel, '#f8f7f3');
+        pixelRect(headX + pixel * 3, headY + pixel * 2, pixel, pixel, colors.dark);
+      }
+
+      const legBaseY = bodyY + bodyHeight - pixel;
+      pixelRect(bodyX + pixel * 4, legBaseY, pixel, Math.max(pixel, footY - legBaseY), colors.feet);
+      pixelRect(bodyX + pixel * 8, legBaseY, pixel, Math.max(pixel, footY - legBaseY), colors.feet);
+      const footWidth = birdId === 'penguin' ? pixel * 4 : pixel * 3;
+      pixelRect(bodyX + pixel * 4 + stride * pixel, footY, footWidth, pixel, colors.feet);
+      pixelRect(bodyX + pixel * 8 - stride * pixel, footY, footWidth, pixel, colors.feet);
+    }
+
     function drawRunner() {
       if (!canvas || !ctx) return;
       const width = gameWidth();
@@ -504,42 +609,17 @@
         }
       });
 
-      const { pixel, bodyX, bodyY, bodyWidth, bodyHeight, headX, headY } = playerGeometry();
+      const geometry = playerGeometry();
       const stride = player.onGround ? Math.round(Math.sin(state.animTime * state.speed * 0.035) * 2) : 1;
-      const pixelRect = (x, y, rectWidth, rectHeight, color) => {
-        ctx.fillStyle = color;
-        ctx.fillRect(Math.round(x), Math.round(y), rectWidth, rectHeight);
-      };
-
-      // A deliberately blocky kiwi: round feathers, tiny legs, and its unmistakably long beak.
-      pixelRect(bodyX + pixel * 2, bodyY, bodyWidth - pixel * 4, pixel * 2, colors.kiwiDark);
-      pixelRect(bodyX + pixel, bodyY + pixel * 2, bodyWidth - pixel * 2, bodyHeight - pixel * 4, colors.kiwiDark);
-      pixelRect(bodyX + pixel * 2, bodyY + bodyHeight - pixel * 2, bodyWidth - pixel * 4, pixel * 2, colors.kiwiDark);
-      pixelRect(bodyX + pixel * 3, bodyY + pixel * 2, bodyWidth - pixel * 6, bodyHeight - pixel * 4, colors.kiwi);
-      pixelRect(bodyX + pixel * 4, bodyY + pixel * 4, bodyWidth - pixel * 10, bodyHeight - pixel * 9, colors.kiwiLight);
-      pixelRect(bodyX + pixel * 6, bodyY + pixel * 6, bodyWidth - pixel * 15, pixel * 3, colors.kiwi);
-
-      pixelRect(headX, headY + pixel, pixel * 5, pixel * 5, colors.kiwiDark);
-      pixelRect(headX + pixel, headY, pixel * 3, pixel * 6, colors.kiwi);
-      pixelRect(headX + pixel * 3, headY + pixel, pixel, pixel, colors.kiwiLight);
-      pixelRect(headX + pixel * 4, headY + pixel * 3, pixel * 7, pixel, colors.kiwiBeak);
-      pixelRect(headX + pixel * 4, headY + pixel * 4, pixel * 5, pixel, colors.kiwiDark);
-      pixelRect(headX + pixel * 2, headY + pixel * 2, pixel, pixel, '#f8f7f3');
-      pixelRect(headX + pixel * 3, headY + pixel * 2, pixel, pixel, colors.kiwiDark);
-
-      const footY = player.onGround ? groundY() - pixel : bodyY + bodyHeight + pixel * 2;
-      const legBaseY = bodyY + bodyHeight - pixel;
-      pixelRect(bodyX + pixel * 4, legBaseY, pixel, footY - legBaseY, colors.kiwiFeet);
-      pixelRect(bodyX + pixel * 8, legBaseY, pixel, footY - legBaseY, colors.kiwiFeet);
-      pixelRect(bodyX + pixel * 4 + stride * pixel, footY, pixel * 3, pixel, colors.kiwiFeet);
-      pixelRect(bodyX + pixel * 8 - stride * pixel, footY, pixel * 3, pixel, colors.kiwiFeet);
+      const footY = player.onGround ? groundY() - geometry.pixel : geometry.bodyY + geometry.bodyHeight + geometry.pixel * 2;
+      drawBird(ctx, state.birdId, geometry, footY, stride);
 
       if (!state.running) {
         ctx.fillStyle = colors.muted;
         ctx.font = `600 18px ${getComputedStyle(document.body).fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(state.ended ? 'Game over' : 'Press Start', width / 2, height / 2);
+        ctx.fillText(state.ended ? 'Game over' : `Ready, ${birds[state.birdId].name}?`, width / 2, height / 2);
       }
     }
 
@@ -636,19 +716,62 @@
       renderScores(scores);
     }
 
+    runnerGame.querySelectorAll('[data-bird-preview]').forEach((preview) => {
+      const previewCtx = preview.getContext('2d');
+      if (!previewCtx) return;
+      previewCtx.imageSmoothingEnabled = false;
+      drawBird(previewCtx, preview.dataset.birdPreview, playerGeometry(16, 9, false), 64);
+    });
+
+    birdInputs.forEach((input) => {
+      input.addEventListener('change', () => {
+        if (state.running || !input.checked || !birds[input.value]) return;
+        state.birdId = input.value;
+        const bird = birds[state.birdId];
+        if (birdNameEl) birdNameEl.textContent = bird.name;
+        if (startButton) startButton.textContent = `Start as ${bird.name}`;
+        if (messageEl) messageEl.textContent = `${bird.name}: ${bird.hint}`;
+        player.ducking = false;
+        player.width = 52;
+        player.height = 58;
+        player.onGround = true;
+        player.y = groundY() - player.height;
+        drawRunner();
+      });
+    });
+
     if (canvas && ctx) {
       setCanvasSize();
       window.addEventListener('resize', setCanvasSize);
       canvas.addEventListener('pointerdown', jumpRunner);
+      if (themeToggle) themeToggle.addEventListener('click', drawRunner);
     }
 
     if (startButton) startButton.addEventListener('click', startRunner);
     if (jumpButton) jumpButton.addEventListener('click', jumpRunner);
     if (duckButton) {
-      duckButton.addEventListener('pointerdown', () => setDuck(true));
+      duckButton.addEventListener('pointerdown', (event) => {
+        if (duckButton.setPointerCapture && event.pointerId !== undefined) duckButton.setPointerCapture(event.pointerId);
+        setDuck(true);
+      });
       duckButton.addEventListener('pointerup', () => setDuck(false));
-      duckButton.addEventListener('pointerleave', () => setDuck(false));
+      duckButton.addEventListener('pointercancel', () => setDuck(false));
+      duckButton.addEventListener('lostpointercapture', () => setDuck(false));
+      duckButton.addEventListener('keydown', (event) => {
+        if (event.key === ' ' || event.key === 'Enter') {
+          event.preventDefault();
+          setDuck(true);
+        }
+      });
+      duckButton.addEventListener('keyup', (event) => {
+        if (event.key === ' ' || event.key === 'Enter') {
+          event.preventDefault();
+          setDuck(false);
+        }
+      });
+      duckButton.addEventListener('blur', () => setDuck(false));
     }
+    window.addEventListener('blur', () => setDuck(false));
 
     function isFormControl(target) {
       return target instanceof HTMLElement
@@ -660,7 +783,7 @@
       const key = event.key.toLowerCase();
       if (event.key === ' ' || event.key === 'ArrowUp' || key === 'w') {
         event.preventDefault();
-        jumpRunner();
+        if (!event.repeat) jumpRunner();
       }
       if (event.key === 'ArrowDown' || key === 's') {
         event.preventDefault();
@@ -669,7 +792,6 @@
     });
 
     document.addEventListener('keyup', (event) => {
-      if (isFormControl(event.target)) return;
       const key = event.key.toLowerCase();
       if (event.key === 'ArrowDown' || key === 's') {
         setDuck(false);

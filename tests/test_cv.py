@@ -282,11 +282,14 @@ class CVTests(unittest.TestCase):
         for paper in papers:
             self.assertIn(f'[{paper["number"]}] {paper["title"]}', pdf)
         for direction in model["directions"]:
-            self.assertIn(direction["title"], pdf)
+            self.assertIn(BeautifulSoup(direction["title"], "html.parser").get_text(), pdf)
             for question in direction["questions"]:
                 self.assertIn(BeautifulSoup(question, "html.parser").get_text(), pdf)
-        self.assertEqual([direction["title"] for direction in model["directions"]],
-                         [title.get_text() for title in home.select(".research-directions > li > strong")])
+        self.assertEqual([BeautifulSoup(direction["title"], "html.parser").get_text()
+                          for direction in model["directions"]],
+                         [title.get_text() for title in home.select(".research-direction-title")])
+        self.assertEqual([title.decode_contents() for title in generated.select(".research-direction-title")],
+                         [direction["title"] for direction in model["directions"]])
         interest_text = " ".join(home.select_one(".research-interests .bio").get_text().split())
         self.assertIn(interest_text, pdf)
         pdf_links = {a.get_object().get("/A", {}).get("/URI", "")
@@ -402,29 +405,42 @@ class CVTests(unittest.TestCase):
         self.edit("index.html", '<p class="bio">Research interests.</p>',
                   '<div class="research-interests"><p class="bio">Research <strong>interests</strong>.</p>'
                   '<ol class="research-directions">'
-                  '<li><strong>Understanding models</strong><ul>'
+                  '<li><span class="research-direction-title">Understanding <strong>what</strong> models learn</span><ul>'
                   '<li>How do models compute? (<a href="https://example.com/mechanisms">Study</a>)</li>'
                   '<li>Where do they fail?</li></ul></li>'
-                  '<li><strong>Improving training</strong><ul>'
+                  '<li><span class="research-direction-title">Understanding <strong>how</strong> models learn</span><ul>'
                   '<li>How does training reshape a model’s computation?</li>'
                   '<li>How can insights help? (<a href="https://example.com/training">Method</a>)</li>'
                   '</ul></li></ol></div>')
         model = cv.generate(self.root)
         self.assertEqual(model["interests"], 'Research <strong>interests</strong>.')
         self.assertEqual([d["title"] for d in model["directions"]],
-                         ["Understanding models", "Improving training"])
+                         ["Understanding <strong>what</strong> models learn",
+                          "Understanding <strong>how</strong> models learn"])
         rendered = BeautifulSoup((self.root / "cv.html").read_text(encoding="utf-8"), "html.parser")
         self.assertEqual(len(rendered.select(".research-directions > li")), 2)
         self.assertEqual(len(rendered.select(".research-directions > li > ul > li")), 4)
+        self.assertEqual([n.text for n in rendered.select(".research-direction-title strong")],
+                         ["what", "how"])
+        self.assertFalse(rendered.select(".research-directions > li > strong"))
         pdf = self.text()
         for index, direction in enumerate(model["directions"], start=1):
-            self.assertIn(f'{index}. {direction["title"]}', pdf)
+            title = BeautifulSoup(direction["title"], "html.parser").get_text()
+            self.assertIn(f'{index}. {title}', pdf)
             for question in direction["questions"]:
                 self.assertIn(BeautifulSoup(question, "html.parser").get_text(), pdf)
         links = {a.get_object().get("/A", {}).get("/URI", "")
                  for page in PdfReader(self.root / "cv.pdf").pages for a in page.get("/Annots", [])}
         self.assertIn("https://example.com/mechanisms", links)
         self.assertIn("https://example.com/training", links)
+        fragments = []
+        for page in PdfReader(self.root / "cv.pdf").pages:
+            page.extract_text(visitor_text=lambda text, cm, tm, font, size:
+                              fragments.append((text.strip(), font.get("/BaseFont", "") if font else "")))
+        for keyword in ("what", "how"):
+            self.assertIn((keyword, "/Times-Bold"), fragments)
+        for index in (1, 2):
+            self.assertIn((f"{index}. Understanding", "/Times-Roman"), fragments)
 
     def add_numbered_reference(self):
         self.edit("index.html", '<p class="bio">Research interests.</p>',

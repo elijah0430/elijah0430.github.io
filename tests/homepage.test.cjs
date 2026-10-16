@@ -220,19 +220,21 @@ test('approved research interests retain wording, emphasis, numbered directions 
     const doc = dom.window.document;
     const research = doc.querySelector('#home > .research-interests');
     assert.equal(research.querySelector('.bio').textContent.replace(/\s+/g, ' ').trim(),
-      'My research focuses on using interpretability to better understand and improve foundation models. I am exploring two complementary directions:');
+      'My research focuses on using interpretability to build an actionable understanding of foundation models. I am exploring two complementary directions:');
     assert.equal(research.querySelector('.bio strong').textContent,
-      'using interpretability to better understand and improve foundation models');
+      'using interpretability to build an actionable understanding of foundation models');
     const list = research.querySelector('ol.research-directions');
-    assert.deepEqual([...list.querySelectorAll(':scope > li > strong')].map(n => n.textContent), [
-      'Understanding model behavior',
-      'Understanding model training',
+    assert.deepEqual([...list.querySelectorAll(':scope > li > .research-direction-title')].map(n => n.textContent), [
+      'Understanding what models learn',
+      'Understanding how models learn',
     ]);
+    assert.deepEqual([...list.querySelectorAll('.research-direction-title strong')].map(n => n.textContent), ['what', 'how']);
+    assert.equal(list.querySelector(':scope > li > strong'), null);
     assert.deepEqual([...list.querySelectorAll(':scope > li > ul > li')].map(n => n.textContent), [
-      'How do internal mechanisms shape model capabilities and limitations in practice? [2]',
-      'How does machine intelligence fundamentally differ from human intelligence? [4]',
-      "How does training reshape a model's internal computations? [3]",
-      'How can we use insights from interpretability to improve training algorithms and pipelines? [1], [4]',
+      'Which learned mechanisms enable or limit model capabilities in practice? [2]',
+      'How do models process concepts differently from humans, and when do these differences lead to failures? [4]',
+      "Which changes in a model's internal computations drive improvements during training? [3]",
+      'How can we use these insights to improve training algorithms and pipelines? [1], [4]',
     ]);
     assert.deepEqual([...list.querySelectorAll('a')].map(a => [a.textContent, a.getAttribute('href')]), [
       ['[2]', '#dual-mechanisms'],
@@ -270,7 +272,8 @@ test('site uses plain sans-serif on white, while the printed CV and code retain 
   for (const file of ['index.html', 'research.html', 'blog.html', 'game.html']) {
     assert.match(read(file), file === 'index.html'
       ? /styles\.css\?v=20261011-citation-focus/
-      : /styles\.css\?v=20261009-service-markers/);
+      : file === 'game.html' ? /styles\.css\?v=20261016-bird-selection/
+        : /styles\.css\?v=20261009-service-markers/);
     assert.doesNotMatch(read(file), /&copy;|data-year/);
   }
 });
@@ -636,7 +639,7 @@ test('the homepage footer shows the date without copyright text or a separator',
     dom.window.document.head.append(style);
     assert.equal(dom.window.getComputedStyle(footer).borderTopWidth, '0px');
     const date = footer.querySelector('.site-updated time');
-    assert.equal(date.textContent, '2026-10-11');
+    assert.equal(date.textContent, '2026-10-16');
     assert.equal(date.getAttribute('datetime'), date.textContent);
     assert.match(footer.textContent, /Last updated:/);
     assert.doesNotMatch(footer.textContent, /©/);
