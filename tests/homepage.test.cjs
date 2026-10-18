@@ -271,7 +271,7 @@ test('site uses plain sans-serif on white, while the printed CV and code retain 
   assert.match(blog, /\.editor-source:focus-within\s*\{\s*outline:/);
   for (const file of ['index.html', 'research.html', 'blog.html', 'game.html']) {
     assert.match(read(file), file === 'index.html'
-      ? /styles\.css\?v=20261011-citation-focus/
+      ? /styles\.css\?v=20261018-page-toc-subtle/
       : file === 'game.html' ? /styles\.css\?v=20261016-bird-selection/
         : /styles\.css\?v=20261009-service-markers/);
     assert.doesNotMatch(read(file), /&copy;|data-year/);
@@ -639,7 +639,7 @@ test('the homepage footer shows the date without copyright text or a separator',
     dom.window.document.head.append(style);
     assert.equal(dom.window.getComputedStyle(footer).borderTopWidth, '0px');
     const date = footer.querySelector('.site-updated time');
-    assert.equal(date.textContent, '2026-10-16');
+    assert.equal(date.textContent, '2026-10-18');
     assert.equal(date.getAttribute('datetime'), date.textContent);
     assert.match(footer.textContent, /Last updated:/);
     assert.doesNotMatch(footer.textContent, /©/);

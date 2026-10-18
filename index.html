@@ -19,7 +19,7 @@
   <meta name="twitter:image" content="https://elijah0430.github.io/assets/img/profile-20261009.png" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="assets/css/styles.css?v=20261011-citation-focus" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20261018-page-toc-subtle" />
   <script>document.documentElement.classList.add('js');</script>
   <script>
     window.EMAILJS_CONFIG = {
@@ -31,6 +31,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script defer src="assets/js/main.js"></script>
   <script defer src="assets/js/paper-previews.js?v=20261011"></script>
+  <script defer src="assets/js/page-toc.js?v=20261018"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -58,7 +59,7 @@
   }
   </script>
 </head>
-<body>
+<body class="has-page-toc">
   <a class="skip-link" href="#main">Skip to content</a>
 
   <header class="site-header">
@@ -82,6 +83,25 @@
     </div>
   </header>
 
+  <nav class="page-toc" aria-label="Page sections" data-page-toc>
+    <button class="toc-toggle" type="button" aria-label="Choose section" aria-describedby="toc-current" aria-expanded="false" aria-controls="page-toc-links" data-toc-toggle>
+      <span class="toc-current" id="toc-current" data-toc-current>About</span>
+      <span class="toc-chevron" aria-hidden="true"></span>
+    </button>
+    <div class="toc-panel">
+      <ol id="page-toc-links" class="toc-links">
+        <li><a href="#home" aria-current="location">About</a></li>
+        <li><a href="#research-interests">Research Interests</a></li>
+        <li><a href="#selected-publications">Selected Papers</a></li>
+        <li><a href="#education">Education</a></li>
+        <li><a href="#awards">Awards</a></li>
+        <li><a href="#teaching">Teaching</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#experience">Experiences</a></li>
+      </ol>
+    </div>
+  </nav>
+
   <main id="main" class="page">
     <section class="intro" id="home" data-cv-subtitle="Ph.D. Student, Graduate School of Data Science, Seoul National University">
       <div class="portrait-frame">
@@ -102,7 +122,7 @@
           <a href="https://yohanjo.github.io/lab.html" target="_blank" rel="noopener noreferrer">Lab Page</a>
         </div>
       </div>
-      <div class="research-interests">
+      <div class="research-interests" id="research-interests">
         <p class="bio">
           My research focuses on <strong>using interpretability to build an actionable understanding of foundation models</strong>. I am exploring two complementary directions:
         </p>
@@ -442,7 +462,7 @@
   </main>
 
   <footer class="site-footer site-footer--plain page">
-    <p class="site-updated">Last updated: <time datetime="2026-10-16">2026-10-16</time></p>
+    <p class="site-updated">Last updated: <time datetime="2026-10-18">2026-10-18</time></p>
     <a href="#home">Back to top</a>
   </footer>
 </body>
