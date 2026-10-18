@@ -13,7 +13,7 @@ test('selected publications replace news and exactly match the requested four re
     const doc = home.window.document;
     assert.equal(doc.querySelector('#news'), null);
     const selected = doc.querySelector('#selected-publications');
-    assert.equal(selected.querySelector('h2').textContent, 'Selected Publications');
+    assert.equal(selected.querySelector('h2').textContent, 'Selected Papers');
     assert.ok(selected.hasAttribute('data-cv-exclude'));
     const papers = [...selected.querySelectorAll('.paper')];
     assert.deepEqual(papers.map(p => p.id), ['poise', 'dual-mechanisms', 'vla-rl', 'negation']);
