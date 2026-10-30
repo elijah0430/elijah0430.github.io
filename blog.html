@@ -16,7 +16,7 @@
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/styles.css?v=20261009-service-markers" />
   <link rel="stylesheet" href="assets/vendor/katex/katex.min.css" />
-  <link rel="stylesheet" href="assets/css/blog.css?v=20261009-scale85" />
+  <link rel="stylesheet" href="assets/css/blog.css?v=20261030-drafts" />
   <script>document.documentElement.classList.add('js');</script>
   <script defer src="assets/js/main.js"></script>
   <script defer src="assets/vendor/marked/marked.umd.js"></script>
@@ -25,7 +25,7 @@
   <script defer src="assets/js/blog-markdown.js?v=20261003-inline-math"></script>
   <script defer src="assets/js/blog-editor.js?v=20261003-inline-math"></script>
   <script defer src="assets/js/blog-layout.js?v=20261004-resize"></script>
-  <script defer src="assets/js/blog.js?v=20261004-resize"></script>
+  <script defer src="assets/js/blog.js?v=20261030-drafts"></script>
 </head>
 <body class="blog-site">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -87,6 +87,11 @@
     </section>
 
     <section class="blog-list-view" data-blog-list-view>
+      <section class="drafts-panel" data-drafts-panel hidden aria-labelledby="drafts-title">
+        <div class="blog-feed-heading"><h2 id="drafts-title">Drafts <span data-drafts-count></span></h2><button class="text-button" type="button" data-new-draft>+ New draft</button></div>
+        <p class="blog-feed-meta">Saved only in this browser. Drafts are not published.</p>
+        <div data-drafts-list></div>
+      </section>
       <div class="blog-feed-heading">
         <h2>Posts</h2>
         <span data-blog-count></span>
@@ -147,6 +152,8 @@
             <h2 id="editor-title" data-editor-title>New post</h2>
           </div>
           <div class="editor-publish-actions">
+            <button class="quiet-button" type="button" data-new-draft>+ New draft</button>
+            <button class="quiet-button" type="button" data-save-draft>Save draft</button>
             <span class="draft-status" data-draft-status role="status">Draft · only on this browser</span>
             <button class="primary-button" type="submit">Publish <span aria-hidden="true">↗</span></button>
           </div>
