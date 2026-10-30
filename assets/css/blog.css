@@ -299,3 +299,10 @@ html[data-theme='dark'] .blog-site {
   .editor-bottom-bar { gap: 10px; padding-inline: 4px; }
   .editor-size-options { position: fixed; inset: auto 16px 20px; width: auto; }
 }
+
+.drafts-panel { margin: 0 0 32px; }
+.drafts-panel > .blog-feed-meta { margin: 12px 0; }
+.draft-list-item { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.draft-list-item button { text-align: left; overflow-wrap: anywhere; min-width: 0; }
+.draft-list-item > span { flex-shrink: 0; }
+.editor-publish-actions { flex-wrap: wrap; }
