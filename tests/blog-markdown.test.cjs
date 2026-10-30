@@ -67,6 +67,7 @@ test('shows invalid math as editable text and preserves surrounding writing', ()
   dom.window.close();
 });
 
+const draftKey = app => 'jongwon-blog-draft-v1:' + decodeURIComponent(app.window.location.hash.replace('#draft/', ''));
 const session = { access_token: 'local-test-only', refresh_token: 'local-test-refresh', expires_at: Date.now() / 1000 + 3600 };
 const flush = async () => { for (let i = 0; i < 6; i++) await new Promise(setImmediate); };
 
@@ -116,7 +117,7 @@ test('automatically saves all fields privately after typing, and reload restores
   first.type('summary', 'A summary');
   first.type('body', 'An equation $x_i$');
   await new Promise((resolve) => setTimeout(resolve, 750));
-  const draft = first.window.localStorage.getItem('jongwon-blog-draft-v1:new');
+  const draft = first.window.localStorage.getItem(draftKey(first));
   assert.equal(JSON.parse(draft).body, 'An equation $x_i$');
   assert.equal(first.calls.filter((call) => call.method === 'POST').length, 0);
   assert.match(first.window.document.querySelector('[data-draft-status]').textContent, /Saved/);
@@ -151,10 +152,10 @@ for (const rich of [false, true]) test(`Split uses pure Markdown, live preview a
   await new Promise(resolve => setTimeout(resolve, 750));
   assert.equal(doc.querySelectorAll('[data-editor-preview] .katex').length, 1);
   assert.equal(doc.querySelectorAll('[data-editor-preview] .blog-footnotes li').length, 1);
-  assert.equal(JSON.parse(app.window.localStorage.getItem('jongwon-blog-draft-v1:new')).body, app.form.elements.body.value);
+  assert.equal(JSON.parse(app.window.localStorage.getItem(app.window.location.hash.startsWith('#draft/') ? draftKey(app) : 'jongwon-blog-draft-v1:new')).body, app.form.elements.body.value);
   assert.equal(app.calls.filter(call => call.method === 'POST').length, 0);
   const source = app.form.elements.body.value;
-  const draft = app.window.localStorage.getItem('jongwon-blog-draft-v1:new');
+  const draft = app.window.localStorage.getItem(app.window.location.hash.startsWith('#draft/') ? draftKey(app) : 'jongwon-blog-draft-v1:new');
   const height = doc.querySelector('[data-editor-height]');
   height.value = '800';
   height.dispatchEvent(new app.window.Event('input', { bubbles: true }));
@@ -168,7 +169,7 @@ for (const rich of [false, true]) test(`Split uses pure Markdown, live preview a
   assert.equal(doc.querySelector('[data-editor-workspace]').style.height, '800px');
   assert.equal(doc.querySelector('[data-editor-workspace]').style.getPropertyValue('--editor-left'), '52fr');
   await new Promise(resolve => setTimeout(resolve, 750));
-  assert.equal(app.window.localStorage.getItem('jongwon-blog-draft-v1:new'), draft, 'resizing and unchanged mode switches must not rewrite drafts');
+  assert.equal(app.window.localStorage.getItem(app.window.location.hash.startsWith('#draft/') ? draftKey(app) : 'jongwon-blog-draft-v1:new'), draft, 'resizing and unchanged mode switches must not rewrite drafts');
   app.window.close();
 });
 
@@ -178,7 +179,7 @@ test('flushes unsaved typing on pagehide and isolates edit drafts from new posts
   app.type('body', 'Edited $a$');
   app.window.dispatchEvent(new app.window.Event('pagehide'));
   assert.equal(JSON.parse(app.window.localStorage.getItem('jongwon-blog-draft-v1:existing')).body, 'Edited $a$');
-  assert.equal(app.window.localStorage.getItem('jongwon-blog-draft-v1:new'), null);
+  assert.equal(app.window.localStorage.getItem(app.window.location.hash.startsWith('#draft/') ? draftKey(app) : 'jongwon-blog-draft-v1:new'), null);
   app.dom.window.close();
 });
 
@@ -225,7 +226,7 @@ test('publishes only on submission, preserves source, and removes the published 
   const saves = app.calls.filter((call) => call.method === 'POST' && call.url.includes('/blog_posts'));
   assert.equal(saves.length, 1);
   assert.equal(JSON.parse(saves[0].body).body, '## Hello\n\n$$x_i^2$$');
-  assert.equal(app.window.localStorage.getItem('jongwon-blog-draft-v1:new'), null);
+  assert.equal(app.window.localStorage.getItem(app.window.location.hash.startsWith('#draft/') ? draftKey(app) : 'jongwon-blog-draft-v1:new'), null);
   assert.equal(app.window.document.querySelector('[data-blog-post-view]').hidden, false);
   assert.equal(app.window.document.querySelectorAll('[data-blog-post-body] .katex').length, 1);
   app.dom.window.close();
@@ -298,7 +299,36 @@ test('the Footnote button also inserts and autosaves Markdown in source mode', a
   assert.match(app.form.elements.body.value, /Keep this text\[\^note-1\]\./);
   assert.match(app.form.elements.body.value, /\[\^note-1\]: A note\n    \n    With \$x_i\$\./);
   app.window.dispatchEvent(new app.window.Event('pagehide'));
-  assert.match(JSON.parse(app.window.localStorage.getItem('jongwon-blog-draft-v1:new')).body, /\[\^note-1\]/);
+  assert.match(JSON.parse(app.window.localStorage.getItem(app.window.location.hash.startsWith('#draft/') ? draftKey(app) : 'jongwon-blog-draft-v1:new')).body, /\[\^note-1\]/);
   assert.equal(app.calls.filter(call => call.method === 'POST').length, 0);
+  app.dom.window.close();
+});
+
+
+test('multiple drafts survive switching and reload; publishing removes only the selected draft', async () => {
+  const app = await editor({ hash: '#write' });
+  const doc = app.window.document;
+  const click = selector => doc.querySelector(selector).click();
+  app.type('title', 'First draft'); app.type('body', 'First body $x_i$');
+  click('[data-save-draft]');
+  const firstKey = draftKey(app);
+  click('[data-blog-editor] [data-new-draft]'); await flush();
+  assert.equal(app.form.elements.title.value, '');
+  const secondKey = draftKey(app);
+  assert.notEqual(secondKey, firstKey);
+  app.type('title', 'Second draft'); app.type('body', 'Second body');
+  click('[data-editor-cancel]'); await flush();
+  assert.equal(doc.querySelector('[data-drafts-count]').textContent, '2');
+  const open = [...doc.querySelectorAll('[data-drafts-list] button')].find(button => button.textContent === 'First draft');
+  open.click(); await flush();
+  assert.equal(app.form.elements.body.value, 'First body $x_i$');
+  const saved = { [firstKey]: app.window.localStorage.getItem(firstKey), [secondKey]: app.window.localStorage.getItem(secondKey) };
+  const next = await editor({ hash: app.window.location.hash, saved });
+  assert.equal(next.form.elements.title.value, 'First draft');
+  next.dom.window.close();
+  app.form.dispatchEvent(new app.window.Event('submit', { bubbles: true, cancelable: true })); await flush();
+  assert.equal(app.window.localStorage.getItem(firstKey), null);
+  assert.equal(JSON.parse(app.window.localStorage.getItem(secondKey)).title, 'Second draft');
+  assert.equal(app.calls.filter(call => call.method === 'POST').length, 1);
   app.dom.window.close();
 });
