@@ -15,8 +15,11 @@
     activePost: null,
     session: readSession(),
     pendingPost: null,
+    pendingDraft: null,
+    pendingFresh: false,
     editorOpen: false,
     draftStored: true,
+    draftId: null,
     mode: 'write',
     richEditing: false,
   };
@@ -129,6 +132,7 @@
 
   function syncAuthUi() {
     const signedIn = hasActiveSession();
+    renderDrafts();
     loginButton.hidden = signedIn;
     logoutButton.hidden = !signedIn;
     // Keep the entry point discoverable; openEditor still requires authentication.
@@ -197,6 +201,7 @@
     editorView.hidden = name !== 'editor';
     if (name !== 'auth') authView.hidden = true;
     if (name === 'auth') authView.hidden = false;
+    renderDrafts();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -330,18 +335,26 @@
     authForm.elements.namedItem('username').focus();
   }
 
-  async function openEditor(post = null) {
-    if (state.editorOpen && editorForm.elements.namedItem('id').value === (post?.id || '')) return;
+  async function openEditor(post = null, selectedDraft = null, fresh = false) {
+    if (!fresh && !selectedDraft && state.editorOpen && editorForm.elements.namedItem('id').value === (post?.id || '')) return;
     state.pendingPost = post;
+    state.pendingDraft = selectedDraft;
+    state.pendingFresh = fresh;
     if (!(await ensureSession())) {
       openAuth();
       return;
     }
 
-    if (state.editorOpen) persistDraft();
+    if (state.editorOpen) {
+      persistDraft();
+      if (!state.draftStored) return;
+    }
+    const available = readDrafts();
+    state.draftId = selectedDraft || (post ? post.id : (!fresh ? available.find(draft => !draft.postId)?.id : null)) || window.crypto.randomUUID();
     state.activePost = post;
     editorForm.reset();
     editorStatus.textContent = '';
+    editorFailed = false;
     editorForm.elements.namedItem('id').value = post?.id || '';
     editorForm.elements.namedItem('title').value = post?.title || '';
     editorForm.elements.namedItem('summary').value = post?.summary || '';
@@ -360,7 +373,7 @@
     editorTitle.textContent = post ? 'Edit post' : 'New post';
     editorForm.querySelector('button[type="submit"]').textContent = post ? 'Save changes' : 'Publish';
     showView('editor');
-    window.history.replaceState(null, '', post ? `#edit/${encodeURIComponent(post.id)}` : '#write');
+    window.history.replaceState(null, '', post ? `#edit/${encodeURIComponent(post.id)}` : `#draft/${encodeURIComponent(state.draftId)}`);
     setEditorMode(state.mode, true);
     updatePreview();
     editorForm.elements.namedItem('title').focus({ preventScroll: true });
@@ -368,7 +381,49 @@
   }
 
   function draftKey() {
-    return `jongwon-blog-draft-v1:${editorForm.elements.namedItem('id').value || 'new'}`;
+    return `jongwon-blog-draft-v1:${state.draftId}`;
+  }
+
+  // Keep each draft in its own key; the former :new draft remains readable.
+  function readDrafts() {
+    const drafts = [];
+    try {
+      for (let index = 0; index < window.localStorage.length; index++) {
+        const key = window.localStorage.key(index);
+        if (!key.startsWith('jongwon-blog-draft-v1:')) continue;
+        try {
+          const draft = JSON.parse(window.localStorage.getItem(key));
+          if (draft && ['title', 'summary', 'body'].every(field => typeof draft[field] === 'string')) {
+            const id = key.slice('jongwon-blog-draft-v1:'.length);
+            const legacyPost = state.posts.find(post => post.id === id);
+            drafts.push({ ...draft, id, postId: draft.postId || legacyPost?.id || null });
+          }
+        } catch (_error) { /* A damaged entry must not hide other drafts. */ }
+      }
+    } catch (_error) { /* Storage may be unavailable. */ }
+    return drafts.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+  }
+
+  function renderDrafts() {
+    const panel = app.querySelector('[data-drafts-panel]');
+    panel.hidden = !hasActiveSession();
+    const list = app.querySelector('[data-drafts-list]');
+    list.replaceChildren();
+    const drafts = readDrafts();
+    app.querySelector('[data-drafts-count]').textContent = String(drafts.length);
+    if (!drafts.length) list.append(makeTextElement('p', 'blog-status', 'No drafts yet. Start a new draft to write.'));
+    drafts.forEach(draft => {
+      const row = makeTextElement('div', 'draft-list-item', '');
+      const open = makeTextElement('button', 'text-button', draft.title.trim() || 'Untitled draft');
+      open.type = 'button';
+      open.addEventListener('click', () => {
+        const post = draft.postId ? state.posts.find(item => item.id === draft.postId) : null;
+        if (draft.postId && !post) { listStatus.textContent = 'The original post could not be found. Reload before editing this draft.'; return; }
+        openEditor(post, draft.id);
+      });
+      row.append(open, makeTextElement('span', 'blog-feed-meta', `${draft.postId ? 'Edit · ' : ''}${draft.savedAt ? formatDate(draft.savedAt) : ''}`));
+      list.append(row);
+    });
   }
 
   function draftContent() {
@@ -381,7 +436,7 @@
     const draft = draftContent();
     try {
       if (Object.values(draft).some((value) => value.trim())) {
-        window.localStorage.setItem(draftKey(), JSON.stringify({ ...draft, savedAt: Date.now() }));
+        window.localStorage.setItem(draftKey(), JSON.stringify({ ...draft, postId: editorForm.elements.namedItem('id').value || null, savedAt: Date.now() }));
         const time = new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(new Date());
         draftStatus.textContent = `Saved ${time} · this browser`;
       } else {
@@ -389,6 +444,7 @@
         draftStatus.textContent = 'Draft · only on this browser';
       }
       state.draftStored = true;
+      renderDrafts();
     } catch (_error) {
       state.draftStored = false;
       draftStatus.textContent = 'Autosave unavailable · download your draft';
@@ -625,6 +681,14 @@
   }
 
   async function route() {
+    const draftMatch = window.location.hash.match(/^#draft\/(.+)$/);
+    if (draftMatch) {
+      const draft = readDrafts().find(item => item.id === decodeURIComponent(draftMatch[1]));
+      if (draft) {
+        const post = draft.postId ? state.posts.find(item => item.id === draft.postId) : null;
+        if (!draft.postId || post) { await openEditor(post, draft.id); return; }
+      }
+    }
     if (window.location.hash === '#write') { await openEditor(); return; }
     const editMatch = window.location.hash.match(/^#edit\/(.+)$/);
     if (editMatch) {
@@ -642,6 +706,8 @@
   }
 
   loginButton.addEventListener('click', () => { state.pendingPost = null; openAuth(); });
+  app.querySelectorAll('[data-new-draft]').forEach(button => button.addEventListener('click', () => openEditor(null, null, true)));
+  app.querySelector('[data-save-draft]').addEventListener('click', persistDraft);
   writeButton.addEventListener('click', () => openEditor());
   logoutButton.addEventListener('click', () => {
     saveSession(null);
@@ -678,7 +744,7 @@
     try {
       await signIn(String(formData.get('username') || '').trim(), String(formData.get('password') || ''));
       authForm.reset();
-      openEditor(state.pendingPost);
+      openEditor(state.pendingPost, state.pendingDraft, state.pendingFresh);
     } catch (error) {
       console.error(error);
       authStatus.textContent = 'Incorrect username or password.';
@@ -692,6 +758,8 @@
     persistDraft();
     if (!(await ensureSession())) {
       state.pendingPost = state.activePost;
+      state.pendingDraft = state.draftId;
+      state.pendingFresh = false;
       openAuth();
       authStatus.textContent = 'Sign in again to publish. Your draft has been saved in this browser.';
       return;
