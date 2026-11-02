@@ -70,10 +70,13 @@ html[data-theme='dark'] .blog-site {
 .prose { color: var(--text); font: 400 1.12rem/1.85 var(--font-reading); overflow-wrap: anywhere; }
 .prose > :first-child { margin-top: 0; }
 .prose p { color: inherit; margin: 0 0 1.3em; white-space: normal; }
-.prose h1, .prose h2, .prose h3, .prose h4 { font-family: var(--font-reading); font-weight: 600; line-height: 1.35; letter-spacing: -.02em; margin: 1.6em 0 .65em; }
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 { font-family: var(--font-reading); font-weight: 600; line-height: 1.35; letter-spacing: -.02em; margin: 1.6em 0 .65em; }
 .prose h1 { font-size: 1.8em; }
 .prose h2 { font-size: 1.45em; }
 .prose h3 { font-size: 1.2em; }
+.prose h4 { font-size: 1.1em; }
+.prose h5 { font-size: 1em; }
+.prose h6 { font-size: .9em; }
 .prose strong { font-weight: 600; }
 .prose ul, .prose ol { padding-left: 1.4em; margin: 0 0 1.3em; }
 .prose li + li { margin-top: .3em; }

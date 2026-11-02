@@ -49,6 +49,8 @@
   const draftStatus = app.querySelector('[data-draft-status]');
   const workspace = app.querySelector('[data-editor-workspace]');
   const preview = app.querySelector('[data-editor-preview]');
+  const previewPanel = app.querySelector('[data-editor-preview-panel]');
+  const ignoredScroll = new WeakMap();
   const wordCount = app.querySelector('[data-word-count]');
   const mathTools = app.querySelector('[data-math-tools]');
   const mathToggle = app.querySelector('[data-math-toggle]');
@@ -465,6 +467,29 @@
     });
   }
 
+  function syncSplitScroll(from, to) {
+    if (state.mode !== 'split') return;
+    const fromRange = Math.max(0, from.scrollHeight - from.clientHeight);
+    const toRange = Math.max(0, to.scrollHeight - to.clientHeight);
+    const progress = fromRange ? Math.max(0, Math.min(1, from.scrollTop / fromRange)) : 0;
+    const target = progress * toRange;
+    if (Math.abs(to.scrollTop - target) < 1) return;
+    to.scrollTop = target;
+    // Read the applied position: browsers can clamp or round scrollTop.
+    ignoredScroll.set(to, to.scrollTop);
+  }
+
+  function onSplitScroll(from, to) {
+    const expected = ignoredScroll.get(from);
+    ignoredScroll.delete(from);
+    if (state.mode !== 'split') return;
+    if (expected !== undefined && Math.abs(from.scrollTop - expected) < 1) return;
+    syncSplitScroll(from, to);
+  }
+
+  bodyInput.addEventListener('scroll', () => onSplitScroll(bodyInput, previewPanel), { passive: true });
+  previewPanel.addEventListener('scroll', () => onSplitScroll(previewPanel, bodyInput), { passive: true });
+
   function updatePreview() {
     resizeHeadings();
     wordCount.textContent = `${countWords(bodyInput.value)} words · ${readingTime(bodyInput.value)} min read`;
@@ -475,12 +500,13 @@
       return;
     }
     const folds = [...preview.querySelectorAll('details')].map(detail => ({ title: detail.querySelector('summary')?.textContent, open: detail.open }));
-    const scrollTop = preview.parentElement.scrollTop;
+    const scrollTop = previewPanel.scrollTop;
     const result = renderBody(preview, bodyInput.value);
     preview.querySelectorAll('details').forEach((detail, index) => {
       if (folds[index]?.title === detail.querySelector('summary')?.textContent) detail.open = folds[index].open;
     });
-    preview.parentElement.scrollTop = scrollTop;
+    if (state.mode === 'split') syncSplitScroll(bodyInput, previewPanel);
+    else previewPanel.scrollTop = scrollTop;
     if (!result.available) editorStatus.textContent = 'Formatting is unavailable. Your text is still saved; reload to try again.';
   }
 
@@ -503,7 +529,7 @@
     workspace.dataset.mode = mode;
     app.querySelector('[data-editor-visual]').hidden = !richEditing;
     app.querySelector('[data-editor-source]').hidden = richEditing || mode === 'preview';
-    app.querySelector('[data-editor-preview-panel]').hidden = mode !== 'preview' && mode !== 'split';
+    previewPanel.hidden = mode !== 'preview' && mode !== 'split';
     app.querySelectorAll('[data-exit-toggle], [data-unwrap-toggle], [data-format="undo"], [data-format="redo"]').forEach((button) => { button.disabled = !richEditing; });
     app.querySelectorAll('[data-editor-mode]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.editorMode === mode)));
     editorLayout?.update();
