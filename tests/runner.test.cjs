@@ -102,6 +102,52 @@ test('ducking does not bypass a ground obstacle', () => {
   } finally { app.close(); }
 });
 
+test('game-over score and entered name survive gameplay inputs until an explicit restart', () => {
+  const app = game();
+  try {
+    app.select('runner-start').click();
+    app.step(300);
+    assert.equal(app.ended(), true);
+    const score = app.select('runner-score').textContent;
+    const distance = app.select('runner-distance').textContent;
+    const name = app.select('score-form').querySelector('input[name="name"]');
+    name.value = 'Player';
+
+    for (const key of ['ArrowUp', ' ', 'w', 'W', 'ArrowDown', 's', 'ArrowLeft', 'ArrowRight', 'Enter']) {
+      app.key('keydown', key, { target: app.select('runner-canvas') });
+      app.key('keyup', key, { target: app.select('runner-canvas') });
+      assert.equal(app.ended(), true, `${JSON.stringify(key)} must leave the score form open.`);
+    }
+    app.select('runner-jump').click();
+    app.pointer('pointerdown');
+    app.pointer('pointerup');
+    app.select('runner-canvas').dispatchEvent(new app.window.Event('pointerdown'));
+    app.step(60);
+    assert.equal(app.ended(), true);
+    assert.equal(app.select('runner-score').textContent, score);
+    assert.equal(app.select('runner-distance').textContent, distance);
+    assert.equal(name.value, 'Player');
+    assert.equal(app.select('runner-picker').disabled, false);
+
+    app.select('runner-start').click();
+    assert.equal(app.ended(), false);
+    assert.equal(app.select('runner-score').textContent, '0');
+    assert.equal(app.select('runner-picker').disabled, true);
+    app.step(20);
+    assert.ok(Number(app.select('runner-distance').textContent) > 0);
+  } finally { app.close(); }
+});
+
+test('jump input can still start the first run', () => {
+  const app = game();
+  try {
+    app.key('keydown', 'ArrowUp');
+    assert.equal(app.select('runner-picker').disabled, true);
+    app.step(20);
+    assert.ok(Number(app.select('runner-distance').textContent) > 0);
+  } finally { app.close(); }
+});
+
 test('four accessible bird choices update the preview and start label without starting a run', () => {
   const app = game();
   try {

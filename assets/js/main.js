@@ -340,6 +340,8 @@
     }
 
     function jumpRunner() {
+      // Preserve the final score until the player explicitly restarts.
+      if (state.ended) return;
       if (!state.running) {
         startRunner();
         return;
